@@ -1,0 +1,2878 @@
+{
+ "cards": {
+  "P2": {
+   "best": {
+    "gear": 0,
+    "honed": 0,
+    "reserve": 0
+   },
+   "classes": {
+    "artificer": {
+     "best": null,
+     "pairs": {
+      "gear-honed": {
+       "d": -2.1875,
+       "high": 1.40625,
+       "low": -6.09375,
+       "n": 640,
+       "verdict": "tie"
+      },
+      "gear-reserve": {
+       "d": -2.03125,
+       "high": 2.03125,
+       "low": -6.09375,
+       "n": 640,
+       "verdict": "tie"
+      },
+      "honed-reserve": {
+       "d": 0.15625,
+       "high": 3.4375,
+       "low": -2.96875,
+       "n": 640,
+       "verdict": "tie"
+      }
+     },
+     "possible": [
+      "gear",
+      "reserve",
+      "honed"
+     ],
+     "runs": 640
+    },
+    "barbarian": {
+     "best": null,
+     "pairs": {
+      "gear-honed": {
+       "d": 2.380952380952381,
+       "high": 6.101190476190476,
+       "low": -1.3392857142857142,
+       "n": 672,
+       "verdict": "tie"
+      },
+      "gear-reserve": {
+       "d": 2.0833333333333335,
+       "high": 5.505952380952381,
+       "low": -1.4880952380952381,
+       "n": 672,
+       "verdict": "tie"
+      },
+      "honed-reserve": {
+       "d": -0.2976190476190476,
+       "high": 2.9761904761904763,
+       "low": -3.2738095238095237,
+       "n": 672,
+       "verdict": "tie"
+      }
+     },
+     "possible": [
+      "gear",
+      "reserve",
+      "honed"
+     ],
+     "runs": 672
+    },
+    "bard": {
+     "best": null,
+     "pairs": {
+      "gear-honed": {
+       "d": -0.3125,
+       "high": 4.0625,
+       "low": -4.6875,
+       "n": 640,
+       "verdict": "tie"
+      },
+      "gear-reserve": {
+       "d": -1.71875,
+       "high": 2.65625,
+       "low": -6.40625,
+       "n": 640,
+       "verdict": "tie"
+      },
+      "honed-reserve": {
+       "d": -1.40625,
+       "high": 2.5,
+       "low": -5.3125,
+       "n": 640,
+       "verdict": "tie"
+      }
+     },
+     "possible": [
+      "gear",
+      "reserve",
+      "honed"
+     ],
+     "runs": 640
+    },
+    "cleric": {
+     "best": null,
+     "pairs": {
+      "gear-honed": {
+       "d": -0.7472826086956522,
+       "high": 1.4266304347826086,
+       "low": -2.989130434782609,
+       "n": 1472,
+       "verdict": "tie"
+      },
+      "gear-reserve": {
+       "d": -1.5625,
+       "high": 1.358695652173913,
+       "low": -4.3478260869565215,
+       "n": 1472,
+       "verdict": "tie"
+      },
+      "honed-reserve": {
+       "d": -0.8152173913043478,
+       "high": 1.2907608695652173,
+       "low": -2.921195652173913,
+       "n": 1472,
+       "verdict": "tie"
+      }
+     },
+     "possible": [
+      "gear",
+      "reserve",
+      "honed"
+     ],
+     "runs": 1472
+    },
+    "druid": {
+     "best": null,
+     "pairs": {
+      "gear-honed": {
+       "d": -2.875,
+       "high": 0.5,
+       "low": -6.375,
+       "n": 800,
+       "verdict": "tie"
+      },
+      "gear-reserve": {
+       "d": -1.125,
+       "high": 2.375,
+       "low": -4.75,
+       "n": 800,
+       "verdict": "tie"
+      },
+      "honed-reserve": {
+       "d": 1.75,
+       "high": 5.125,
+       "low": -1.625,
+       "n": 800,
+       "verdict": "tie"
+      }
+     },
+     "possible": [
+      "gear",
+      "reserve",
+      "honed"
+     ],
+     "runs": 800
+    },
+    "fighter": {
+     "best": null,
+     "pairs": {
+      "gear-honed": {
+       "d": -4.625,
+       "high": -1.0,
+       "low": -8.5,
+       "n": 800,
+       "verdict": "small"
+      },
+      "gear-reserve": {
+       "d": -2.75,
+       "high": 0.375,
+       "low": -6.0,
+       "n": 800,
+       "verdict": "tie"
+      },
+      "honed-reserve": {
+       "d": 1.875,
+       "high": 5.375,
+       "low": -1.375,
+       "n": 800,
+       "verdict": "tie"
+      }
+     },
+     "possible": [
+      "reserve",
+      "honed"
+     ],
+     "runs": 800
+    },
+    "monk": {
+     "best": null,
+     "pairs": {
+      "gear-honed": {
+       "d": -1.125,
+       "high": 1.75,
+       "low": -4.0,
+       "n": 800,
+       "verdict": "tie"
+      },
+      "gear-reserve": {
+       "d": -1.375,
+       "high": 2.125,
+       "low": -5.0,
+       "n": 800,
+       "verdict": "tie"
+      },
+      "honed-reserve": {
+       "d": -0.25,
+       "high": 3.125,
+       "low": -3.875,
+       "n": 800,
+       "verdict": "tie"
+      }
+     },
+     "possible": [
+      "gear",
+      "reserve",
+      "honed"
+     ],
+     "runs": 800
+    },
+    "paladin": {
+     "best": null,
+     "pairs": {
+      "gear-honed": {
+       "d": -2.5,
+       "high": 0.625,
+       "low": -5.75,
+       "n": 800,
+       "verdict": "tie"
+      },
+      "gear-reserve": {
+       "d": -1.375,
+       "high": 2.5,
+       "low": -5.375,
+       "n": 800,
+       "verdict": "tie"
+      },
+      "honed-reserve": {
+       "d": 1.125,
+       "high": 4.375,
+       "low": -2.0,
+       "n": 800,
+       "verdict": "tie"
+      }
+     },
+     "possible": [
+      "gear",
+      "reserve",
+      "honed"
+     ],
+     "runs": 800
+    },
+    "ranger": {
+     "best": null,
+     "pairs": {
+      "gear-honed": {
+       "d": 0.78125,
+       "high": 4.53125,
+       "low": -2.96875,
+       "n": 640,
+       "verdict": "tie"
+      },
+      "gear-reserve": {
+       "d": -0.15625,
+       "high": 3.4375,
+       "low": -3.75,
+       "n": 640,
+       "verdict": "tie"
+      },
+      "honed-reserve": {
+       "d": -0.9375,
+       "high": 1.71875,
+       "low": -3.75,
+       "n": 640,
+       "verdict": "tie"
+      }
+     },
+     "possible": [
+      "gear",
+      "reserve",
+      "honed"
+     ],
+     "runs": 640
+    },
+    "rogue": {
+     "best": null,
+     "pairs": {
+      "gear-honed": {
+       "d": -1.2731481481481481,
+       "high": 2.0833333333333335,
+       "low": -4.861111111111111,
+       "n": 864,
+       "verdict": "tie"
+      },
+      "gear-reserve": {
+       "d": -3.4722222222222223,
+       "high": 0.23148148148148148,
+       "low": -7.060185185185185,
+       "n": 864,
+       "verdict": "tie"
+      },
+      "honed-reserve": {
+       "d": -2.199074074074074,
+       "high": 0.0,
+       "low": -4.282407407407407,
+       "n": 864,
+       "verdict": "tie"
+      }
+     },
+     "possible": [
+      "gear",
+      "reserve",
+      "honed"
+     ],
+     "runs": 864
+    },
+    "sorcerer": {
+     "best": null,
+     "pairs": {
+      "gear-honed": {
+       "d": 0.9868421052631579,
+       "high": 5.098684210526316,
+       "low": -2.7960526315789473,
+       "n": 608,
+       "verdict": "tie"
+      },
+      "gear-reserve": {
+       "d": -0.6578947368421053,
+       "high": 3.289473684210526,
+       "low": -4.440789473684211,
+       "n": 608,
+       "verdict": "tie"
+      },
+      "honed-reserve": {
+       "d": -1.644736842105263,
+       "high": 1.9736842105263157,
+       "low": -5.098684210526316,
+       "n": 608,
+       "verdict": "tie"
+      }
+     },
+     "possible": [
+      "gear",
+      "reserve",
+      "honed"
+     ],
+     "runs": 608
+    },
+    "warlock": {
+     "best": null,
+     "pairs": {
+      "gear-honed": {
+       "d": -2.2135416666666665,
+       "high": 0.6510416666666666,
+       "low": -5.078125,
+       "n": 768,
+       "verdict": "tie"
+      },
+      "gear-reserve": {
+       "d": -1.171875,
+       "high": 2.2135416666666665,
+       "low": -4.557291666666667,
+       "n": 768,
+       "verdict": "tie"
+      },
+      "honed-reserve": {
+       "d": 1.0416666666666667,
+       "high": 4.427083333333333,
+       "low": -2.2135416666666665,
+       "n": 768,
+       "verdict": "tie"
+      }
+     },
+     "possible": [
+      "gear",
+      "reserve",
+      "honed"
+     ],
+     "runs": 768
+    },
+    "wizard": {
+     "best": null,
+     "pairs": {
+      "gear-honed": {
+       "d": -1.4322916666666667,
+       "high": 0.78125,
+       "low": -3.7760416666666665,
+       "n": 1536,
+       "verdict": "tie"
+      },
+      "gear-reserve": {
+       "d": -0.9765625,
+       "high": 1.8880208333333333,
+       "low": -3.7760416666666665,
+       "n": 1536,
+       "verdict": "tie"
+      },
+      "honed-reserve": {
+       "d": 0.4557291666666667,
+       "high": 3.2552083333333335,
+       "low": -2.1484375,
+       "n": 1536,
+       "verdict": "tie"
+      }
+     },
+     "possible": [
+      "gear",
+      "reserve",
+      "honed"
+     ],
+     "runs": 1536
+    }
+   },
+   "verdict": "inconclusive"
+  },
+  "P3": {
+   "largest": 1.25,
+   "pairs": {
+    "gear-honed": {
+     "d": -1.25,
+     "high": 0.3472222222222222,
+     "low": -2.951388888888889,
+     "n": 2880,
+     "verdict": "met"
+    },
+    "gear-reserve": {
+     "d": -1.2152777777777777,
+     "high": 0.8333333333333334,
+     "low": -3.298611111111111,
+     "n": 2880,
+     "verdict": "met"
+    },
+    "honed-reserve": {
+     "d": 0.034722222222222224,
+     "high": 1.6666666666666667,
+     "low": -1.5972222222222223,
+     "n": 2880,
+     "verdict": "met"
+    }
+   },
+   "verdict": "met"
+  },
+  "P4_rise": {
+   "d": 0.7986111111111112,
+   "high": 4.097222222222222,
+   "low": -2.1875,
+   "n": 2880,
+   "verdict": "met"
+  },
+  "P5_reserve_vs_ref": {
+   "high": 2.480928893129851,
+   "low": 2.359101823710955,
+   "ratio": 2.4195525704135314
+  },
+  "dominance": {
+   "gear": [],
+   "honed": [],
+   "reserve": []
+  },
+  "non_dominance": false
+ },
+ "paired": {
+  "gear": {
+   "d": -1.8623737373737375,
+   "high": 1.7045454545454546,
+   "low": -5.082070707070707,
+   "n": 3168
+  },
+  "honed": {
+   "d": 3.0934343434343434,
+   "high": 6.6603535353535355,
+   "low": -0.06392045454545384,
+   "n": 3168
+  },
+  "mixed": {
+   "d": 0.5366161616161617,
+   "high": 3.6931818181818183,
+   "low": -2.2411616161616164,
+   "n": 3168
+  },
+  "reserve": {
+   "d": 0.03156565656565657,
+   "high": 2.8093434343434343,
+   "low": -2.4305555555555554,
+   "n": 3168
+  }
+ },
+ "ref": "m2-r10",
+ "ref_metrics": {
+  "gear": {
+   "class_median": 0.771875,
+   "class_spread": 0.1312500000000001,
+   "classes": {
+    "artificer": {
+     "death": 0.19375,
+     "runs": 640,
+     "win": 0.83125
+    },
+    "barbarian": {
+     "death": 0.27232142857142855,
+     "runs": 672,
+     "win": 0.7633928571428571
+    },
+    "bard": {
+     "death": 0.3015625,
+     "runs": 640,
+     "win": 0.725
+    },
+    "cleric": {
+     "death": 0.23958333333333334,
+     "runs": 1472,
+     "win": 0.7717391304347826
+    },
+    "druid": {
+     "death": 0.25125,
+     "runs": 800,
+     "win": 0.7675
+    },
+    "fighter": {
+     "death": 0.19675925925925927,
+     "runs": 800,
+     "win": 0.84125
+    },
+    "monk": {
+     "death": 0.3401442307692308,
+     "runs": 800,
+     "win": 0.71
+    },
+    "paladin": {
+     "death": 0.17548076923076922,
+     "runs": 800,
+     "win": 0.83625
+    },
+    "ranger": {
+     "death": 0.24107142857142858,
+     "runs": 640,
+     "win": 0.771875
+    },
+    "rogue": {
+     "death": 0.22916666666666666,
+     "runs": 864,
+     "win": 0.7881944444444444
+    },
+    "sorcerer": {
+     "death": 0.2625,
+     "runs": 608,
+     "win": 0.7598684210526315
+    },
+    "warlock": {
+     "death": 0.21995192307692307,
+     "runs": 768,
+     "win": 0.7981770833333334
+    },
+    "wizard": {
+     "death": 0.244375,
+     "runs": 1536,
+     "win": 0.775390625
+    }
+   },
+   "deadlocks": 0,
+   "deaths_per_run": 0.9472853535353535,
+   "fights_over_15": 122,
+   "gates": {
+    "illegal_proposals": 0,
+    "passive_ends": 0,
+    "policy_errors": 0,
+    "protection_mismatches": 0
+   },
+   "holds": {
+    "dangerous_1_5x": "met",
+    "finale_highest": "met",
+    "representatives_35": "met",
+    "rotation_55_90": "met"
+   },
+   "holds_detail": {
+    "dangerous_1_5x": {
+     "fights": {
+      "1": {
+       "high": 2.750307659286586,
+       "limit": 1.5,
+       "low": 1.970942188279142,
+       "ratio": 2.309796994865641,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "2": {
+       "high": 3.003352920836811,
+       "limit": 1.5,
+       "low": 1.939508224852583,
+       "ratio": 2.392875844089919,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "3": {
+       "high": 2.7862365366574764,
+       "limit": 1.5,
+       "low": 2.000399727839149,
+       "ratio": 2.3597139922642274,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "4": {
+       "high": 5.254013826053678,
+       "limit": 1.5,
+       "low": 3.0280626214990813,
+       "ratio": 3.8670955773911633,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "5": {
+       "high": 2.1519577526886127,
+       "limit": 1.5,
+       "low": 1.5077700232103395,
+       "ratio": 1.7983864479456113,
+       "sign_decided": 0,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "finale_highest": {
+     "stages": {
+      "1": {
+       "d": 0.16205776249893897,
+       "high": 0.21728481422732154,
+       "low": 0.11287864063531197,
+       "verdict": "met"
+      },
+      "2": {
+       "d": 0.16174150772121862,
+       "high": 0.2174839123965538,
+       "low": 0.11236188015887856,
+       "verdict": "met"
+      },
+      "3": {
+       "d": 0.14877823149493752,
+       "high": 0.20355627670964624,
+       "low": 0.09986732032242256,
+       "verdict": "met"
+      },
+      "4": {
+       "d": 0.11652043183416361,
+       "high": 0.168838013649473,
+       "low": 0.07075650679795892,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "representatives_35": {
+     "parties": {
+      "dup-cleric": {
+       "high": 0.9111057606383721,
+       "low": 0.6469050424507756,
+       "rate": 0.8125,
+       "verdict": "met"
+      },
+      "dup-fighter": {
+       "high": 0.9944622826374491,
+       "low": 0.8425539219962727,
+       "rate": 0.96875,
+       "verdict": "met"
+      },
+      "dup-wizard": {
+       "high": 0.950299461555257,
+       "low": 0.7193135021517204,
+       "rate": 0.875,
+       "verdict": "met"
+      },
+      "familiar": {
+       "high": 0.9111057606383721,
+       "low": 0.6469050424507756,
+       "rate": 0.8125,
+       "verdict": "met"
+      },
+      "melee": {
+       "high": 0.8897630306846815,
+       "low": 0.6124466920955516,
+       "rate": 0.78125,
+       "verdict": "met"
+      },
+      "mixed": {
+       "high": 0.9944622826374491,
+       "low": 0.8425539219962727,
+       "rate": 0.96875,
+       "verdict": "met"
+      },
+      "ranged": {
+       "high": 0.9111057606383721,
+       "low": 0.6469050424507756,
+       "rate": 0.8125,
+       "verdict": "met"
+      },
+      "support-heavy": {
+       "high": 0.8897630306846815,
+       "low": 0.6124466920955516,
+       "rate": 0.78125,
+       "verdict": "met"
+      },
+      "support-poor": {
+       "high": 0.8674775601737845,
+       "low": 0.5789310822975338,
+       "rate": 0.75,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "rotation_55_90": {
+     "high": 0.7956301035393423,
+     "low": 0.7654270640942751,
+     "rate": 0.7809027777777777,
+     "verdict": "met"
+    }
+   },
+   "rotation_win": 0.7809027777777777,
+   "rounds_max": 31,
+   "rounds_p99": 15,
+   "rounds_per_fight": 5.984798922455263,
+   "runs": 3168,
+   "slots": {
+    "1": {
+     "damage_share": 0.3128590013364802,
+     "death_share": 0.27557480839720094,
+     "down_share": 0.3749287749287749
+    },
+    "2": {
+     "damage_share": 0.24138929962749167,
+     "death_share": 0.25124958347217596,
+     "down_share": 0.23566951566951566
+    },
+    "3": {
+     "damage_share": 0.2196555008957261,
+     "death_share": 0.23825391536154616,
+     "down_share": 0.19877492877492878
+    },
+    "4": {
+     "damage_share": 0.226096198140302,
+     "death_share": 0.23492169276907698,
+     "down_share": 0.19062678062678062
+    }
+   },
+   "stages": {
+    "1": {
+     "defeat_share": 0.0006313131313131314,
+     "defeats": 2,
+     "fights": 3168,
+     "revives": 0.34311868686868685,
+     "specials": 6.247790404040404
+    },
+    "2": {
+     "defeat_share": 0.0009475679090334807,
+     "defeats": 3,
+     "fights": 3166,
+     "revives": 0.4500947567909033,
+     "specials": 3.797536323436513
+    },
+    "3": {
+     "defeat_share": 0.013910844135314574,
+     "defeats": 44,
+     "fights": 3163,
+     "revives": 1.300031615554853,
+     "specials": 0.8561492254189061
+    },
+    "4": {
+     "defeat_share": 0.04616864379608849,
+     "defeats": 144,
+     "fights": 3119,
+     "revives": 2.309073420968259,
+     "specials": 0.4632895158704713
+    },
+    "5": {
+     "defeat_share": 0.1626890756302521,
+     "defeats": 484,
+     "fights": 2975,
+     "revives": 6.369747899159663,
+     "specials": 0.2635294117647059
+    }
+   },
+   "stalls": 0,
+   "win": 0.7863005050505051
+  },
+  "honed": {
+   "class_median": 0.7325,
+   "class_spread": 0.14375000000000004,
+   "classes": {
+    "artificer": {
+     "death": 0.2234375,
+     "runs": 640,
+     "win": 0.7890625
+    },
+    "barbarian": {
+     "death": 0.3125,
+     "runs": 672,
+     "win": 0.7261904761904762
+    },
+    "bard": {
+     "death": 0.3484375,
+     "runs": 640,
+     "win": 0.6796875
+    },
+    "cleric": {
+     "death": 0.28982843137254904,
+     "runs": 1472,
+     "win": 0.7289402173913043
+    },
+    "druid": {
+     "death": 0.2775,
+     "runs": 800,
+     "win": 0.7325
+    },
+    "fighter": {
+     "death": 0.22453703703703703,
+     "runs": 800,
+     "win": 0.80625
+    },
+    "monk": {
+     "death": 0.3713942307692308,
+     "runs": 800,
+     "win": 0.6725
+    },
+    "paladin": {
+     "death": 0.19831730769230768,
+     "runs": 800,
+     "win": 0.81625
+    },
+    "ranger": {
+     "death": 0.27976190476190477,
+     "runs": 640,
+     "win": 0.73125
+    },
+    "rogue": {
+     "death": 0.2777777777777778,
+     "runs": 864,
+     "win": 0.7453703703703703
+    },
+    "sorcerer": {
+     "death": 0.303125,
+     "runs": 608,
+     "win": 0.7171052631578947
+    },
+    "warlock": {
+     "death": 0.24519230769230768,
+     "runs": 768,
+     "win": 0.7708333333333334
+    },
+    "wizard": {
+     "death": 0.284375,
+     "runs": 1536,
+     "win": 0.7337239583333334
+    }
+   },
+   "deadlocks": 0,
+   "deaths_per_run": 1.091540404040404,
+   "fights_over_15": 209,
+   "gates": {
+    "illegal_proposals": 0,
+    "passive_ends": 0,
+    "policy_errors": 0,
+    "protection_mismatches": 0
+   },
+   "holds": {
+    "dangerous_1_5x": "met",
+    "finale_highest": "met",
+    "representatives_35": "met",
+    "rotation_55_90": "met"
+   },
+   "holds_detail": {
+    "dangerous_1_5x": {
+     "fights": {
+      "1": {
+       "high": 2.750307659286586,
+       "limit": 1.5,
+       "low": 1.970942188279142,
+       "ratio": 2.309796994865641,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "2": {
+       "high": 3.017371336533569,
+       "limit": 1.5,
+       "low": 1.9102016109223223,
+       "ratio": 2.3824273886506853,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "3": {
+       "high": 2.7257619346223505,
+       "limit": 1.5,
+       "low": 1.987437508111451,
+       "ratio": 2.319548507749022,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "4": {
+       "high": 4.900852427354256,
+       "limit": 1.5,
+       "low": 3.007900056958658,
+       "ratio": 3.739345811283251,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "5": {
+       "high": 2.2630809355745356,
+       "limit": 1.5,
+       "low": 1.5840270959054958,
+       "ratio": 1.8877941717113986,
+       "sign_decided": 0,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "finale_highest": {
+     "stages": {
+      "1": {
+       "d": 0.19618978933740516,
+       "high": 0.2613759444117567,
+       "low": 0.13762603799340234,
+       "verdict": "met"
+      },
+      "2": {
+       "d": 0.19587353455968481,
+       "high": 0.2610610503898685,
+       "low": 0.1371341684850936,
+       "verdict": "met"
+      },
+      "3": {
+       "d": 0.1832264138819336,
+       "high": 0.24685876634404447,
+       "low": 0.1261341392888676,
+       "verdict": "met"
+      },
+      "4": {
+       "d": 0.14457751272512853,
+       "high": 0.20722255513734267,
+       "low": 0.08825473558535606,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "representatives_35": {
+     "parties": {
+      "dup-cleric": {
+       "high": 0.9313568089337279,
+       "low": 0.6824550744643347,
+       "rate": 0.84375,
+       "verdict": "met"
+      },
+      "dup-fighter": {
+       "high": 0.9826897968048427,
+       "low": 0.7985253275199642,
+       "rate": 0.9375,
+       "verdict": "met"
+      },
+      "dup-wizard": {
+       "high": 0.8897630306846815,
+       "low": 0.6124466920955516,
+       "rate": 0.78125,
+       "verdict": "met"
+      },
+      "familiar": {
+       "high": 0.9944622826374491,
+       "low": 0.8425539219962727,
+       "rate": 0.96875,
+       "verdict": "met"
+      },
+      "melee": {
+       "high": 0.8674775601737845,
+       "low": 0.5789310822975338,
+       "rate": 0.75,
+       "verdict": "met"
+      },
+      "mixed": {
+       "high": 0.950299461555257,
+       "low": 0.7193135021517204,
+       "rate": 0.875,
+       "verdict": "met"
+      },
+      "ranged": {
+       "high": 0.9111057606383721,
+       "low": 0.6469050424507756,
+       "rate": 0.8125,
+       "verdict": "met"
+      },
+      "support-heavy": {
+       "high": 0.8443559315435214,
+       "low": 0.546251630618882,
+       "rate": 0.71875,
+       "verdict": "met"
+      },
+      "support-poor": {
+       "high": 0.8204764788338126,
+       "low": 0.514330003019676,
+       "rate": 0.6875,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "rotation_55_90": {
+     "high": 0.7583431314568947,
+     "low": 0.7264269058433508,
+     "rate": 0.7427083333333333,
+     "verdict": "met"
+    }
+   },
+   "rotation_win": 0.7427083333333333,
+   "rounds_max": 39,
+   "rounds_p99": 16,
+   "rounds_per_fight": 6.201489662257609,
+   "runs": 3168,
+   "slots": {
+    "1": {
+     "damage_share": 0.311147292770697,
+     "death_share": 0.2741469057258531,
+     "down_share": 0.3704489035995035
+    },
+    "2": {
+     "damage_share": 0.2427553140372164,
+     "death_share": 0.24812030075187969,
+     "down_share": 0.23882912701696318
+    },
+    "3": {
+     "damage_share": 0.2192332023188526,
+     "death_share": 0.2388663967611336,
+     "down_share": 0.20467004551096402
+    },
+    "4": {
+     "damage_share": 0.22686419087323398,
+     "death_share": 0.2388663967611336,
+     "down_share": 0.1860519238725693
+    }
+   },
+   "stages": {
+    "1": {
+     "defeat_share": 0.0006313131313131314,
+     "defeats": 2,
+     "fights": 3168,
+     "revives": 0.34311868686868685,
+     "specials": 6.247790404040404
+    },
+    "2": {
+     "defeat_share": 0.0009475679090334807,
+     "defeats": 3,
+     "fights": 3166,
+     "revives": 0.43651295009475677,
+     "specials": 3.8673404927353126
+    },
+    "3": {
+     "defeat_share": 0.013594688586784698,
+     "defeats": 43,
+     "fights": 3163,
+     "revives": 1.4252292127726842,
+     "specials": 0.8552007587733165
+    },
+    "4": {
+     "defeat_share": 0.052243589743589745,
+     "defeats": 163,
+     "fights": 3120,
+     "revives": 2.5951923076923076,
+     "specials": 0.4375
+    },
+    "5": {
+     "defeat_share": 0.19682110246871828,
+     "defeats": 582,
+     "fights": 2957,
+     "revives": 7.0791342576936085,
+     "specials": 0.26682448427460265
+    }
+   },
+   "stalls": 0,
+   "win": 0.7496843434343434
+  },
+  "mixed": {
+   "class_median": 0.778125,
+   "class_spread": 0.15375000000000005,
+   "classes": {
+    "artificer": {
+     "death": 0.221875,
+     "runs": 640,
+     "win": 0.7921875
+    },
+    "barbarian": {
+     "death": 0.28869047619047616,
+     "runs": 672,
+     "win": 0.7574404761904762
+    },
+    "bard": {
+     "death": 0.3171875,
+     "runs": 640,
+     "win": 0.703125
+    },
+    "cleric": {
+     "death": 0.2512254901960784,
+     "runs": 1472,
+     "win": 0.7622282608695652
+    },
+    "druid": {
+     "death": 0.21625,
+     "runs": 800,
+     "win": 0.79875
+    },
+    "fighter": {
+     "death": 0.1840277777777778,
+     "runs": 800,
+     "win": 0.85375
+    },
+    "monk": {
+     "death": 0.35096153846153844,
+     "runs": 800,
+     "win": 0.7
+    },
+    "paladin": {
+     "death": 0.18629807692307693,
+     "runs": 800,
+     "win": 0.83375
+    },
+    "ranger": {
+     "death": 0.22321428571428573,
+     "runs": 640,
+     "win": 0.778125
+    },
+    "rogue": {
+     "death": 0.22800925925925927,
+     "runs": 864,
+     "win": 0.7881944444444444
+    },
+    "sorcerer": {
+     "death": 0.29375,
+     "runs": 608,
+     "win": 0.7286184210526315
+    },
+    "warlock": {
+     "death": 0.21394230769230768,
+     "runs": 768,
+     "win": 0.80078125
+    },
+    "wizard": {
+     "death": 0.25375,
+     "runs": 1536,
+     "win": 0.771484375
+    }
+   },
+   "deadlocks": 1,
+   "deaths_per_run": 0.976010101010101,
+   "fights_over_15": 172,
+   "gates": {
+    "illegal_proposals": 0,
+    "passive_ends": 0,
+    "policy_errors": 0,
+    "protection_mismatches": 0
+   },
+   "holds": {
+    "dangerous_1_5x": "met",
+    "finale_highest": "met",
+    "representatives_35": "met",
+    "rotation_55_90": "met"
+   },
+   "holds_detail": {
+    "dangerous_1_5x": {
+     "fights": {
+      "1": {
+       "high": 2.750307659286586,
+       "limit": 1.5,
+       "low": 1.970942188279142,
+       "ratio": 2.309796994865641,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "2": {
+       "high": 2.978272498972907,
+       "limit": 1.5,
+       "low": 1.9313714898035914,
+       "ratio": 2.3785031521762545,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "3": {
+       "high": 2.8123440785355647,
+       "limit": 1.5,
+       "low": 1.9987055796110675,
+       "ratio": 2.3699280216256646,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "4": {
+       "high": 5.429931623658645,
+       "limit": 1.5,
+       "low": 3.1089440926721026,
+       "ratio": 3.9692717416614407,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "5": {
+       "high": 2.1977326719947152,
+       "limit": 1.5,
+       "low": 1.5532195871040864,
+       "ratio": 1.845423915354487,
+       "sign_decided": 0,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "finale_highest": {
+     "stages": {
+      "1": {
+       "d": 0.17018240576579516,
+       "high": 0.22280349292892085,
+       "low": 0.12297601373453122,
+       "verdict": "met"
+      },
+      "2": {
+       "d": 0.1698661509880748,
+       "high": 0.2226997220243455,
+       "low": 0.12210250167996757,
+       "verdict": "met"
+      },
+      "3": {
+       "d": 0.15753098644929045,
+       "high": 0.20870646113104346,
+       "low": 0.1114913151278263,
+       "verdict": "met"
+      },
+      "4": {
+       "d": 0.12401884710223648,
+       "high": 0.1683542415802841,
+       "low": 0.08283589219892254,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "representatives_35": {
+     "parties": {
+      "dup-cleric": {
+       "high": 0.9111057606383721,
+       "low": 0.6469050424507756,
+       "rate": 0.8125,
+       "verdict": "met"
+      },
+      "dup-fighter": {
+       "high": 0.9944622826374491,
+       "low": 0.8425539219962727,
+       "rate": 0.96875,
+       "verdict": "met"
+      },
+      "dup-wizard": {
+       "high": 0.9111057606383721,
+       "low": 0.6469050424507756,
+       "rate": 0.8125,
+       "verdict": "met"
+      },
+      "familiar": {
+       "high": 0.9944622826374491,
+       "low": 0.8425539219962727,
+       "rate": 0.96875,
+       "verdict": "met"
+      },
+      "melee": {
+       "high": 0.8674775601737845,
+       "low": 0.5789310822975338,
+       "rate": 0.75,
+       "verdict": "met"
+      },
+      "mixed": {
+       "high": 0.9111057606383721,
+       "low": 0.6469050424507756,
+       "rate": 0.8125,
+       "verdict": "met"
+      },
+      "ranged": {
+       "high": 0.8897630306846815,
+       "low": 0.6124466920955516,
+       "rate": 0.78125,
+       "verdict": "met"
+      },
+      "support-heavy": {
+       "high": 0.8674775601737845,
+       "low": 0.5789310822975338,
+       "rate": 0.75,
+       "verdict": "met"
+      },
+      "support-poor": {
+       "high": 0.8204764788338126,
+       "low": 0.514330003019676,
+       "rate": 0.6875,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "rotation_55_90": {
+     "high": 0.7895406017020166,
+     "low": 0.7590332173315946,
+     "rate": 0.7746527777777777,
+     "verdict": "met"
+    }
+   },
+   "rotation_win": 0.7746527777777777,
+   "rounds_max": 43,
+   "rounds_p99": 16,
+   "rounds_per_fight": 6.137515233147329,
+   "runs": 3168,
+   "slots": {
+    "1": {
+     "damage_share": 0.31230425596970707,
+     "death_share": 0.27716688227684344,
+     "down_share": 0.37232485571479856
+    },
+    "2": {
+     "damage_share": 0.2423468726733128,
+     "death_share": 0.24838292367399742,
+     "down_share": 0.23693148869190622
+    },
+    "3": {
+     "damage_share": 0.21802408439731136,
+     "death_share": 0.23544631306597671,
+     "down_share": 0.20078424875044873
+    },
+    "4": {
+     "damage_share": 0.22732478695966873,
+     "death_share": 0.2390038809831824,
+     "down_share": 0.18995940684284648
+    }
+   },
+   "stages": {
+    "1": {
+     "defeat_share": 0.0006313131313131314,
+     "defeats": 2,
+     "fights": 3168,
+     "revives": 0.34311868686868685,
+     "specials": 6.247790404040404
+    },
+    "2": {
+     "defeat_share": 0.0009475679090334807,
+     "defeats": 3,
+     "fights": 3166,
+     "revives": 0.4481996209728364,
+     "specials": 4.491471888818698
+    },
+    "3": {
+     "defeat_share": 0.013278533038254822,
+     "defeats": 42,
+     "fights": 3163,
+     "revives": 1.320265570660765,
+     "specials": 1.7021814732848561
+    },
+    "4": {
+     "defeat_share": 0.046794871794871795,
+     "defeats": 146,
+     "fights": 3120,
+     "revives": 2.309294871794872,
+     "specials": 1.369871794871795
+    },
+    "5": {
+     "defeat_share": 0.17081371889710828,
+     "defeats": 508,
+     "fights": 2974,
+     "revives": 6.703093476798924,
+     "specials": 1.2353732347007398
+    }
+   },
+   "stalls": 1,
+   "win": 0.7784090909090909
+  },
+  "reserve": {
+   "class_median": 0.784375,
+   "class_spread": 0.13624999999999998,
+   "classes": {
+    "artificer": {
+     "death": 0.2078125,
+     "runs": 640,
+     "win": 0.80625
+    },
+    "barbarian": {
+     "death": 0.29017857142857145,
+     "runs": 672,
+     "win": 0.7559523809523809
+    },
+    "bard": {
+     "death": 0.315625,
+     "runs": 640,
+     "win": 0.70625
+    },
+    "cleric": {
+     "death": 0.24080882352941177,
+     "runs": 1472,
+     "win": 0.7703804347826086
+    },
+    "druid": {
+     "death": 0.21625,
+     "runs": 800,
+     "win": 0.8
+    },
+    "fighter": {
+     "death": 0.1886574074074074,
+     "runs": 800,
+     "win": 0.8425
+    },
+    "monk": {
+     "death": 0.3317307692307692,
+     "runs": 800,
+     "win": 0.71375
+    },
+    "paladin": {
+     "death": 0.1778846153846154,
+     "runs": 800,
+     "win": 0.84
+    },
+    "ranger": {
+     "death": 0.21577380952380953,
+     "runs": 640,
+     "win": 0.784375
+    },
+    "rogue": {
+     "death": 0.2199074074074074,
+     "runs": 864,
+     "win": 0.7951388888888888
+    },
+    "sorcerer": {
+     "death": 0.3015625,
+     "runs": 608,
+     "win": 0.7236842105263158
+    },
+    "warlock": {
+     "death": 0.21153846153846154,
+     "runs": 768,
+     "win": 0.8059895833333334
+    },
+    "wizard": {
+     "death": 0.248125,
+     "runs": 1536,
+     "win": 0.7740885416666666
+    }
+   },
+   "deadlocks": 1,
+   "deaths_per_run": 0.9583333333333334,
+   "fights_over_15": 169,
+   "gates": {
+    "illegal_proposals": 0,
+    "passive_ends": 0,
+    "policy_errors": 0,
+    "protection_mismatches": 0
+   },
+   "holds": {
+    "dangerous_1_5x": "met",
+    "finale_highest": "met",
+    "representatives_35": "met",
+    "rotation_55_90": "met"
+   },
+   "holds_detail": {
+    "dangerous_1_5x": {
+     "fights": {
+      "1": {
+       "high": 2.750307659286586,
+       "limit": 1.5,
+       "low": 1.970942188279142,
+       "ratio": 2.309796994865641,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "2": {
+       "high": 2.9875586800407348,
+       "limit": 1.5,
+       "low": 1.938485099538531,
+       "ratio": 2.385047186290358,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "3": {
+       "high": 2.8710139002621533,
+       "limit": 1.5,
+       "low": 2.045861122398139,
+       "ratio": 2.422288641851775,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "4": {
+       "high": 5.506296054764393,
+       "limit": 1.5,
+       "low": 3.1452827427618275,
+       "ratio": 4.014494025137286,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "5": {
+       "high": 2.1910521750467913,
+       "limit": 1.5,
+       "low": 1.5278658757276828,
+       "ratio": 1.8294870459374113,
+       "sign_decided": 0,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "finale_highest": {
+     "stages": {
+      "1": {
+       "d": 0.16760240077063449,
+       "high": 0.218558951277821,
+       "low": 0.12163556294653856,
+       "verdict": "met"
+      },
+      "2": {
+       "d": 0.16728614599291414,
+       "high": 0.21863816247857024,
+       "low": 0.12061202712337005,
+       "verdict": "met"
+      },
+      "3": {
+       "d": 0.15558349252307346,
+       "high": 0.20634934371315797,
+       "low": 0.10954858635286686,
+       "verdict": "met"
+      },
+      "4": {
+       "d": 0.1221094345938118,
+       "high": 0.16641971043057613,
+       "low": 0.08161023621474539,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "representatives_35": {
+     "parties": {
+      "dup-cleric": {
+       "high": 0.9313568089337279,
+       "low": 0.6824550744643347,
+       "rate": 0.84375,
+       "verdict": "met"
+      },
+      "dup-fighter": {
+       "high": 1.0,
+       "low": 0.8928172849426366,
+       "rate": 1.0,
+       "verdict": "met"
+      },
+      "dup-wizard": {
+       "high": 0.8897630306846815,
+       "low": 0.6124466920955516,
+       "rate": 0.78125,
+       "verdict": "met"
+      },
+      "familiar": {
+       "high": 0.9313568089337279,
+       "low": 0.6824550744643347,
+       "rate": 0.84375,
+       "verdict": "met"
+      },
+      "melee": {
+       "high": 0.8897630306846815,
+       "low": 0.6124466920955516,
+       "rate": 0.78125,
+       "verdict": "met"
+      },
+      "mixed": {
+       "high": 0.9111057606383721,
+       "low": 0.6469050424507756,
+       "rate": 0.8125,
+       "verdict": "met"
+      },
+      "ranged": {
+       "high": 0.8443559315435214,
+       "low": 0.546251630618882,
+       "rate": 0.71875,
+       "verdict": "met"
+      },
+      "support-heavy": {
+       "high": 0.8897630306846815,
+       "low": 0.6124466920955516,
+       "rate": 0.78125,
+       "verdict": "met"
+      },
+      "support-poor": {
+       "high": 0.8674775601737845,
+       "low": 0.5789310822975338,
+       "rate": 0.75,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "rotation_55_90": {
+     "high": 0.7936008204573437,
+     "low": 0.7632952309762717,
+     "rate": 0.7788194444444444,
+     "verdict": "met"
+    }
+   },
+   "rotation_win": 0.7788194444444444,
+   "rounds_max": 39,
+   "rounds_p99": 16,
+   "rounds_per_fight": 6.136436494197602,
+   "runs": 3168,
+   "slots": {
+    "1": {
+     "damage_share": 0.3124354711169583,
+     "death_share": 0.2733860342555995,
+     "down_share": 0.3721468739662587
+    },
+    "2": {
+     "damage_share": 0.24196216147155206,
+     "death_share": 0.2490118577075099,
+     "down_share": 0.24015878266622562
+    },
+    "3": {
+     "damage_share": 0.2186747882416721,
+     "death_share": 0.23748353096179184,
+     "down_share": 0.19878156356819937
+    },
+    "4": {
+     "damage_share": 0.22692757916981757,
+     "death_share": 0.24011857707509882,
+     "down_share": 0.18891277979931637
+    }
+   },
+   "stages": {
+    "1": {
+     "defeat_share": 0.0006313131313131314,
+     "defeats": 2,
+     "fights": 3168,
+     "revives": 0.34311868686868685,
+     "specials": 6.247790404040404
+    },
+    "2": {
+     "defeat_share": 0.0009475679090334807,
+     "defeats": 3,
+     "fights": 3166,
+     "revives": 0.45451674036639295,
+     "specials": 4.516740366392924
+    },
+    "3": {
+     "defeat_share": 0.012646221941195067,
+     "defeats": 40,
+     "fights": 3163,
+     "revives": 1.3193171040151754,
+     "specials": 1.8337021814732848
+    },
+    "4": {
+     "defeat_share": 0.04612427930813581,
+     "defeats": 144,
+     "fights": 3122,
+     "revives": 2.317104420243434,
+     "specials": 1.5035233824471492
+    },
+    "5": {
+     "defeat_share": 0.1682337139019476,
+     "defeats": 501,
+     "fights": 2978,
+     "revives": 6.714909335124244,
+     "specials": 1.385829415715245
+    }
+   },
+   "stalls": 1,
+   "win": 0.7818813131313131
+  }
+ },
+ "step": "m2-final",
+ "step_metrics": {
+  "gear": {
+   "class_median": 0.765625,
+   "class_spread": 0.08412828947368423,
+   "classes": {
+    "artificer": {
+     "death": 0.2203125,
+     "runs": 640,
+     "win": 0.7890625
+    },
+    "barbarian": {
+     "death": 0.21726190476190477,
+     "runs": 672,
+     "win": 0.7976190476190477
+    },
+    "bard": {
+     "death": 0.2890625,
+     "runs": 640,
+     "win": 0.7375
+    },
+    "cleric": {
+     "death": 0.24693627450980393,
+     "runs": 1472,
+     "win": 0.7663043478260869
+    },
+    "druid": {
+     "death": 0.24625,
+     "runs": 800,
+     "win": 0.7675
+    },
+    "fighter": {
+     "death": 0.20833333333333334,
+     "runs": 800,
+     "win": 0.8025
+    },
+    "monk": {
+     "death": 0.26802884615384615,
+     "runs": 800,
+     "win": 0.75625
+    },
+    "paladin": {
+     "death": 0.265625,
+     "runs": 800,
+     "win": 0.7625
+    },
+    "ranger": {
+     "death": 0.19196428571428573,
+     "runs": 640,
+     "win": 0.8078125
+    },
+    "rogue": {
+     "death": 0.29050925925925924,
+     "runs": 864,
+     "win": 0.7361111111111112
+    },
+    "sorcerer": {
+     "death": 0.2765625,
+     "runs": 608,
+     "win": 0.7236842105263158
+    },
+    "warlock": {
+     "death": 0.24759615384615385,
+     "runs": 768,
+     "win": 0.765625
+    },
+    "wizard": {
+     "death": 0.245,
+     "runs": 1536,
+     "win": 0.7623697916666666
+    }
+   },
+   "deadlocks": 0,
+   "deaths_per_run": 0.990530303030303,
+   "fights_over_15": 243,
+   "gates": {
+    "illegal_proposals": 0,
+    "passive_ends": 0,
+    "policy_errors": 0,
+    "protection_mismatches": 0
+   },
+   "holds": {
+    "dangerous_1_5x": "met",
+    "finale_highest": "met",
+    "representatives_35": "met",
+    "rotation_55_90": "met"
+   },
+   "holds_detail": {
+    "dangerous_1_5x": {
+     "fights": {
+      "1": {
+       "high": 2.7896467387362045,
+       "limit": 1.5,
+       "low": 2.1308381225854975,
+       "ratio": 2.4082351894979226,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "2": {
+       "high": 3.044770740588205,
+       "limit": 1.5,
+       "low": 2.2051032688412615,
+       "ratio": 2.572436426897556,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "3": {
+       "high": 2.7748959888886393,
+       "limit": 1.5,
+       "low": 1.8430654475524528,
+       "ratio": 2.260278924787688,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "4": {
+       "high": 6.5535641025354066,
+       "limit": 1.5,
+       "low": 2.746340903364244,
+       "ratio": 3.9790230200735346,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "5": {
+       "high": 2.407659060457257,
+       "limit": 1.5,
+       "low": 1.5360602080671486,
+       "ratio": 1.9079993273476317,
+       "sign_decided": 0,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "finale_highest": {
+     "stages": {
+      "1": {
+       "d": 0.16569468267581475,
+       "high": 0.205527046190689,
+       "low": 0.12741170616415054,
+       "verdict": "met"
+      },
+      "2": {
+       "d": 0.16569468267581475,
+       "high": 0.205527046190689,
+       "low": 0.12741170616415054,
+       "verdict": "met"
+      },
+      "3": {
+       "d": 0.1413891271202592,
+       "high": 0.18154490420911293,
+       "low": 0.10266074988109362,
+       "verdict": "met"
+      },
+      "4": {
+       "d": 0.10875518089645532,
+       "high": 0.14853896946709966,
+       "low": 0.07061456372091661,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "representatives_35": {
+     "parties": {
+      "dup-cleric": {
+       "high": 0.7183491403055682,
+       "low": 0.3932530203122613,
+       "rate": 0.5625,
+       "verdict": "met"
+      },
+      "dup-fighter": {
+       "high": 0.9826897968048427,
+       "low": 0.7985253275199642,
+       "rate": 0.9375,
+       "verdict": "met"
+      },
+      "dup-wizard": {
+       "high": 0.7706633153404079,
+       "low": 0.45254100589525126,
+       "rate": 0.625,
+       "verdict": "met"
+      },
+      "familiar": {
+       "high": 0.9675990373736805,
+       "low": 0.7578150066422116,
+       "rate": 0.90625,
+       "verdict": "met"
+      },
+      "melee": {
+       "high": 0.9313568089337279,
+       "low": 0.6824550744643347,
+       "rate": 0.84375,
+       "verdict": "met"
+      },
+      "mixed": {
+       "high": 0.950299461555257,
+       "low": 0.7193135021517204,
+       "rate": 0.875,
+       "verdict": "met"
+      },
+      "ranged": {
+       "high": 0.8443559315435214,
+       "low": 0.546251630618882,
+       "rate": 0.71875,
+       "verdict": "met"
+      },
+      "support-heavy": {
+       "high": 0.8897630306846815,
+       "low": 0.6124466920955516,
+       "rate": 0.78125,
+       "verdict": "met"
+      },
+      "support-poor": {
+       "high": 0.7958976664567146,
+       "low": 0.4831077350878594,
+       "rate": 0.65625,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "rotation_55_90": {
+     "high": 0.782768774708374,
+     "low": 0.7519346569918968,
+     "rate": 0.7677083333333333,
+     "verdict": "met"
+    }
+   },
+   "rescue": {
+    "fights": 15510,
+    "quick_redowns": 9934,
+    "quick_share": 0.22662256187977645,
+    "redowns": 28799,
+    "revives": 43835
+   },
+   "rotation_win": 0.7677083333333333,
+   "rounds_max": 34,
+   "rounds_p99": 17,
+   "rounds_per_fight": 5.847195357833655,
+   "runs": 3168,
+   "slots": {
+    "1": {
+     "damage_share": 0.25370771650982504,
+     "death_share": 0.26035691523263227,
+     "down_share": 0.25423362242360015
+    },
+    "2": {
+     "damage_share": 0.2433326393619734,
+     "death_share": 0.24697259400892288,
+     "down_share": 0.221186495663646
+    },
+    "3": {
+     "damage_share": 0.22245683108039022,
+     "death_share": 0.24155513065646908,
+     "down_share": 0.22793433830049528
+    },
+    "4": {
+     "damage_share": 0.28050281304781133,
+     "death_share": 0.25111536010197577,
+     "down_share": 0.2966455436122586
+    }
+   },
+   "stages": {
+    "1": {
+     "defeat_share": 0.0,
+     "defeats": 0,
+     "fights": 3168,
+     "revives": 0.45896464646464646,
+     "specials": 6.344381313131313
+    },
+    "2": {
+     "defeat_share": 0.0,
+     "defeats": 0,
+     "fights": 3168,
+     "revives": 0.8443813131313131,
+     "specials": 3.929608585858586
+    },
+    "3": {
+     "defeat_share": 0.024305555555555556,
+     "defeats": 77,
+     "fights": 3168,
+     "revives": 2.3926767676767677,
+     "specials": 0.8541666666666666
+    },
+    "4": {
+     "defeat_share": 0.05693950177935943,
+     "defeats": 176,
+     "fights": 3091,
+     "revives": 3.021999352960207,
+     "specials": 0.398576512455516
+    },
+    "5": {
+     "defeat_share": 0.16569468267581475,
+     "defeats": 483,
+     "fights": 2915,
+     "revives": 7.8164665523156085,
+     "specials": 0.2216123499142367
+    }
+   },
+   "stalls": 0,
+   "win": 0.7676767676767676
+  },
+  "honed": {
+   "class_median": 0.7766927083333334,
+   "class_spread": 0.13493421052631582,
+   "classes": {
+    "artificer": {
+     "death": 0.1984375,
+     "runs": 640,
+     "win": 0.8109375
+    },
+    "barbarian": {
+     "death": 0.24404761904761904,
+     "runs": 672,
+     "win": 0.7738095238095238
+    },
+    "bard": {
+     "death": 0.290625,
+     "runs": 640,
+     "win": 0.740625
+    },
+    "cleric": {
+     "death": 0.23958333333333334,
+     "runs": 1472,
+     "win": 0.7737771739130435
+    },
+    "druid": {
+     "death": 0.215,
+     "runs": 800,
+     "win": 0.79625
+    },
+    "fighter": {
+     "death": 0.16203703703703703,
+     "runs": 800,
+     "win": 0.84875
+    },
+    "monk": {
+     "death": 0.25721153846153844,
+     "runs": 800,
+     "win": 0.7675
+    },
+    "paladin": {
+     "death": 0.23076923076923078,
+     "runs": 800,
+     "win": 0.7875
+    },
+    "ranger": {
+     "death": 0.19940476190476192,
+     "runs": 640,
+     "win": 0.8
+    },
+    "rogue": {
+     "death": 0.2673611111111111,
+     "runs": 864,
+     "win": 0.7488425925925926
+    },
+    "sorcerer": {
+     "death": 0.2859375,
+     "runs": 608,
+     "win": 0.7138157894736842
+    },
+    "warlock": {
+     "death": 0.2283653846153846,
+     "runs": 768,
+     "win": 0.7877604166666666
+    },
+    "wizard": {
+     "death": 0.235,
+     "runs": 1536,
+     "win": 0.7766927083333334
+    }
+   },
+   "deadlocks": 0,
+   "deaths_per_run": 0.9371843434343434,
+   "fights_over_15": 294,
+   "gates": {
+    "illegal_proposals": 0,
+    "passive_ends": 0,
+    "policy_errors": 0,
+    "protection_mismatches": 0
+   },
+   "holds": {
+    "dangerous_1_5x": "met",
+    "finale_highest": "met",
+    "representatives_35": "met",
+    "rotation_55_90": "met"
+   },
+   "holds_detail": {
+    "dangerous_1_5x": {
+     "fights": {
+      "1": {
+       "high": 2.7896467387362045,
+       "limit": 1.5,
+       "low": 2.1308381225854975,
+       "ratio": 2.4082351894979226,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "2": {
+       "high": 3.049420723145894,
+       "limit": 1.5,
+       "low": 2.218800537638007,
+       "ratio": 2.5875266410736035,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "3": {
+       "high": 2.688523443958677,
+       "limit": 1.5,
+       "low": 1.8212207151013524,
+       "ratio": 2.2142052353545587,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "4": {
+       "high": 7.923049047163215,
+       "limit": 1.5,
+       "low": 3.1767238995933385,
+       "ratio": 4.707464359547,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "5": {
+       "high": 2.712268886123709,
+       "limit": 1.5,
+       "low": 1.6939607887214614,
+       "ratio": 2.1327013765990475,
+       "sign_decided": 0,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "finale_highest": {
+     "stages": {
+      "1": {
+       "d": 0.15827093260721578,
+       "high": 0.2021243814094735,
+       "low": 0.11669336942196777,
+       "verdict": "met"
+      },
+      "2": {
+       "d": 0.15827093260721578,
+       "high": 0.2021243814094735,
+       "low": 0.11669336942196777,
+       "verdict": "met"
+      },
+      "3": {
+       "d": 0.14027850836479153,
+       "high": 0.18864106466002944,
+       "low": 0.09494572981216873,
+       "verdict": "met"
+      },
+      "4": {
+       "d": 0.10266180370975517,
+       "high": 0.14354589278426635,
+       "low": 0.0637949246003953,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "representatives_35": {
+     "parties": {
+      "dup-cleric": {
+       "high": 0.8897630306846815,
+       "low": 0.6124466920955516,
+       "rate": 0.78125,
+       "verdict": "met"
+      },
+      "dup-fighter": {
+       "high": 0.9944622826374491,
+       "low": 0.8425539219962727,
+       "rate": 0.96875,
+       "verdict": "met"
+      },
+      "dup-wizard": {
+       "high": 0.8204764788338126,
+       "low": 0.514330003019676,
+       "rate": 0.6875,
+       "verdict": "met"
+      },
+      "familiar": {
+       "high": 0.9675990373736805,
+       "low": 0.7578150066422116,
+       "rate": 0.90625,
+       "verdict": "met"
+      },
+      "melee": {
+       "high": 0.9111057606383721,
+       "low": 0.6469050424507756,
+       "rate": 0.8125,
+       "verdict": "met"
+      },
+      "mixed": {
+       "high": 0.9111057606383721,
+       "low": 0.6469050424507756,
+       "rate": 0.8125,
+       "verdict": "met"
+      },
+      "ranged": {
+       "high": 0.8897630306846815,
+       "low": 0.6124466920955516,
+       "rate": 0.78125,
+       "verdict": "met"
+      },
+      "support-heavy": {
+       "high": 0.7706633153404079,
+       "low": 0.45254100589525126,
+       "rate": 0.625,
+       "verdict": "met"
+      },
+      "support-poor": {
+       "high": 0.8204764788338126,
+       "low": 0.514330003019676,
+       "rate": 0.6875,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "rotation_55_90": {
+     "high": 0.7949537376025173,
+     "low": 0.7647163912977661,
+     "rate": 0.7802083333333333,
+     "verdict": "met"
+    }
+   },
+   "rescue": {
+    "fights": 15553,
+    "quick_redowns": 9514,
+    "quick_share": 0.2250449427571199,
+    "redowns": 27769,
+    "revives": 42276
+   },
+   "rotation_win": 0.7802083333333333,
+   "rounds_max": 48,
+   "rounds_p99": 17,
+   "rounds_per_fight": 5.889860477078377,
+   "runs": 3168,
+   "slots": {
+    "1": {
+     "damage_share": 0.25198989823780643,
+     "death_share": 0.26002020882452004,
+     "down_share": 0.25308641975308643
+    },
+    "2": {
+     "damage_share": 0.24440747354634593,
+     "death_share": 0.2462108454024924,
+     "down_share": 0.2258361391694725
+    },
+    "3": {
+     "damage_share": 0.22301873757267202,
+     "death_share": 0.24385314920848772,
+     "down_share": 0.22900112233445566
+    },
+    "4": {
+     "damage_share": 0.2805838906431756,
+     "death_share": 0.24991579656449983,
+     "down_share": 0.2920763187429854
+    }
+   },
+   "stages": {
+    "1": {
+     "defeat_share": 0.0,
+     "defeats": 0,
+     "fights": 3168,
+     "revives": 0.45896464646464646,
+     "specials": 6.344381313131313
+    },
+    "2": {
+     "defeat_share": 0.0,
+     "defeats": 0,
+     "fights": 3168,
+     "revives": 0.7787247474747475,
+     "specials": 4.6208964646464645
+    },
+    "3": {
+     "defeat_share": 0.017992424242424244,
+     "defeats": 57,
+     "fights": 3168,
+     "revives": 2.0795454545454546,
+     "specials": 2.4510732323232323
+    },
+    "4": {
+     "defeat_share": 0.05560912889746062,
+     "defeats": 173,
+     "fights": 3111,
+     "revives": 2.7862423657987785,
+     "specials": 2.2082931533269043
+    },
+    "5": {
+     "defeat_share": 0.15827093260721578,
+     "defeats": 465,
+     "fights": 2938,
+     "revives": 7.86215112321307,
+     "specials": 2.113002042205582
+    }
+   },
+   "stalls": 0,
+   "win": 0.7806186868686869
+  },
+  "mixed": {
+   "class_median": 0.7827380952380952,
+   "class_spread": 0.09815789473684211,
+   "classes": {
+    "artificer": {
+     "death": 0.1984375,
+     "runs": 640,
+     "win": 0.8125
+    },
+    "barbarian": {
+     "death": 0.23511904761904762,
+     "runs": 672,
+     "win": 0.7827380952380952
+    },
+    "bard": {
+     "death": 0.2703125,
+     "runs": 640,
+     "win": 0.75
+    },
+    "cleric": {
+     "death": 0.22977941176470587,
+     "runs": 1472,
+     "win": 0.7846467391304348
+    },
+    "druid": {
+     "death": 0.2225,
+     "runs": 800,
+     "win": 0.78375
+    },
+    "fighter": {
+     "death": 0.1840277777777778,
+     "runs": 800,
+     "win": 0.835
+    },
+    "monk": {
+     "death": 0.26802884615384615,
+     "runs": 800,
+     "win": 0.76375
+    },
+    "paladin": {
+     "death": 0.23317307692307693,
+     "runs": 800,
+     "win": 0.7925
+    },
+    "ranger": {
+     "death": 0.19345238095238096,
+     "runs": 640,
+     "win": 0.8078125
+    },
+    "rogue": {
+     "death": 0.2488425925925926,
+     "runs": 864,
+     "win": 0.7650462962962963
+    },
+    "sorcerer": {
+     "death": 0.265625,
+     "runs": 608,
+     "win": 0.7368421052631579
+    },
+    "warlock": {
+     "death": 0.23317307692307693,
+     "runs": 768,
+     "win": 0.7760416666666666
+    },
+    "wizard": {
+     "death": 0.23875,
+     "runs": 1536,
+     "win": 0.7779947916666666
+    }
+   },
+   "deadlocks": 0,
+   "deaths_per_run": 0.9248737373737373,
+   "fights_over_15": 299,
+   "gates": {
+    "illegal_proposals": 0,
+    "passive_ends": 0,
+    "policy_errors": 0,
+    "protection_mismatches": 0
+   },
+   "holds": {
+    "dangerous_1_5x": "met",
+    "finale_highest": "met",
+    "representatives_35": "met",
+    "rotation_55_90": "met"
+   },
+   "holds_detail": {
+    "dangerous_1_5x": {
+     "fights": {
+      "1": {
+       "high": 2.7896467387362045,
+       "limit": 1.5,
+       "low": 2.1308381225854975,
+       "ratio": 2.4082351894979226,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "2": {
+       "high": 2.9391126020185907,
+       "limit": 1.5,
+       "low": 2.1817674415606523,
+       "ratio": 2.518108419545154,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "3": {
+       "high": 2.732249458933211,
+       "limit": 1.5,
+       "low": 1.8947870271902474,
+       "ratio": 2.2710324630005956,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "4": {
+       "high": 8.566041295263961,
+       "limit": 1.5,
+       "low": 3.143508550469459,
+       "ratio": 4.8356847769469224,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "5": {
+       "high": 2.7088241519855782,
+       "limit": 1.5,
+       "low": 1.6858184971472392,
+       "ratio": 2.100658061555187,
+       "sign_decided": 0,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "finale_highest": {
+     "stages": {
+      "1": {
+       "d": 0.15801966768396067,
+       "high": 0.20192646756551655,
+       "low": 0.11726149033188654,
+       "verdict": "met"
+      },
+      "2": {
+       "d": 0.15801966768396067,
+       "high": 0.20192646756551655,
+       "low": 0.11726149033188654,
+       "verdict": "met"
+      },
+      "3": {
+       "d": 0.13781764748194048,
+       "high": 0.18420119208545047,
+       "low": 0.09417446371539158,
+       "verdict": "met"
+      },
+      "4": {
+       "d": 0.10808410067365139,
+       "high": 0.14776170082309067,
+       "low": 0.07125054095071129,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "representatives_35": {
+     "parties": {
+      "dup-cleric": {
+       "high": 0.9313568089337279,
+       "low": 0.6824550744643347,
+       "rate": 0.84375,
+       "verdict": "met"
+      },
+      "dup-fighter": {
+       "high": 0.9944622826374491,
+       "low": 0.8425539219962727,
+       "rate": 0.96875,
+       "verdict": "met"
+      },
+      "dup-wizard": {
+       "high": 0.7706633153404079,
+       "low": 0.45254100589525126,
+       "rate": 0.625,
+       "verdict": "met"
+      },
+      "familiar": {
+       "high": 0.9675990373736805,
+       "low": 0.7578150066422116,
+       "rate": 0.90625,
+       "verdict": "met"
+      },
+      "melee": {
+       "high": 0.9944622826374491,
+       "low": 0.8425539219962727,
+       "rate": 0.96875,
+       "verdict": "met"
+      },
+      "mixed": {
+       "high": 0.8674775601737845,
+       "low": 0.5789310822975338,
+       "rate": 0.75,
+       "verdict": "met"
+      },
+      "ranged": {
+       "high": 0.8674775601737845,
+       "low": 0.5789310822975338,
+       "rate": 0.75,
+       "verdict": "met"
+      },
+      "support-heavy": {
+       "high": 0.8443559315435214,
+       "low": 0.546251630618882,
+       "rate": 0.71875,
+       "verdict": "met"
+      },
+      "support-poor": {
+       "high": 0.7706633153404079,
+       "low": 0.45254100589525126,
+       "rate": 0.625,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "rotation_55_90": {
+     "high": 0.7973207465002219,
+     "low": 0.7672040179667308,
+     "rate": 0.7826388888888889,
+     "verdict": "met"
+    }
+   },
+   "rescue": {
+    "fights": 15557,
+    "quick_redowns": 9633,
+    "quick_share": 0.2243049410888092,
+    "redowns": 28127,
+    "revives": 42946
+   },
+   "rotation_win": 0.7826388888888889,
+   "rounds_max": 35,
+   "rounds_p99": 17,
+   "rounds_per_fight": 5.924278459857299,
+   "runs": 3168,
+   "slots": {
+    "1": {
+     "damage_share": 0.25445040237177385,
+     "death_share": 0.2593856655290102,
+     "down_share": 0.2567989201389657
+    },
+    "2": {
+     "damage_share": 0.2414654001400711,
+     "death_share": 0.2477815699658703,
+     "down_share": 0.22176982142461996
+    },
+    "3": {
+     "damage_share": 0.22296585434299035,
+     "death_share": 0.24505119453924915,
+     "down_share": 0.2270363567967073
+    },
+    "4": {
+     "damage_share": 0.2811183431451647,
+     "death_share": 0.2477815699658703,
+     "down_share": 0.294394901639707
+    }
+   },
+   "stages": {
+    "1": {
+     "defeat_share": 0.0,
+     "defeats": 0,
+     "fights": 3168,
+     "revives": 0.45896464646464646,
+     "specials": 6.344381313131313
+    },
+    "2": {
+     "defeat_share": 0.0,
+     "defeats": 0,
+     "fights": 3168,
+     "revives": 0.7998737373737373,
+     "specials": 5.150252525252525
+    },
+    "3": {
+     "defeat_share": 0.020202020202020204,
+     "defeats": 64,
+     "fights": 3168,
+     "revives": 2.151199494949495,
+     "specials": 3.216540404040404
+    },
+    "4": {
+     "defeat_share": 0.04993556701030928,
+     "defeats": 155,
+     "fights": 3104,
+     "revives": 2.841494845360825,
+     "specials": 3.0103092783505154
+    },
+    "5": {
+     "defeat_share": 0.15801966768396067,
+     "defeats": 466,
+     "fights": 2949,
+     "revives": 7.908782638182434,
+     "specials": 3.1614106476771786
+    }
+   },
+   "stalls": 0,
+   "win": 0.7837752525252525
+  },
+  "reserve": {
+   "class_median": 0.7767857142857143,
+   "class_spread": 0.09973684210526312,
+   "classes": {
+    "artificer": {
+     "death": 0.2015625,
+     "runs": 640,
+     "win": 0.809375
+    },
+    "barbarian": {
+     "death": 0.24107142857142858,
+     "runs": 672,
+     "win": 0.7767857142857143
+    },
+    "bard": {
+     "death": 0.2625,
+     "runs": 640,
+     "win": 0.7546875
+    },
+    "cleric": {
+     "death": 0.23284313725490197,
+     "runs": 1472,
+     "win": 0.7819293478260869
+    },
+    "druid": {
+     "death": 0.22875,
+     "runs": 800,
+     "win": 0.77875
+    },
+    "fighter": {
+     "death": 0.18287037037037038,
+     "runs": 800,
+     "win": 0.83
+    },
+    "monk": {
+     "death": 0.26802884615384615,
+     "runs": 800,
+     "win": 0.77
+    },
+    "paladin": {
+     "death": 0.2403846153846154,
+     "runs": 800,
+     "win": 0.77625
+    },
+    "ranger": {
+     "death": 0.1875,
+     "runs": 640,
+     "win": 0.809375
+    },
+    "rogue": {
+     "death": 0.24421296296296297,
+     "runs": 864,
+     "win": 0.7708333333333334
+    },
+    "sorcerer": {
+     "death": 0.2734375,
+     "runs": 608,
+     "win": 0.7302631578947368
+    },
+    "warlock": {
+     "death": 0.234375,
+     "runs": 768,
+     "win": 0.77734375
+    },
+    "wizard": {
+     "death": 0.24375,
+     "runs": 1536,
+     "win": 0.7721354166666666
+    }
+   },
+   "deadlocks": 0,
+   "deaths_per_run": 0.9283459595959596,
+   "fights_over_15": 291,
+   "gates": {
+    "illegal_proposals": 0,
+    "passive_ends": 0,
+    "policy_errors": 0,
+    "protection_mismatches": 0
+   },
+   "holds": {
+    "dangerous_1_5x": "met",
+    "finale_highest": "met",
+    "representatives_35": "met",
+    "rotation_55_90": "met"
+   },
+   "holds_detail": {
+    "dangerous_1_5x": {
+     "fights": {
+      "1": {
+       "high": 2.7896467387362045,
+       "limit": 1.5,
+       "low": 2.1308381225854975,
+       "ratio": 2.4082351894979226,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "2": {
+       "high": 2.9596658324169547,
+       "limit": 1.5,
+       "low": 2.205947242427321,
+       "ratio": 2.5393209325994133,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "3": {
+       "high": 2.6845034923829676,
+       "limit": 1.5,
+       "low": 1.8583143105623503,
+       "ratio": 2.2298801316968473,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "4": {
+       "high": 9.795540489346566,
+       "limit": 1.5,
+       "low": 3.182121674326668,
+       "ratio": 5.057506091759215,
+       "sign_decided": 0,
+       "verdict": "met"
+      },
+      "5": {
+       "high": 2.7004102364159066,
+       "limit": 1.5,
+       "low": 1.7049768753706105,
+       "ratio": 2.1150578773287987,
+       "sign_decided": 0,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "finale_highest": {
+     "stages": {
+      "1": {
+       "d": 0.1602846492714334,
+       "high": 0.20616378944551064,
+       "low": 0.11856829773290657,
+       "verdict": "met"
+      },
+      "2": {
+       "d": 0.1602846492714334,
+       "high": 0.20616378944551064,
+       "low": 0.11856829773290657,
+       "verdict": "met"
+      },
+      "3": {
+       "d": 0.1410295987663829,
+       "high": 0.18822074628370586,
+       "low": 0.09653302299409586,
+       "verdict": "met"
+      },
+      "4": {
+       "d": 0.11007544425051291,
+       "high": 0.15097532718405585,
+       "low": 0.07256420750284316,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "representatives_35": {
+     "parties": {
+      "dup-cleric": {
+       "high": 0.8897630306846815,
+       "low": 0.6124466920955516,
+       "rate": 0.78125,
+       "verdict": "met"
+      },
+      "dup-fighter": {
+       "high": 0.9944622826374491,
+       "low": 0.8425539219962727,
+       "rate": 0.96875,
+       "verdict": "met"
+      },
+      "dup-wizard": {
+       "high": 0.8204764788338126,
+       "low": 0.514330003019676,
+       "rate": 0.6875,
+       "verdict": "met"
+      },
+      "familiar": {
+       "high": 0.9826897968048427,
+       "low": 0.7985253275199642,
+       "rate": 0.9375,
+       "verdict": "met"
+      },
+      "melee": {
+       "high": 0.9826897968048427,
+       "low": 0.7985253275199642,
+       "rate": 0.9375,
+       "verdict": "met"
+      },
+      "mixed": {
+       "high": 0.8674775601737845,
+       "low": 0.5789310822975338,
+       "rate": 0.75,
+       "verdict": "met"
+      },
+      "ranged": {
+       "high": 0.8674775601737845,
+       "low": 0.5789310822975338,
+       "rate": 0.75,
+       "verdict": "met"
+      },
+      "support-heavy": {
+       "high": 0.8897630306846815,
+       "low": 0.6124466920955516,
+       "rate": 0.78125,
+       "verdict": "met"
+      },
+      "support-poor": {
+       "high": 0.7958976664567146,
+       "low": 0.4831077350878594,
+       "rate": 0.65625,
+       "verdict": "met"
+      }
+     },
+     "verdict": "met"
+    },
+    "rotation_55_90": {
+     "high": 0.7946155314358971,
+     "low": 0.7643610780977195,
+     "rate": 0.7798611111111111,
+     "verdict": "met"
+    }
+   },
+   "rescue": {
+    "fights": 15562,
+    "quick_redowns": 9767,
+    "quick_share": 0.22576394988673662,
+    "redowns": 28330,
+    "revives": 43262
+   },
+   "rotation_win": 0.7798611111111111,
+   "rounds_max": 35,
+   "rounds_p99": 17,
+   "rounds_per_fight": 5.936833311913635,
+   "runs": 3168,
+   "slots": {
+    "1": {
+     "damage_share": 0.25515376409594515,
+     "death_share": 0.2597755865351921,
+     "down_share": 0.25814602421286226
+    },
+    "2": {
+     "damage_share": 0.24144972416134694,
+     "death_share": 0.2471948316899014,
+     "down_share": 0.22178278733548656
+    },
+    "3": {
+     "damage_share": 0.22196764103169195,
+     "death_share": 0.24413464807888474,
+     "down_share": 0.22485883154263617
+    },
+    "4": {
+     "damage_share": 0.28142887071101597,
+     "death_share": 0.24889493369602175,
+     "down_share": 0.295212356909015
+    }
+   },
+   "stages": {
+    "1": {
+     "defeat_share": 0.0,
+     "defeats": 0,
+     "fights": 3168,
+     "revives": 0.45896464646464646,
+     "specials": 6.344381313131313
+    },
+    "2": {
+     "defeat_share": 0.0,
+     "defeats": 0,
+     "fights": 3168,
+     "revives": 0.8001893939393939,
+     "specials": 5.179292929292929
+    },
+    "3": {
+     "defeat_share": 0.019255050505050504,
+     "defeats": 61,
+     "fights": 3168,
+     "revives": 2.1458333333333335,
+     "specials": 3.3434343434343434
+    },
+    "4": {
+     "defeat_share": 0.0502092050209205,
+     "defeats": 156,
+     "fights": 3107,
+     "revives": 2.850016092693917,
+     "specials": 3.0955906018667525
+    },
+    "5": {
+     "defeat_share": 0.1602846492714334,
+     "defeats": 473,
+     "fights": 2951,
+     "revives": 8.004066418163335,
+     "specials": 3.2189088444595053
+    }
+   },
+   "stalls": 0,
+   "win": 0.7821969696969697
+  }
+ }
+}

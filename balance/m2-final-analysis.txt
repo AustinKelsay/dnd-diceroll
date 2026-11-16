@@ -1,0 +1,24 @@
+step m2-final vs m2-r10
+  gear     win 78.6 -> 76.8 (paired -1.9 [-5.1,+1.7])  rot 76.8  deaths/run 0.95 -> 0.99  rounds 5.98 -> 5.85 p99 17 max 34 >15 243  stalls 0 gates 0
+  reserve  win 78.2 -> 78.2 (paired +0.0 [-2.4,+2.8])  rot 78.0  deaths/run 0.96 -> 0.93  rounds 6.14 -> 5.94 p99 17 max 35 >15 291  stalls 0 gates 0
+  honed    win 75.0 -> 78.1 (paired +3.1 [-0.1,+6.7])  rot 78.0  deaths/run 1.09 -> 0.94  rounds 6.20 -> 5.89 p99 17 max 48 >15 294  stalls 0 gates 0
+  mixed    win 77.8 -> 78.4 (paired +0.5 [-2.2,+3.7])  rot 78.3  deaths/run 0.98 -> 0.92  rounds 6.14 -> 5.92 p99 17 max 35 >15 299  stalls 0 gates 0
+  mixed defeat share by fight: {'1': '0.0%', '2': '0.0%', '3': '2.0%', '4': '5.0%', '5': '15.8%'} holds {'rotation_55_90': 'met', 'representatives_35': 'met', 'dangerous_1_5x': 'met', 'finale_highest': 'met'}
+  mixed specials per fight: {'1': 6.34, '2': 5.15, '3': 3.22, '4': 3.01, '5': 3.16}  revives/fight: {'1': 0.46, '2': 0.8, '3': 2.15, '4': 2.84, '5': 7.91}
+  mixed slot shares (damage/death/down): {'1': '25/26/26', '2': '24/25/22', '3': '22/25/23', '4': '28/25/29'}
+  mixed classes: {'artificer': '81.2/20', 'barbarian': '78.3/24', 'bard': '75.0/27', 'cleric': '78.5/23', 'druid': '78.4/22', 'fighter': '83.5/18', 'monk': '76.4/27', 'paladin': '79.2/23', 'ranger': '80.8/19', 'rogue': '76.5/25', 'sorcerer': '73.7/27', 'warlock': '77.6/23', 'wizard': '77.8/24'} median 78.3 spread 9.8
+  rescue: {'fights': 15557, 'revives': 42946, 'redowns': 28127, 'quick_redowns': 9633, 'quick_share': 0.2243049410888092}
+  P2 best: {'gear': 0, 'reserve': 0, 'honed': 0} verdict inconclusive  P3 largest 1.2 met  rise 0.8  non-dominance False
+    artificer  gear-honed  -2.2 tie    gear-reserve  -2.0 tie    honed-reserve  +0.2 tie    best None
+    barbarian  gear-honed  +2.4 tie    gear-reserve  +2.1 tie    honed-reserve  -0.3 tie    best None
+    bard       gear-honed  -0.3 tie    gear-reserve  -1.7 tie    honed-reserve  -1.4 tie    best None
+    cleric     gear-honed  -0.7 tie    gear-reserve  -1.6 tie    honed-reserve  -0.8 tie    best None
+    druid      gear-honed  -2.9 tie    gear-reserve  -1.1 tie    honed-reserve  +1.8 tie    best None
+    fighter    gear-honed  -4.6 small  gear-reserve  -2.8 tie    honed-reserve  +1.9 tie    best None
+    monk       gear-honed  -1.1 tie    gear-reserve  -1.4 tie    honed-reserve  -0.2 tie    best None
+    paladin    gear-honed  -2.5 tie    gear-reserve  -1.4 tie    honed-reserve  +1.1 tie    best None
+    ranger     gear-honed  +0.8 tie    gear-reserve  -0.2 tie    honed-reserve  -0.9 tie    best None
+    rogue      gear-honed  -1.3 tie    gear-reserve  -3.5 tie    honed-reserve  -2.2 tie    best None
+    sorcerer   gear-honed  +1.0 tie    gear-reserve  -0.7 tie    honed-reserve  -1.6 tie    best None
+    warlock    gear-honed  -2.2 tie    gear-reserve  -1.2 tie    honed-reserve  +1.0 tie    best None
+    wizard     gear-honed  -1.4 tie    gear-reserve  -1.0 tie    honed-reserve  +0.5 tie    best None
