@@ -29,7 +29,26 @@ bool AExpeditionBattleView::SetPieceBusy() const
 
 void AExpeditionBattleView::OnSetPieceCue(TFunction<void(EWaystoneCue)> Handler)
 {
-    if (SetPieceComponent) { SetPieceComponent->OnCue = MoveTemp(Handler); }
+    // The component's hook stays the view's (it sounds the moment); a listener set here hears the same moments after it.
+    SetPieceListener = MoveTemp(Handler);
+    if (SetPieceComponent) { SetPieceComponent->OnCue = [this](EWaystoneCue Cue) { HandleSetPieceCue(Cue); }; }
+}
+
+TOptional<EExpeditionCue> AExpeditionBattleView::SetPieceSound(EWaystoneCue Cue)
+{
+    switch (Cue)
+    {
+    case EWaystoneCue::Flare: return EExpeditionCue::WaystoneFlare;
+    case EWaystoneCue::Shatter: return EExpeditionCue::WaystoneShatter;
+    default: return {};
+    }
+}
+
+void AExpeditionBattleView::HandleSetPieceCue(EWaystoneCue Cue)
+{
+    // The component announces a moment only when its timeline passes it (Play, Advance); Settle (skip, Instant, Resume) is silent, so each sounds once.
+    if (const TOptional<EExpeditionCue> Sound = SetPieceSound(Cue)) { PlayCue(*Sound); }
+    if (SetPieceListener) { SetPieceListener(Cue); }
 }
 
 FLinearColor AExpeditionBattleView::ArtifactShownColour() const

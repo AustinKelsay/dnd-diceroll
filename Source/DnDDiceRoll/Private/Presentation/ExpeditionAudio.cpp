@@ -112,6 +112,7 @@ float Volume(EExpeditionCue Cue)
     case EExpeditionCue::PartyTurn: case EExpeditionCue::EnemyTurn: return 0.35f;
     case EExpeditionCue::SpendKit: case EExpeditionCue::SpendSlot: case EExpeditionCue::SpendPotion: case EExpeditionCue::RoundStart: return 0.4f;
     case EExpeditionCue::Finale: case EExpeditionCue::RunEnd: return 0.6f;
+    case EExpeditionCue::WaystoneFlare: case EExpeditionCue::WaystoneShatter: return 0.6f;
     default: return 0.55f;
     }
 }
@@ -357,6 +358,25 @@ TArray<int16> Synthesize(EExpeditionCue Cue, int32 Variation)
         for (const float Start : {0.0f, 1.0f}) { Mix.Tone(Start, 1.3f, 131 * Pitch, 130, 0.3f, 0.003f); Mix.Tone(Start, 0.9f, 315 * Pitch, 315, 0.12f, 0.003f); }
         Mix.Tone(0.0f, 2.2f, 65, 62, 0.15f, 0.2f, 0.2f);
         Mix.Burst(0.0f, 0.15f, 0.3f, 0.08f);
+        return Mix.Finish();
+    }
+    case EExpeditionCue::WaystoneFlare:
+    {
+        // A shimmer swelling into the shatter: rising partials over filtered noise that brightens.
+        FMix Mix(1.45f, Variation);
+        Mix.Sweep(0.0f, 1.35f, 0.35f, 0.2f, 0.95f);
+        Mix.Tone(0.0f, 1.35f, 523 * Pitch, 1047 * Pitch, 0.12f, 1.0f);
+        Mix.Tone(0.0f, 1.35f, 784 * Pitch, 1568 * Pitch, 0.08f, 1.0f);
+        return Mix.Finish();
+    }
+    case EExpeditionCue::WaystoneShatter:
+    {
+        // Stone and glass breaking with a low ring under it.
+        FMix Mix(2.4f, Variation);
+        Mix.Burst(0.0f, 0.25f, 0.9f, 0.9f);
+        Mix.Burst(0.0f, 0.4f, 0.7f, 0.3f);
+        Mix.Tone(0.0f, 2.2f, 98 * Pitch, 92, 0.35f, 0.003f);
+        Mix.Tone(0.02f, 1.2f, 2350 * Pitch, 2300, 0.08f, 0.002f);
         return Mix.Finish();
     }
     default:

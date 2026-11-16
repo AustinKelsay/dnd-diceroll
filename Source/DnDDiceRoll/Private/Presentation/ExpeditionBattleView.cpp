@@ -772,6 +772,8 @@ void AExpeditionBattleView::BeginPlay()
         *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Master)), *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Effects)),
         *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Ambience)), *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Music)));
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
+    // The finale set piece's Flare and Shatter sound their own cues (#246).
+    OnSetPieceCue(nullptr);
     Show.OnShake = [this](float Amount) { Shake(Amount); };
     Feedback.Add(TEXT("Welcome. Start a new expedition or continue your saved one."));
     bUnfinishedCheckpoint = Session.HasUnfinishedCheckpoint();
@@ -2692,7 +2694,8 @@ FExpeditionMusicMoment AExpeditionBattleView::MusicMoment() const
     Now.Phase = Progress().Phase;
     Now.Encounter = Progress().History.Num();
     Now.bFinale = !Progress().History.IsEmpty() && FExpeditionRun::Encounter(Progress(), Progress().History.Last().Route).World == EExpeditionWorld::Vault;
-    Now.bPresenting = IsPresenting();
+    // The finale set piece counts as presenting too: the victory sting follows it once the Waystone has settled (#246).
+    Now.bPresenting = IsPresenting() || SetPieceBusy();
     return Now;
 }
 

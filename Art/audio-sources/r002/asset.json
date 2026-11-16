@@ -69,7 +69,7 @@
       },
       "true_peak_ceiling_dbtp": -1.0,
       "sample_rate": 48000,
-      "variations": 60,
+      "variations": 62,
       "cue_limit_db_overrides": {
         "PartyTurn": 0,
         "EnemyTurn": 0,
@@ -88,7 +88,7 @@
     {
       "role": "source",
       "path": "Art/audio-sources/r002/recipe.json",
-      "sha256": "70d72ec6300eb64668d1e9f11ef975684acb8a2a06e616fa44756414c3e01a82"
+      "sha256": "5e5d637f9929ae3bf881c67ec733f477bccea10c5ba72b918af4543476564ed7"
     },
     {
       "role": "export",
@@ -389,6 +389,16 @@
       "role": "export",
       "path": "Art/audio-sources/r002/cues/RunEnd_01.wav",
       "sha256": "206ae27a3aaf3296acde1fd47d16ae2b9fa60cf54e19a2b114d5b59a595fbc27"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/WaystoneFlare_01.wav",
+      "sha256": "cf18f271801a1a2691feb55bdd333dd53b489775769f099f8074d44eda6e3eca"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/WaystoneShatter_01.wav",
+      "sha256": "2a181062a9eab4558055473eae744cc21fa97e49e899e2f77dee02564bbce690"
     }
   ],
   "import_policy": {

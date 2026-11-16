@@ -447,8 +447,13 @@ public:
      */
     const UWaystoneSetPiece* SetPiece() const;
     bool SetPieceBusy() const;
-    /** The set piece's sound and music hook (#243, #245): called once per cue as it plays (never on skip, Instant or Resume). Nothing is attached today. */
+    /**
+     * The set piece's moments, called once each as it plays (never on skip, Instant or Resume). The view itself sounds Flare and Shatter
+     * (#246) and holds the run's victory sting until the set piece has settled; a handler set here (tests) hears the same moments after it.
+     */
     void OnSetPieceCue(TFunction<void(EWaystoneCue)> Handler);
+    /** The cue a set-piece moment sounds (#246): Flare and Shatter have their own; Lift and Settled none (the Finale cue already played at the winning blow). */
+    static TOptional<EExpeditionCue> SetPieceSound(EWaystoneCue Cue);
     /** Capture support: holds the set piece at a time in its timeline (a time at or past its end shows the settled state); Clear lets it settle. */
     bool PreviewSetPiece(float Seconds);
     void ClearSetPiecePreview();
@@ -746,6 +751,9 @@ private:
     UPROPERTY() TObjectPtr<UPointLightComponent> WaystoneLight;
     /** The finale's set piece (#250): a component of this actor under the scenery root, rebuilt with each board (ExpeditionBattleViewSetPiece.cpp). */
     UPROPERTY() TObjectPtr<UWaystoneSetPiece> SetPieceComponent;
+    /** Whoever else listens to the set piece's moments (tests); the view always sounds them first. */
+    TFunction<void(EWaystoneCue)> SetPieceListener;
+    void HandleSetPieceCue(EWaystoneCue Cue);
     TArray<FSoftObjectPath> SetPieceMeshOverride;
     /** Builds the set piece around the Waystone's pedestal (scenery-local, reference cm): the apse on a Vault-kit board, the legacy corner pedestal otherwise. */
     void BuildSetPiece(const FVector& Pedestal, bool bApse, const FCombatEncounter& Encounter);

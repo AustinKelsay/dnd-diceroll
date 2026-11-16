@@ -14,8 +14,10 @@ enum class EExpeditionCue : uint8
 {
     DiceRoll, DiceLand, Hit, Critical, Miss, Heal, Step, Click, Downed, Death,
     PartyTurn, EnemyTurn, Victory, Defeat, Spell, Bow, Swing, Camp, Loot, Route,
-    SpendKit, SpendSlot, SpendPotion, SpendRage, Protection, RoundStart, Finale, RunEnd
+    SpendKit, SpendSlot, SpendPotion, SpendRage, Protection, RoundStart, Finale, RunEnd,
+    /** The finale set piece (#250, #246): the Waystone's flare building to the shatter, and the seal shattering. */
+    WaystoneFlare, WaystoneShatter
 };
 
 /** How many cues there are; a test checks it against the reflected enum, so a new cue must update it. */
-constexpr int32 ExpeditionCueCount = static_cast<int32>(EExpeditionCue::RunEnd) + 1;
+constexpr int32 ExpeditionCueCount = static_cast<int32>(EExpeditionCue::WaystoneShatter) + 1;

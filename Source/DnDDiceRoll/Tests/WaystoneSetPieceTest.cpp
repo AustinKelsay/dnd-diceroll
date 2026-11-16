@@ -264,6 +264,9 @@ bool FWaystoneConvergenceTest::RunTest(const FString& Parameters)
         for (int32 Frame = 0; Frame < 60; ++Frame) { Played->Tick(1.0f / 30.0f); }
         TestEqual(FString::Printf(TEXT("%s: a settled set piece writes nothing per frame"), Name), Piece->PieceWrites(), SettledWrites);
         TestEqual(FString::Printf(TEXT("%s: no cue after it settles"), Name), Cues.Num(), 4);
+        // #246: the flare and the shatter sound once each when played.
+        TestEqual(FString::Printf(TEXT("%s: the flare sounds once"), Name), Played->CueRequests(EExpeditionCue::WaystoneFlare), 1u);
+        TestEqual(FString::Printf(TEXT("%s: the shatter sounds once"), Name), Played->CueRequests(EExpeditionCue::WaystoneShatter), 1u);
         const TArray<FTransform> Settled = Piece->PieceTransforms();
         const FTransform SettledCamera = Played->CameraTransform();
         const FLinearColor SettledColour = Played->ArtifactShownColour();
@@ -283,6 +286,8 @@ bool FWaystoneConvergenceTest::RunTest(const FString& Parameters)
                 TestTrue(FString::Printf(TEXT("%s: the resumed camera holds the same shot"), Name), Resumed->CameraTransform().Equals(SettledCamera, 0.5));
                 TestTrue(FString::Printf(TEXT("%s: the resumed artifact has the played colour"), Name), SameColour(Resumed->ArtifactShownColour(), SettledColour));
                 TestTrue(FString::Printf(TEXT("%s: Resume writes nothing"), Name), ReadCheckpoint(FPaths::Combine(Base, TEXT("resumed/current.json"))) == PlayedFile);
+                Resumed->Tick(1.0f / 30.0f);
+                TestEqual(FString::Printf(TEXT("%s: a resumed victory sounds no set-piece cue"), Name), Resumed->CueRequests(EExpeditionCue::WaystoneFlare) + Resumed->CueRequests(EExpeditionCue::WaystoneShatter), 0u);
             }
         }
 
@@ -305,6 +310,8 @@ bool FWaystoneConvergenceTest::RunTest(const FString& Parameters)
                 TestTrue(FString::Printf(TEXT("%s: the skipped camera holds the same shot"), Name), Skipped->CameraTransform().Equals(SettledCamera, 0.5));
                 TestTrue(FString::Printf(TEXT("%s: the skipped artifact has the played colour"), Name), SameColour(Skipped->ArtifactShownColour(), SettledColour));
                 TestTrue(FString::Printf(TEXT("%s: skip stops the cues"), Name), Heard == TArray<EWaystoneCue>({EWaystoneCue::Flare, EWaystoneCue::Shatter}));
+                TestTrue(FString::Printf(TEXT("%s: the skipped set piece sounded its flare and shatter once each"), Name),
+                    Skipped->CueRequests(EExpeditionCue::WaystoneFlare) == 1u && Skipped->CueRequests(EExpeditionCue::WaystoneShatter) == 1u);
                 TestTrue(FString::Printf(TEXT("%s: skipping changes no checkpoint byte"), Name), ReadCheckpoint(FPaths::Combine(Base, TEXT("skipped/current.json"))) == PlayedFile);
             }
             else { AddError(FString::Printf(TEXT("%s: the skip board has no set piece"), Name)); }
@@ -326,6 +333,7 @@ bool FWaystoneConvergenceTest::RunTest(const FString& Parameters)
                 TestTrue(FString::Printf(TEXT("%s: converged pieces lie where the played ones did"), Name), SamePieces(Set->PieceTransforms(), Settled));
                 TestTrue(FString::Printf(TEXT("%s: the converged artifact has the played colour"), Name), SameColour(Early->ArtifactShownColour(), SettledColour));
                 TestEqual(FString::Printf(TEXT("%s: converging is silent"), Name), Heard.Num(), 0);
+                TestEqual(FString::Printf(TEXT("%s: converging sounds no set-piece cue"), Name), Early->CueRequests(EExpeditionCue::WaystoneFlare) + Early->CueRequests(EExpeditionCue::WaystoneShatter), 0u);
             }
         }
 
@@ -346,6 +354,7 @@ bool FWaystoneConvergenceTest::RunTest(const FString& Parameters)
                 TestTrue(FString::Printf(TEXT("%s: Instant pieces lie where the played ones did"), Name), SamePieces(Set->PieceTransforms(), Settled));
                 TestTrue(FString::Printf(TEXT("%s: the Instant artifact has the played colour"), Name), SameColour(Instant->ArtifactShownColour(), SettledColour));
                 TestEqual(FString::Printf(TEXT("%s: Instant is silent"), Name), Heard.Num(), 0);
+                TestEqual(FString::Printf(TEXT("%s: Instant sounds no set-piece cue"), Name), Instant->CueRequests(EExpeditionCue::WaystoneFlare) + Instant->CueRequests(EExpeditionCue::WaystoneShatter), 0u);
                 TestTrue(FString::Printf(TEXT("%s: Instant changes no rule"), Name), ExpeditionTestSupport::SameRun(Instant->CurrentRun().Snapshot(), Blow.Won));
                 TestTrue(FString::Printf(TEXT("%s: Instant changes no checkpoint byte"), Name), ReadCheckpoint(FPaths::Combine(Base, TEXT("instant/current.json"))) == PlayedFile);
             }
