@@ -30,6 +30,7 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerController.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Misc/CommandLine.h"
@@ -709,6 +710,8 @@ void AExpeditionBattleView::BeginPlay()
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoPalettes"))) { bPalettes = false; }
     // -ExpeditionNoAccents keeps the subclass palettes but not the party-slot accents (the baseline the accent region is measured against).
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoAccents"))) { bAccents = false; }
+    // -ExpeditionNoJourney draws today's overview instead of the journey map (#248): the like-for-like baseline for its cost on one package.
+    if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoJourney"))) { bJourneyAllowed = false; }
     // -ExpeditionLooseParts draws every themed part as its own component, as before #144 (for A/B profiling on one build).
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionLooseParts"))) { bLooseParts = true; }
     // -ExpeditionPrimitives keeps the engine-primitive presentation for comparison.
@@ -809,11 +812,16 @@ void AExpeditionBattleView::ClearPresentation()
     Swaying.Reset();
     Occluder = FExpeditionPart(); bOccluderBoardSent = false; Dressing.Reset(); BrazierCells.Reset(); VariantsByCell.Reset(); SpotsByCell.Reset();
     bVigilKit = false; bRootKit = false; bVaultKit = false; WorldProp = FExpeditionProp(); ObstaclePieces = 0; ArchPieces = 0;
+    JourneyDrawn.Reset(); JourneyLook = JourneyLayout::FJourneyLook();
 }
 
 void AExpeditionBattleView::RebuildBoard()
 {
     ++Revision;
+    // Any rebuild (the fly-in's own handover, a Resume, Return to menu, a new run) leaves no fly-in behind: a resumed fight never replays it (#249).
+    FlyIn = ERouteFlyInStage::None; bFlyInHeld = false; FlyInSeconds = 0.0f;
+    // A rebuild is a hard cut to another scene (the dark battle board, the bright journey map): the exposure and temporal history start again from it, with no visible adaptation.
+    CutCamera();
     ClearPresentation();
     // Themed boards draw their static parts, rings and effects from shared instanced groups (#144); the primitive look never does.
     bInstancedParts = Theme && !bLooseParts;
@@ -836,6 +844,7 @@ void AExpeditionBattleView::RebuildBoard()
     // The themed build replaces this with the kit it actually drew (the Vault falls back to the Vigil when incomplete).
     AmbienceKit = KitKindFor(BoardTheme);
     bOverview = WantsOverview();
+    bJourneyShown = bOverview && bJourneySet && HasRun();
     SceneryRoot->SetRelativeScale3D(FVector(SceneScale()));
     ApplyTheme();
     if (bOverview) { BuildOverview(); }
@@ -1042,6 +1051,7 @@ void AExpeditionBattleView::UseTheme(UDiceRollTheme* Value)
 void AExpeditionBattleView::UsePrimitives()
 {
     Theme = nullptr; ThemeMaterial = nullptr; OverviewTable = nullptr; OverviewRoot = nullptr; OverviewVigil = nullptr; OverviewVault = nullptr; bOverviewR002 = false;
+    JourneySet = FDiceRollJourney(); JourneyHold.Reset(); bJourneySet = false;
     BoardMetric = FBoardMetric();
     RebuildBoard();
 }
@@ -1106,7 +1116,16 @@ void AExpeditionBattleView::ApplyTheme()
         Settings.ColorContrast = FVector4(1.12f, 1.12f, 1.12f, 1.0f);
         Settings.VignetteIntensity = bOverview ? 0.85f : 0.6f;
         Settings.AutoExposureBias = bOverview ? -0.8f : BoardTheme == EBoardTheme::Vault ? -1.4f : -1.0f;
+        // The journey map (#248) is read end to end: a lighter vignette and a little more exposure than the overview's candlelit corners.
+        if (bOverview && bJourneyShown) { Settings.VignetteIntensity = 0.45f; Settings.AutoExposureBias = -0.25f; }
         Settings.BloomIntensity = 0.45f;
+    }
+    if (!bBattleLook)
+    {
+        // The battle look's fixed exposure band is for its biome's luminance (the Vault's is the darkest): the tabletop and the journey map (#248) adapt on their own,
+        // whichever board came before, so a route screen or an ending reached from a fight looks as one reached from Resume.
+        Settings.bOverride_AutoExposureMinBrightness = false;
+        Settings.bOverride_AutoExposureMaxBrightness = false;
     }
     if (bBattleLook)
     {
@@ -2050,6 +2069,24 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
 {
     const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
     Camera->FieldOfView = bOverview ? OverviewFieldOfView : ExpeditionCameraRig::FieldOfView;
+    // The route fly-in's move (#249) owns the camera until its cut: a pure function of its time, from the journey's pose into the chosen diorama.
+    if (FlyIn == ERouteFlyInStage::Moving)
+    {
+        const FTransform Pose = RouteFlyIn::At(FlyInMove, FlyInSeconds);
+        Camera->FieldOfView = JourneyLayout::CameraFieldOfView;
+        Camera->SetWorldLocationAndRotation(Pose.GetLocation(), Pose.GetRotation());
+        bCameraPlaced = true;
+        return;
+    }
+    // The journey map (#248) is one fixed, composed view: the HUD's bands are laid out against exactly this camera (JourneyLayout).
+    if (ShowingJourney())
+    {
+        const FTransform Pose = JourneyCameraTransform();
+        Camera->FieldOfView = JourneyLayout::CameraFieldOfView;
+        Camera->SetWorldLocationAndRotation(Pose.GetLocation(), Pose.GetRotation());
+        bCameraPlaced = true;
+        return;
+    }
     // Yaw and distance first: the lean and the fit below belong to the pose rendered this frame, not to the targets.
     const bool bSnap = !bCameraPlaced || DeltaSeconds <= 0.0f;
     if (bSnap)
@@ -2354,19 +2391,34 @@ void AExpeditionBattleView::Present(const TArray<FCombatResult>& Results)
     if (PlaybackSpeed == EPlaybackSpeed::Instant) { Show.Finish(); }
 }
 
-void AExpeditionBattleView::SkipPresentation() { Show.Finish(); SettleSetPiece(); }
+void AExpeditionBattleView::SkipPresentation()
+{
+    FinishFlyIn(); Show.Finish(); SettleSetPiece();
+    // The last result's numbers on the board are presentation too: skipping them brings the journey (and the route cards) at once.
+    if (OverviewPending() && !PlaybackPresenting()) { RebuildBoard(); }
+}
+
+bool AExpeditionBattleView::OverviewPending() const { return Theme && HasRun() && !bOverview && WantsOverview(); }
+
+void AExpeditionBattleView::CutCamera()
+{
+    ++CameraCutCount;
+    if (APlayerController* Player = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr; Player && Player->PlayerCameraManager) { Player->PlayerCameraManager->SetGameCameraCutThisFrame(); }
+}
 
 void AExpeditionBattleView::CycleSpeed()
 {
     PlaybackSpeed = PlaybackSpeed == EPlaybackSpeed::Normal ? EPlaybackSpeed::Fast : PlaybackSpeed == EPlaybackSpeed::Fast ? EPlaybackSpeed::Instant : EPlaybackSpeed::Normal;
     Show.Speed = PlaybackSpeed == EPlaybackSpeed::Fast ? 2.2f : 1.0f;
-    if (PlaybackSpeed == EPlaybackSpeed::Instant) { Show.Finish(); SettleSetPiece(); }
+    if (PlaybackSpeed == EPlaybackSpeed::Instant) { FinishFlyIn(); Show.Finish(); SettleSetPiece(); }
     PlayCue(EExpeditionCue::Click);
 }
 
 bool AExpeditionBattleView::Execute(const FCombatCommand& Command)
 {
     if (bShowRecords) { return false; }
+    // A command while the route fly-in plays (autoplay, tests: a player's keys and clicks only skip it) finishes the move first, so it acts on the board it names.
+    if (!bFlyInHeld) { FinishFlyIn(); }
     const FCombatantState* Unit = Rules().Find(Command.ActorId);
     if (!Unit || Unit->Side != ECombatSide::Party) { return false; }
     FCombatResult Result = Session.Submit(Command);
@@ -2396,13 +2448,21 @@ void AExpeditionBattleView::ChooseRoute(int32 Index)
     if (Session.ChooseRoute(Id, Error))
     {
         Record({true, TEXT("Route committed. Injuries, uses and permanent deaths carry; no automatic rest.")});
-        EnemyDelay = 0; RebuildBoard();
-        const FCombatantState* First = Rules().Find(Rules().ActiveId());
-        Show.ShowBanner(LocationName().ToUpper(), FString::Printf(TEXT("Encounter %d of %d  ·  %s acts first"), Progress().History.Num(), FExpeditionRun::EncounterCount,
-            First ? *First->Name : TEXT("")), BoardTheme == EBoardTheme::Vault ? FLinearColor(0.5f, 0.85f, 1.0f) : FLinearColor(1.0f, 0.82f, 0.45f), 2.4f);
+        EnemyDelay = 0;
         PlayCue(EExpeditionCue::Route);
+        // The route is committed (run, random streams and checkpoint): the fly-in (#249) only presents it, and builds the board at its cut.
+        if (StartFlyIn(Index)) { return; }
+        RebuildBoard();
+        ShowRouteBanner();
     }
     else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
+}
+
+void AExpeditionBattleView::ShowRouteBanner()
+{
+    const FCombatantState* First = Rules().Find(Rules().ActiveId());
+    Show.ShowBanner(LocationName().ToUpper(), FString::Printf(TEXT("Encounter %d of %d  ·  %s acts first"), Progress().History.Num(), FExpeditionRun::EncounterCount,
+        First ? *First->Name : TEXT("")), BoardTheme == EBoardTheme::Vault ? FLinearColor(0.5f, 0.85f, 1.0f) : FLinearColor(1.0f, 0.82f, 0.45f), 2.4f);
 }
 
 void AExpeditionBattleView::ClaimReward(int32 RecipientId, ERewardCard Card)
@@ -2771,9 +2831,13 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     if (!bShowRecords && !bSettingsHold) { Show.Tick(DeltaSeconds); }
     // The set piece waits behind Settings as playback does (#246); it already waits behind Records.
     if (!bSettingsHold) { UpdateSetPiece(DeltaSeconds); }
+    // The route fly-in (#249) is settled when Settings opens (it hides the HUD, so it never waits behind the panel).
+    UpdateFlyIn(DeltaSeconds);
     if (ImpactTargetId != INDEX_NONE) { Show.HoldImpact(ImpactTargetId); }
-    // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles.
-    if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
+    // The ending's view choice belongs to one finished run: any other phase (a new run, a resume into a fight) starts from the default again.
+    if (EndingView != EEndingView::Default && (!HasRun() || (Progress().Phase != EExpeditionPhase::Victory && Progress().Phase != EExpeditionPhase::Defeat))) { EndingView = EEndingView::Default; }
+    // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles and the last result's numbers have gone (at once under Instant).
+    if (Theme && WantsOverview() != bOverview && !PlaybackPresenting() && ((Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) || PlaybackSpeed == EPlaybackSpeed::Instant)) { RebuildBoard(); }
     UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds); UpdateOccluder(); FlushGroups();
     ExpireVoices();
     AmbienceDucker.Tick(DeltaSeconds);
@@ -2836,7 +2900,32 @@ UStaticMesh* AExpeditionBattleView::UnitMesh(const FCombatantState& Unit) const
 
 bool AExpeditionBattleView::WantsOverview() const
 {
-    return OverviewTable && (!HasRun() || Progress().Phase == EExpeditionPhase::Route);
+    if (!OverviewTable) { return false; }
+    if (!HasRun()) { return true; }
+    const EExpeditionPhase Phase = Progress().Phase;
+    // With the journey set, a finished run can show the whole road on the war table (#248); today's overview never showed the ending.
+    return Phase == EExpeditionPhase::Route || (bJourneySet && EndingWantsJourney());
+}
+
+bool AExpeditionBattleView::EndingWantsJourney() const
+{
+    if (!HasRun()) { return false; }
+    const EExpeditionPhase Phase = Progress().Phase;
+    if (Phase != EExpeditionPhase::Victory && Phase != EExpeditionPhase::Defeat) { return false; }
+    // A victory keeps the Vault board by default: the Waystone set piece (#250) plays and settles there, and a resumed victory shows it settled.
+    return EndingView == EEndingView::Default ? Phase == EExpeditionPhase::Defeat : EndingView == EEndingView::Journey;
+}
+
+bool AExpeditionBattleView::CanToggleEndingJourney() const
+{
+    return bJourneySet && OverviewTable && HasRun() && (Progress().Phase == EExpeditionPhase::Victory || Progress().Phase == EExpeditionPhase::Defeat) && !IsPresenting();
+}
+
+void AExpeditionBattleView::ToggleEndingJourney()
+{
+    if (!CanToggleEndingJourney()) { return; }
+    EndingView = EndingWantsJourney() ? EEndingView::Board : EEndingView::Journey;
+    RebuildBoard();
 }
 
 EDiceRollKit AExpeditionBattleView::KitKindFor(EBoardTheme Theme)
@@ -3205,10 +3294,21 @@ void AExpeditionBattleView::LoadOverviewSet()
     const FDiceRollOverview Set = Theme ? Theme->LoadOverview() : FDiceRollOverview();
     OverviewTable = Set.Table; OverviewRoot = Set.Root; OverviewVigil = Set.Vigil; OverviewVault = Set.Vault;
     bOverviewR002 = Set.bR002 && Set.Table;
+    // The journey map (#248) raises the r002 dioramas, so it needs that set; without either, the route screen is today's overview.
+    JourneySet = Theme && bOverviewR002 && bJourneyAllowed ? Theme->LoadJourney() : FDiceRollJourney();
+    bJourneySet = JourneySet.IsComplete();
+    if (!bJourneySet) { JourneySet = FDiceRollJourney(); }
+    JourneyHold.Reset();
+    if (bJourneySet)
+    {
+        JourneyHold = {JourneySet.Table, JourneySet.Map, JourneySet.Stage, JourneySet.EmblemRoot, JourneySet.EmblemVigil, JourneySet.EmblemVault, JourneySet.Pennant,
+            JourneySet.Lost, JourneySet.Ink, JourneySet.InkDashed, JourneySet.Fog, JourneySet.Goal, JourneySet.Plinth};
+    }
 }
 
 void AExpeditionBattleView::BuildOverview()
 {
+    if (bJourneyShown) { BuildJourney(); return; }
     // The table stands on a dark floor raised over the sandbox floor (top at Z=0); everything
     // past the candlelight falls away.
     const FVector Lift(0.0f, 0.0f, OverviewHeight);
@@ -3219,16 +3319,10 @@ void AExpeditionBattleView::BuildOverview()
     OverviewDrawnLights.Reset();
     Scenery.Add(MakePart(OverviewTable, nullptr, Lift, FVector::OneVector, FLinearColor::White, Toward));
     OverviewDrawnMeshes.Add(OverviewTable->GetFName());
-    // One diorama per offered road (OverviewLayout::Kinds): the forest for guarded roads, the drowned cathedral for dangerous roads and,
+    // One diorama per offered road, from the journey query (OverviewLayout::Kinds): the forest for the Root, the drowned cathedral for the Vigil and,
     // with the r002 set, the Vault for the finale. The title shows the first two worlds.
-    TArray<bool> Dangerous;
-    bool bFinale = false;
-    if (HasRun())
-    {
-        bFinale = Progress().EncountersCompleted + 1 >= FExpeditionRun::EncounterCount;
-        for (const FExpeditionRoute& Route : Progress().Offers) { Dangerous.Add(Route.bDangerous); }
-    }
-    const TArray<OverviewLayout::EDiorama> Kinds = OverviewLayout::Kinds(HasRun(), bFinale, Dangerous, OverviewVault != nullptr);
+    const FJourney Journey = HasRun() ? FJourneyQuery::For(Progress()) : FJourney();
+    const TArray<OverviewLayout::EDiorama> Kinds = OverviewLayout::Kinds(HasRun() ? &Journey : nullptr, OverviewVault != nullptr);
     for (const OverviewLayout::FPlacement& Spot : OverviewLayout::Layout(Kinds, bOverviewR002, HasRun()))
     {
         UStaticMesh* Diorama = Spot.Kind == OverviewLayout::EDiorama::Vault ? OverviewVault : Spot.Kind == OverviewLayout::EDiorama::Vigil ? OverviewVigil : OverviewRoot;
@@ -3257,6 +3351,156 @@ void AExpeditionBattleView::BuildOverview()
         FlameStrength.Last() = Strengths[Index];
         OverviewDrawnLights.Add(Candles[Index]);
     }
+}
+
+// ---------------------------------------------------------------------------------------
+// The war-table journey map (#248). Everything it shows comes from FJourneyQuery through JourneyLayout::Look; nothing here reads or writes rules state.
+
+namespace
+{
+FLinearColor TokenColor(JourneyLayout::EStageMark Mark)
+{
+    using JourneyLayout::EStageMark;
+    switch (Mark)
+    {
+    // Tints multiply the token's pale bronze: above 1 brightens it in the candlelight.
+    case EStageMark::Cleared: return FLinearColor(1.6f, 1.25f, 0.6f);
+    case EStageMark::Lost: return FLinearColor(1.1f, 0.24f, 0.14f);
+    case EStageMark::Current: return FLinearColor(1.9f, 1.75f, 1.4f);
+    case EStageMark::Unreached: return FLinearColor(0.7f, 0.66f, 0.6f);
+    default: return FLinearColor(0.45f, 0.43f, 0.41f);
+    }
+}
+}
+
+void AExpeditionBattleView::AddJourneyPart(FName Role, UStaticMesh* Mesh, int32 Index, const FVector& Location, const FRotator& Rotation, const FVector& Scale, const FLinearColor& Color, bool bOwnMaterial)
+{
+    if (!Mesh) { return; }
+    const FVector Lift(0.0f, 0.0f, OverviewHeight);
+    FExpeditionPart Part = bOwnMaterial ? MakeOwnMaterialPart(Mesh, Lift + Location, Scale, Rotation) : MakePart(Mesh, nullptr, Lift + Location, Scale, Color, Rotation);
+    if (bOwnMaterial && Part.Mesh) { Part.Mesh->SetCastShadow(false); }
+    // A card keeps its own material; its Color parameter carries the part's tint (the fog bank is lifted so it reads as pale fog in the candlelight).
+    if (bOwnMaterial && Part.Material) { Part.Material->SetVectorParameterValue(TEXT("Color"), Color); }
+    Scenery.Add(Part);
+    FJourneyPart Drawn;
+    Drawn.Role = Role; Drawn.Mesh = Mesh->GetFName(); Drawn.Index = Index; Drawn.Local = FTransform(Rotation, Location, Scale); Drawn.Color = Color;
+    JourneyDrawn.Add(Drawn);
+    OverviewDrawnMeshes.Add(Mesh->GetFName());
+}
+
+void AExpeditionBattleView::BuildJourney()
+{
+    using namespace JourneyLayout;
+    OverviewDrawnMeshes.Reset();
+    OverviewDrawnLights.Reset();
+    const FJourney Journey = FJourneyQuery::For(Progress());
+    JourneyLook = Look(Journey);
+    // The table stands on the same dark floor as the overview's; assets face +X and the camera looks from -Y, so they turn -90 degrees to face it.
+    Scenery.Add(MakePart(Cube, nullptr, FVector(0, 0, 5.0f), FVector(400.0f, 400.0f, 0.1f), FLinearColor(0.008f, 0.006f, 0.005f)));
+    const FRotator Toward(0.0f, -90.0f, 0.0f);
+    AddJourneyPart(TEXT("Table"), JourneySet.Table, INDEX_NONE, FVector::ZeroVector, Toward, FVector::OneVector, FLinearColor::White);
+    AddJourneyPart(TEXT("Map"), JourneySet.Map, INDEX_NONE, FVector::ZeroVector, Toward, FVector::OneVector, FLinearColor::White);
+    // The road: trailhead, the five stages, the Vault. Ink into a stage is walked once the party has reached it (a fight fought, or the fork it stands at).
+    auto Ink = [this](const FVector2D& From, const FVector2D& To, bool bWalked, int32 Index)
+    {
+        const FVector2D Delta = To - From;
+        const float Heading = FMath::RadiansToDegrees(FMath::Atan2(Delta.Y, Delta.X));
+        AddJourneyPart(bWalked ? TEXT("Ink") : TEXT("InkDashed"), bWalked ? JourneySet.Ink : JourneySet.InkDashed, Index, FVector(From.X, From.Y, MapTop + 0.05f),
+            FRotator(0.0f, Heading, 0.0f), FVector(Delta.Size() / 100.0f, 1.0f, 1.0f), FLinearColor::White);
+    };
+    for (const FStageLook& Stage : JourneyLook.Stages)
+    {
+        const FVector2D Spot = StageSpot(Stage.Index);
+        Ink(Stage.Index == 0 ? TrailheadSpot() : StageSpot(Stage.Index - 1), Spot, Stage.bWalkedIn, Stage.Index);
+        const FVector At(Spot.X, Spot.Y, MapTop);
+        AddJourneyPart(TEXT("Token"), JourneySet.Stage, Stage.Index, At, Toward, FVector::OneVector, TokenColor(Stage.Mark));
+        UStaticMesh* Emblem = Stage.Emblem == EExpeditionWorld::Root ? JourneySet.EmblemRoot : Stage.Emblem == EExpeditionWorld::Vigil ? JourneySet.EmblemVigil
+            : Stage.Emblem == EExpeditionWorld::Vault ? JourneySet.EmblemVault : nullptr;
+        // A lost stage's emblem is dimmed: the world is known, the road ended there.
+        if (Emblem) { AddJourneyPart(TEXT("Emblem"), Emblem, Stage.Index, At, Toward, FVector::OneVector, Stage.Mark == EStageMark::Lost ? FLinearColor(1.2f, 1.1f, 1.1f) : FLinearColor(2.4f, 2.4f, 2.4f)); }
+        if (Stage.bPennant) { AddJourneyPart(TEXT("Pennant"), JourneySet.Pennant, Stage.Index, At, Toward, FVector::OneVector, FLinearColor(1.5f, 1.5f, 1.5f)); }
+        if (Stage.bBroken) { AddJourneyPart(TEXT("Lost"), JourneySet.Lost, Stage.Index, At, Toward, FVector::OneVector, FLinearColor::White); }
+        // Fog banks turn by a presentation-only hash of the stage, so neighbours do not repeat (never combat or run RNG).
+        if (Stage.bFog) { AddJourneyPart(TEXT("Fog"), JourneySet.Fog, Stage.Index, FVector(Spot.X, Spot.Y, MapTop + FogLift), FRotator(0.0f, -90.0f + (Hash(Stage.Index, 31) - 0.5f) * 40.0f, 0.0f), FVector::OneVector, FLinearColor(6.4f, 6.1f, 5.7f), true); }
+    }
+    if (!JourneyLook.Stages.IsEmpty()) { Ink(StageSpot(JourneyLook.Stages.Num() - 1), GoalSpot(), JourneyLook.bGoalReached, INDEX_NONE); }
+    AddJourneyPart(TEXT("Goal"), JourneySet.Goal, INDEX_NONE, GoalPoint(), Toward, FVector::OneVector, JourneyLook.bGoalReached ? FLinearColor(1.25f, 1.2f, 1.1f) : FLinearColor::White);
+    // The current fork: ink from the stage the party stands at down to each raised offer; the dioramas on their plinths, lit from above.
+    for (const FRaisedLook& Raised : JourneyLook.Raised)
+    {
+        if (JourneyLook.ForkStage != INDEX_NONE && Raised.Offer != INDEX_NONE)
+        { Ink(StageSpot(JourneyLook.ForkStage), FVector2D(Raised.Spot.X, Raised.Spot.Y + 36.0f * Raised.Scale), true, JourneyLook.ForkStage); }
+        UStaticMesh* Diorama = Raised.Kind == EDiorama::Vault ? OverviewVault.Get() : Raised.Kind == EDiorama::Vigil ? OverviewVigil.Get() : OverviewRoot.Get();
+        const FRotator Turn = Toward + FRotator(0.0f, Raised.Yaw, 0.0f);
+        AddJourneyPart(TEXT("Plinth"), JourneySet.Plinth, Raised.Offer, FVector(Raised.Spot.X, Raised.Spot.Y, MapTop), Turn, FVector(Raised.Scale), FLinearColor::White);
+        AddJourneyPart(TEXT("Diorama"), Diorama, Raised.Offer, FVector(Raised.Spot.X, Raised.Spot.Y, MapTop + PlinthHeight * Raised.Scale), Turn, FVector(Raised.Scale), FLinearColor::White);
+    }
+    const FVector Lift(0.0f, 0.0f, OverviewHeight);
+    // Only the two candles flicker (their intensity is set every frame, UpdateEffects); the lamps over the chart and the plinths and the keep's light are steady,
+    // so they cost nothing per frame on the game thread.
+    auto Light = [&](const FVector& At, const FLinearColor& Color, float Strength, float Radius, bool bFlicker)
+    {
+        UPointLightComponent* Made = MakeLight(nullptr, Lift + At, Color, Strength, Radius);
+        if (bFlicker)
+        {
+            Flames.Add(Made);
+            FlameStrength.SetNum(Flames.Num());
+            FlameStrength.Last() = Strength;
+        }
+        OverviewDrawnLights.Add(At);
+    };
+    for (const FVector& Candle : Candles()) { Light(Candle, FLinearColor(1.0f, 0.62f, 0.32f), 16.0f, 420.0f, true); }
+    Light(MapLamp(), FLinearColor(1.0f, 0.8f, 0.58f), 60.0f * 0.8f, 520.0f, false);
+    for (const FRaisedLook& Raised : JourneyLook.Raised) { Light(LampOver(Raised), FLinearColor(1.0f, 0.86f, 0.66f), 30.0f * 0.8f, 190.0f, false); }
+    Light(GoalPoint() + FVector(0.0f, -8.0f, 26.0f), FLinearColor(0.45f, 0.9f, 1.0f), (JourneyLook.bGoalReached ? 6.0f : 3.0f) * 0.8f, 80.0f, false);
+}
+
+bool AExpeditionBattleView::RaisedDioramaTransform(int32 Offer, FTransform& OutWorld) const
+{
+    if (!ShowingJourney()) { return false; }
+    for (const FJourneyPart& Part : JourneyDrawn)
+    {
+        if (Part.Role != TEXT("Diorama") || Part.Index != Offer) { continue; }
+        const FTransform Local(Part.Local.GetRotation(), Part.Local.GetLocation() + FVector(0.0f, 0.0f, OverviewHeight), Part.Local.GetScale3D());
+        OutWorld = Local * SceneryRoot->GetComponentTransform();
+        return true;
+    }
+    return false;
+}
+
+bool AExpeditionBattleView::RaisedScreenBox(int32 RaisedIndex, double W, double H, ExpeditionLayout::Rect& Out) const
+{
+    if (!ShowingJourney() || !JourneyLook.Raised.IsValidIndex(RaisedIndex) || !JourneySet.Plinth) { return false; }
+    // The camera is fixed, so the boxes change only with the build and the viewport: projected once per presentation revision and design size.
+    if (RaisedBoxRevision != Revision || RaisedBoxW != W || RaisedBoxH != H)
+    {
+        RaisedBoxRevision = Revision; RaisedBoxW = W; RaisedBoxH = H;
+        RaisedBoxes.Reset(); RaisedBoxValid.Reset();
+        for (const JourneyLayout::FRaisedLook& Raised : JourneyLook.Raised)
+        {
+            const UStaticMesh* Diorama = Raised.Kind == OverviewLayout::EDiorama::Vault ? OverviewVault.Get() : Raised.Kind == OverviewLayout::EDiorama::Vigil ? OverviewVigil.Get() : OverviewRoot.Get();
+            ExpeditionLayout::Rect Box{};
+            RaisedBoxValid.Add(Diorama && JourneyLayout::RaisedScreenBox(Diorama->GetBoundingBox(), JourneySet.Plinth->GetBoundingBox(), Raised, W, H, Box));
+            RaisedBoxes.Add(Box);
+        }
+    }
+    if (!RaisedBoxValid.IsValidIndex(RaisedIndex) || !RaisedBoxValid[RaisedIndex]) { return false; }
+    Out = RaisedBoxes[RaisedIndex];
+    return true;
+}
+
+void AExpeditionBattleView::SetJourneyAllowed(bool bAllowed)
+{
+    if (bJourneyAllowed == bAllowed) { return; }
+    bJourneyAllowed = bAllowed;
+    LoadOverviewSet();
+    RebuildBoard();
+}
+
+FTransform AExpeditionBattleView::JourneyCameraTransform() const
+{
+    const FTransform Table = FTransform(FVector(0.0f, 0.0f, OverviewHeight)) * SceneryRoot->GetComponentTransform();
+    return FTransform(Table.TransformVectorNoScale(JourneyLayout::CameraLook()).Rotation(), Table.TransformPosition(JourneyLayout::CameraEye()));
 }
 
 void AExpeditionBattleView::AddSway(USceneComponent* Component, float Degrees, float Flicker)

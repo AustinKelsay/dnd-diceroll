@@ -14,6 +14,9 @@
 #include "Presentation/ExpeditionPlayback.h"
 #include "Presentation/FoeLook.h"
 #include "Presentation/VigilKit.h"
+#include "Presentation/DiceRollTheme.h"
+#include "Presentation/JourneyLayout.h"
+#include "Presentation/RouteFlyIn.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
 #include "ExpeditionBattleView.generated.h"
@@ -291,6 +294,39 @@ public:
     const TArray<FVector>& OverviewLights() const { return OverviewDrawnLights; }
     /** True when the overview was drawn from the r002 set (war table and Root, Vigil and Vault dioramas). */
     bool OverviewIsR002() const { return bOverview && bOverviewR002; }
+    /** True while the overview is the war-table journey map (#248): a run's route screen or its ending, with the journey set and the r002 overview loaded. */
+    bool ShowingJourney() const { return bOverview && bJourneyShown; }
+    /** True when the theme's journey set loaded whole (the route screen then draws the journey map instead of today's overview). */
+    bool HasJourneySet() const { return bJourneySet; }
+    /**
+     * A finished run's view (#248 with #250): a defeat opens on the journey map; a victory keeps the Vault board, where the Waystone set piece (#250) settles, and either
+     * can be switched to the other (the ending's Journey button). Presentation state only: it is reset whenever the run is not finished and never saved.
+     */
+    bool CanToggleEndingJourney() const;
+    void ToggleEndingJourney();
+    /** -ExpeditionNoJourney, and tests that need today's overview or the battle board at the ending: the journey set is not loaded while this is off. Presentation only. */
+    void SetJourneyAllowed(bool bAllowed);
+    /** What the journey map shows, as last built (empty off the journey): the pure look and each part placed, by role, mesh and stage. */
+    const JourneyLayout::FJourneyLook& JourneyShown() const { return JourneyLook; }
+    struct FJourneyPart
+    {
+        FName Role;
+        FName Mesh;
+        /** The stage the part marks (tokens, emblems, pennants, lost markers, fog, the ink into it); the offer for a plinth or diorama; INDEX_NONE otherwise. */
+        int32 Index = INDEX_NONE;
+        /** In table-top cm (the overview's table frame). */
+        FTransform Local;
+        FLinearColor Color = FLinearColor::White;
+    };
+    const TArray<FJourneyPart>& JourneyParts() const { return JourneyDrawn; }
+    /**
+     * The seam for the fly-in (#249): the world transform of the diorama raised for offer 0 or 1 (false when that offer has none, or off the journey), and the journey camera's
+     * world pose, which the fly-in starts from before it hands over to the battle camera's opening framing.
+     */
+    bool RaisedDioramaTransform(int32 Offer, FTransform& OutWorld) const;
+    /** The design-unit box (W x H design units) of the RaisedIndex-th raised diorama on its plinth (JourneyLayout::RaisedScreenBox), for the HUD's click target and plaque. */
+    bool RaisedScreenBox(int32 RaisedIndex, double W, double H, ExpeditionLayout::Rect& Out) const;
+    FTransform JourneyCameraTransform() const;
     const TArray<FExpeditionEnding>& Records() const { return EndingRecords; }
     static constexpr int32 RecordsPerPage = 4;
     int32 RecordOffset() const { return RecordsOffset; }
@@ -306,10 +342,51 @@ public:
     /** True from the first frame of a roll until its card is gone: the left margin is the card's, so a combat hint waits (#190). */
     bool RollCardUp() const { return Show.Tray().bVisible && !Show.Tray().Dice.IsEmpty(); }
     void ClearRollPreview() { Show.ClearTrayPreview(); }
-    /** Queued playback, or the finale's set piece (#250) playing or about to play: the HUD holds the ending panel and Skip settles it. */
-    bool IsPresenting() const { return Show.IsBusy() || SetPieceBusy(); }
+    /**
+     * Queued playback, the finale's set piece (#250) playing or about to play, the route fly-in (#249) playing, or the board still showing the last result before the
+     * journey map takes over (OverviewPending): the HUD holds the next screen, enemies wait, and Skip settles it. A capture's held fly-in is a pose, not presentation still owed.
+     */
+    bool IsPresenting() const { return PlaybackPresenting() || OverviewPending(); }
+    /**
+     * The run wants the tabletop (a route screen, a defeat's journey) but the board still shows the result that led there: the camp's or the reward's floating numbers
+     * and sparkles, which the tabletop waits for. The route cards wait with it, so they appear on the same frame as the journey, never over the dark board (#249 on-screen
+     * pass). Skip and Instant settle it at once.
+     */
+    bool OverviewPending() const;
+    /** How many times the board was rebuilt as a camera cut (every RebuildBoard): the frame snaps eye adaptation and temporal history, so a switch between the dark battle
+     * board and the bright journey map never flashes or eases (#249 on-screen pass). Test support. */
+    uint32 CameraCuts() const { return CameraCutCount; }
     void SkipPresentation();
     void CycleSpeed();
+    /**
+     * The route fly-in (#249; RouteFlyIn.h). A route committed while the journey map shows plays a short move into the chosen diorama before the board is built,
+     * when a player watches this view (the player controller turns this on; a bare view, a capture run and Instant speed cut straight to the board, as before).
+     * It starts from the committed route choice itself (ChooseRoute after the session accepted it), whichever key, card or diorama asked for it.
+     */
+    void SetRouteFlyIn(bool bOn) { bRouteFlyIn = bOn; }
+    bool PlaysRouteFlyIn() const { return bRouteFlyIn; }
+    /** Moving: the camera flies toward the diorama, the journey still drawn. Arriving: the board is built and fades up at its opening framing. */
+    enum class ERouteFlyInStage : uint8 { None, Moving, Arriving };
+    ERouteFlyInStage FlyInStage() const { return FlyIn; }
+    bool FlyingIn() const { return FlyIn != ERouteFlyInStage::None; }
+    /** Seconds into the fly-in's timeline (RouteFlyIn::CutSeconds is the handover), the black over the screen now, and the offer being flown into. */
+    float FlyInTime() const { return FlyInSeconds; }
+    float FlyInFade() const { return FlyingIn() ? RouteFlyIn::Fade(FlyInSeconds) : 0.0f; }
+    int32 FlyInOffer() const { return FlyInRoute; }
+    const RouteFlyIn::FPath& FlyInPath() const { return FlyInMove; }
+    /** Converges the fly-in at once: a move still under way builds the board now (no fade), an arrival ends. Skip, Finish, Instant and a command call it; a no-op otherwise. */
+    void FinishFlyIn();
+    /** The world bounds of the diorama raised for an offer (false off the journey, or when the offer has none). */
+    bool RaisedDioramaBounds(int32 Offer, FBox& OutWorld) const;
+    /**
+     * Capture support: holds the fly-in at a time with no command. Before the cut it needs the journey's route screen and shows the move into Offer's diorama; from the
+     * cut on it needs a fight and shows its opening framing under the fade. False when the checkpoint does not fit the time. Clear lets go of it.
+     */
+    bool PreviewFlyIn(int32 Offer, float Seconds);
+    void ClearFlyInPreview();
+    bool HoldsFlyIn() const { return bFlyInHeld; }
+    /** The largest camera clip (the theme material's CameraFade, #143) on the scenery drawn now; 0 once the fly-in has switched it off for its move. Test support. */
+    float SceneryCameraFade() const;
     EPlaybackSpeed Speed() const { return PlaybackSpeed; }
     FString LocationName() const;
     void SetHighlights(const FBoardHighlights& Value) { Highlights = Value; }
@@ -639,8 +716,28 @@ private:
     /** What the overview scene drew last: the table and each diorama by mesh name, and the candle lights. Read by tests; presentation only. */
     TArray<FName> OverviewDrawnMeshes;
     TArray<FVector> OverviewDrawnLights;
-    /** Loads the overview set from the theme (the r002 set or the r001 one, never a mix) into the members above. */
+    /** The journey set (#248), loaded with the overview: every piece or none, and only beside the r002 overview. Held here so the raw pointers stay alive. */
+    FDiceRollJourney JourneySet;
+    UPROPERTY() TArray<TObjectPtr<UStaticMesh>> JourneyHold;
+    bool bJourneySet = false;
+    bool bJourneyShown = false;
+    bool bJourneyAllowed = true;
+    /** RaisedScreenBox's projections, kept per presentation revision and design size. */
+    mutable TArray<ExpeditionLayout::Rect> RaisedBoxes;
+    mutable TArray<bool> RaisedBoxValid;
+    mutable int32 RaisedBoxRevision = -1;
+    mutable double RaisedBoxW = 0.0, RaisedBoxH = 0.0;
+    enum class EEndingView : uint8 { Default, Journey, Board };
+    EEndingView EndingView = EEndingView::Default;
+    /** Whether a finished run shows the journey map now: the player's choice, else the default (defeat: the journey; victory: the board). */
+    bool EndingWantsJourney() const;
+    JourneyLayout::FJourneyLook JourneyLook;
+    TArray<FJourneyPart> JourneyDrawn;
+    /** Loads the overview set from the theme (the r002 set or the r001 one, never a mix) into the members above, and the journey set beside the r002 one. */
     void LoadOverviewSet();
+    /** The war-table journey map (#248): the journey table and map, the five stages from FJourneyQuery, the Vault, and the offered (or the ending's) dioramas raised on plinths. */
+    void BuildJourney();
+    void AddJourneyPart(FName Role, UStaticMesh* Mesh, int32 Index, const FVector& Location, const FRotator& Rotation, const FVector& Scale, const FLinearColor& Color, bool bOwnMaterial = false);
     UPROPERTY() TArray<FExpeditionSway> Swaying;
     /** Parts are instanced (themed look, default on); off draws them loose for the before/after comparison. */
     bool bLooseParts = false;
@@ -761,6 +858,31 @@ private:
     void UpdateSetPiece(float DeltaSeconds);
     /** Skip, Finish and Instant on a won finale: the set piece converges on its settled state. */
     void SettleSetPiece();
+    /** Playback, the set piece and the fly-in: what the tabletop itself waits for before it is built. */
+    bool PlaybackPresenting() const { return Show.IsBusy() || SetPieceBusy() || (FlyIn != ERouteFlyInStage::None && !bFlyInHeld); }
+    uint32 CameraCutCount = 0;
+    /** Marks this frame a camera cut on the local player's camera manager (eye adaptation jumps to its target, temporal history resets). */
+    void CutCamera();
+    /** The route fly-in's state (#249): presentation only, never saved; a rebuild of the board for any other reason drops it. */
+    bool bRouteFlyIn = false;
+    ERouteFlyInStage FlyIn = ERouteFlyInStage::None;
+    float FlyInSeconds = 0.0f;
+    int32 FlyInRoute = INDEX_NONE;
+    RouteFlyIn::FPath FlyInMove;
+    bool bFlyInHeld = false;
+    /**
+     * The theme material clips scenery nearer the camera than CameraFade x its height (#143), which the move would trip as it nears the diorama (it ate the stage and
+     * holed the table in the burst). The journey's fixed camera never comes that near, so the move switches the clip off on the journey's parts; the journey is gone at the cut.
+     */
+    void StopSceneryCameraClip();
+    /** Starts the move into the committed offer's diorama; false (the caller cuts to the board) when no fly-in applies. */
+    bool StartFlyIn(int32 Offer);
+    /** Once per tick: advances the fly-in at playback speed, builds the board at the cut and ends it after the fade-up. */
+    void UpdateFlyIn(float DeltaSeconds);
+    /** Builds the committed route's board; with bArrive the fade-up follows. */
+    void HandOverFlyIn(bool bArrive);
+    /** The encounter's banner ("ROUTE NAME", encounter n of 5, who acts first): at the cut without a fly-in, when the fly-in ends with one. */
+    void ShowRouteBanner();
     UPROPERTY() TArray<TObjectPtr<UAudioComponent>> Voices;
     TArray<float> VoiceEnds;
     TMap<int32, TArray<int16>> SoundCache;

@@ -52,6 +52,24 @@ FDiceRollOverview UDiceRollTheme::LoadOverview() const
     return Found;
 }
 
+bool UDiceRollTheme::JourneyComplete() const
+{
+    return bJourneyR001 && Set(JourneyTable) && Set(JourneyMap) && Set(JourneyStage) && Set(JourneyEmblemRoot) && Set(JourneyEmblemVigil) && Set(JourneyEmblemVault)
+        && Set(JourneyPennant) && Set(JourneyLost) && Set(JourneyInk) && Set(JourneyInkDashed) && Set(JourneyFog) && Set(JourneyGoal) && Set(JourneyPlinth);
+}
+
+FDiceRollJourney UDiceRollTheme::LoadJourney() const
+{
+    FDiceRollJourney Found;
+    if (!JourneyComplete()) { return Found; }
+    Found.Table = Load(JourneyTable); Found.Map = Load(JourneyMap); Found.Stage = Load(JourneyStage);
+    Found.EmblemRoot = Load(JourneyEmblemRoot); Found.EmblemVigil = Load(JourneyEmblemVigil); Found.EmblemVault = Load(JourneyEmblemVault);
+    Found.Pennant = Load(JourneyPennant); Found.Lost = Load(JourneyLost); Found.Ink = Load(JourneyInk); Found.InkDashed = Load(JourneyInkDashed);
+    Found.Fog = Load(JourneyFog); Found.Goal = Load(JourneyGoal); Found.Plinth = Load(JourneyPlinth);
+    // A package that exists but fails to load empties the whole set: the route screen then draws today's overview.
+    return Found.IsComplete() ? Found : FDiceRollJourney();
+}
+
 FDiceRollWorldKit UDiceRollTheme::KitFor(EDiceRollKit Kind) const
 {
     FDiceRollWorldKit Kit;

@@ -5,6 +5,7 @@
 #include "Combat/CombatBattle.h"
 #include "Presentation/CombatHints.h"
 #include "Run/ProgressionQuery.h"
+#include "Presentation/TargetChipLayout.h"
 #include "GameFramework/HUD.h"
 #include "ExpeditionHUD.generated.h"
 
@@ -72,6 +73,8 @@ public:
     /** Panels that should swallow clicks instead of passing them to the board. */
     bool CoversBoard(FVector2D ScreenPosition) const;
     TArray<FName> MenuButtons() const;
+    /** The offered diorama the last frame drew hovered under the pointer, with the Menu closed and no overlay (#248): the only one a press may arm. INDEX_NONE otherwise. */
+    int32 PreviewedDiorama() const { return PreviewedOffer; }
     /**
      * Targeting the last DrawHUD asked to place: one per target chip and per reach or blocked-sight
      * marker. Counted before screen projection, so a headless test without a viewport sees them.
@@ -261,6 +264,39 @@ private:
     void DrawBanner();
     void DrawTitle();
     void DrawRoutes();
+    /** The route fly-in (#249): its fade over the whole screen and, while the camera moves, the skip line. */
+    void DrawFlyIn();
+    /** The journey map's HUD (#248): the stage and goal chips, each raised diorama's plaque and click target, the compact banner and the route cards in the bottom band. */
+    void DrawJourneyMarks();
+    /** The journey's route-screen text and rectangles (#248), rebuilt only on a new presentation revision or design size. */
+    struct FJourneyHudCache
+    {
+        int32 Revision = -1;
+        double W = 0.0, H = 0.0;
+        TArray<FString> Chips;
+        TArray<FLinearColor> ChipColors;
+        TArray<ExpeditionLayout::Rect> ChipRects;
+        TArray<float> ChipWidths;
+        TArray<bool> HasBox;
+        TArray<ExpeditionLayout::Rect> Boxes;
+        TArray<FName> DioramaIds;
+        TArray<ExpeditionLayout::Rect> Plaques;
+        TArray<FString> PlaqueTitles, PlaqueDetails;
+        TArray<FLinearColor> Accents;
+        FString Banner;
+        TArray<FString> Tags;
+        TArray<float> TagWidths;
+        TArray<FName> RouteIds;
+        TArray<TArray<TPair<FString, bool>>> Lines;
+    };
+    FJourneyHudCache JourneyCache;
+    void RefreshJourneyCache();
+    /** The offered diorama drawn hovered under the pointer this frame (live: no Menu, no overlay), or INDEX_NONE. */
+    int32 PreviewedOffer = INDEX_NONE;
+    void DrawJourneyRoutes();
+    void DrawJourneyEnding();
+    /** A raised diorama takes a click only while no overlay or Menu owns the screen. */
+    bool AllowsRouteClick() const;
     void DrawReward();
     void DrawCamp();
     void DrawEnding();

@@ -32,7 +32,9 @@ public:
      */
     virtual void FlushPressedKeys() override;
     /** Spends an armed left press for good: its release can never click, however the window comes back (#220). */
-    void NotifyWindowFocusLost() { bPressVoided = true; }
+    void NotifyWindowFocusLost() { bPressVoided = true; bDioramaVoided = true; }
+    /** The offered diorama a held left button is armed on (#248), or INDEX_NONE: none, or the press was spent (drag-off, a key, focus, an overlay or the Menu, a new screen). */
+    int32 ArmedDiorama() const { return bDioramaVoided ? INDEX_NONE : DioramaPress; }
     /**
      * The application losing activation (Slate's OnApplicationActivationStateChanged(false), which on Linux follows the window losing keyboard focus to another client): the
      * press is spent at that moment, not when the button is released. On that platform an input event after the loss re-activates the application, so a poll at release is too late (#220).
@@ -182,6 +184,8 @@ private:
     /** Pointer motion beyond this many viewport pixels hands the board back from the keyboard cursor to the pointer. */
     static constexpr float PointerMoveSlop = 3.0f;
     bool bCapturing = false;
+    /** Keys whose press skipped the route fly-in (#249): their repeats and release are swallowed too. */
+    TSet<FKey> FlyInSwallowed;
     bool bSimulatedPointer = false;
     bool bSimulatedCamera = false;
     FIntPoint SimulatedViewport = FIntPoint::ZeroValue;
@@ -212,6 +216,21 @@ private:
      */
     static constexpr float ClickSlop = 6.0f;
     bool bPressArmed = false, bPressVoided = false;
+    /**
+     * A press on an offered diorama of the journey map (#248), the board's press-and-release rule (#220, #221, #236) for a scene target: it arms only on the offer the HUD
+     * drew hovered under the pointer on the last frame, with the Menu closed, no overlay, the window focused and the route screen live; it is spent when the pointer
+     * leaves that diorama, another key is pressed, focus is lost, an overlay or the Menu opens, or the screen changes (phase or presentation revision); and the release
+     * over the same diorama commits that offer's route, the same command as its card. Route cards keep their press-time activation.
+     */
+    int32 DioramaPress = INDEX_NONE;
+    bool bDioramaVoided = false;
+    uint32 DioramaStamp = 0;
+    /** The live conditions an offer is chosen under, checked at the press, every tick while held and at the release; and the screen it was pressed on. */
+    bool DioramaLive(int32 Offer) const;
+    uint32 DioramaContext() const;
+    /** The pointer is over that offer's diorama on the HUD's last frame. */
+    bool PointerOnDiorama(int32 Offer) const;
+    void PressDiorama(int32 Offer);
     FIntPoint PressCell = FIntPoint::ZeroValue;
     FVector2D PressPointer = FVector2D::ZeroVector;
     /** The rendered yaw and distance and the view's PlayerPans at the press: the parts of the camera the player moves (#232). */

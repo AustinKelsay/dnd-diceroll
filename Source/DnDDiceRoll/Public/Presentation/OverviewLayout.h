@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Presentation/TargetChipLayout.h"
+#include "Run/JourneyQuery.h"
 
 /**
  * What the tabletop overview draws and where (#149, the war table r002): pure functions of the route screen's facts, so the choice is testable
@@ -14,17 +15,24 @@ namespace OverviewLayout
 enum class EDiorama : uint8 { Root, Vigil, Vault };
 
 /**
- * One diorama per offered road. Guarded roads lead to the forest (Root), dangerous roads to the drowned cathedral (Vigil) and the finale, whatever its
- * roads, to the Vault; with no Vault diorama the finale draws the Vigil one, as before the Vault existed. The title (no run) shows the two
- * first worlds side by side.
+ * One diorama per offered road, from the journey query (#247, #248): each offer of the current stage draws the diorama of its world (the forest for the Root,
+ * the drowned cathedral for the Vigil, the Vault for the finale); with no Vault diorama (the r001 set) the Vault draws the Vigil one, as before the Vault existed.
+ * The title (no run: a null journey) shows the two first worlds side by side. An offer whose world is unknown draws nothing.
  */
-inline TArray<EDiorama> Kinds(bool bHasRun, bool bFinale, TConstArrayView<bool> Dangerous, bool bVaultDiorama)
+inline TArray<EDiorama> Kinds(const FJourney* Journey, bool bVaultDiorama)
 {
     TArray<EDiorama> Out;
-    if (!bHasRun) { Out.Add(EDiorama::Root); Out.Add(EDiorama::Vigil); return Out; }
-    for (const bool bDanger : Dangerous)
+    if (!Journey) { Out.Add(EDiorama::Root); Out.Add(EDiorama::Vigil); return Out; }
+    if (!Journey->Stages.IsValidIndex(Journey->CurrentIndex)) { return Out; }
+    for (const FJourneyRoute& Offer : Journey->Stages[Journey->CurrentIndex].Offers)
     {
-        Out.Add(bFinale ? (bVaultDiorama ? EDiorama::Vault : EDiorama::Vigil) : bDanger ? EDiorama::Vigil : EDiorama::Root);
+        switch (Offer.World)
+        {
+        case EExpeditionWorld::Root: Out.Add(EDiorama::Root); break;
+        case EExpeditionWorld::Vigil: Out.Add(EDiorama::Vigil); break;
+        case EExpeditionWorld::Vault: Out.Add(bVaultDiorama ? EDiorama::Vault : EDiorama::Vigil); break;
+        default: break;
+        }
     }
     return Out;
 }

@@ -210,6 +210,16 @@ bool FAmbienceFollowsBoardTest::RunTest(const FString& Parameters)
 
         Game.Press(EKeys::Enter);
         if (!TestTrue(TEXT("The first route starts its fight"), View->InCombat())) { return false; }
+        // The route fly-in (#249) keeps the war table drawn, and its bed, until its cut builds the board: the bed changes there, once.
+        TestTrue(TEXT("The route plays its fly-in"), View->FlyInStage() == AExpeditionBattleView::ERouteFlyInStage::Moving);
+        bool bTableThroughMove = true;
+        for (int32 Step = 0; Step < 400 && View->FlyInStage() == AExpeditionBattleView::ERouteFlyInStage::Moving; ++Step)
+        {
+            bTableThroughMove &= View->AmbienceBed() == EExpeditionAmbience::WarTable;
+            Game.Frame();
+        }
+        TestTrue(TEXT("The war table's bed holds through the fly-in's move"), bTableThroughMove);
+        TestFalse(TEXT("The board is built at the cut"), View->ShowingOverview());
         const EExpeditionAmbience Fight = ExpectedBed(*View);
         TestTrue(TEXT("A world bed is expected"), Fight == EExpeditionAmbience::Vigil || Fight == EExpeditionAmbience::Root);
         TestEqual(TEXT("The fight plays its world's bed"), View->AmbienceBed(), Fight);
@@ -252,6 +262,8 @@ bool FAmbienceFollowsBoardTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("Resume on the route screen restores the war table"), View->AmbienceBed(), EExpeditionAmbience::WarTable);
         View->ChooseRoute(0);
         if (!TestTrue(TEXT("The finale starts"), View->InCombat())) { return false; }
+        // The fly-in (#249) builds the finale's board at its cut.
+        for (int32 Step = 0; Step < 400 && View->FlyingIn(); ++Step) { Game.Frame(); }
         TestEqual(TEXT("The finale plays the bed of the kit it drew"), View->AmbienceBed(), ExpectedBed(*View));
         if (View->UsesVaultKit()) { TestEqual(TEXT("The shipped Vault kit plays the Vault"), View->AmbienceBed(), EExpeditionAmbience::Vault); }
         else { AddError(TEXT("The shipped theme should draw the finale with the Vault kit")); }
