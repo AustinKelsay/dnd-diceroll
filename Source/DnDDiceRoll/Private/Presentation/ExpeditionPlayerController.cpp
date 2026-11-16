@@ -162,7 +162,7 @@ void AExpeditionPlayerController::OnApplicationActivation(bool bActive)
 void AExpeditionPlayerController::PlayerTick(float DeltaTime)
 {
     // A window that has already lost focus spends the press before the superclass delivers any input, including a release it queued (#220).
-    // (Polled every tick, armed or not, so the keyboard-focus latch sees the window have focus before it can lose it.)
+    // (Polled every tick, so the keyboard-focus latch sees focus the window gains during a press before it can lose it.)
     const bool bFocusLost = !WindowHasFocus();
     if ((bPressArmed || DioramaPress != INDEX_NONE) && bFocusLost) { NotifyWindowFocusLost(); }
     Super::PlayerTick(DeltaTime);
@@ -743,6 +743,9 @@ void AExpeditionPlayerController::ChooseAlly(const FCombatantState& Unit)
 
 void AExpeditionPlayerController::Click()
 {
+    // Every left press starts the keyboard-focus latch afresh (#230): only a loss of focus the window had during this press spends it. A seat whose only keyboard
+    // went away (one that sleeps or disconnects) never reports focus again, and its clicks must still commit.
+    bSawKeyboardFocus = KeyboardFocusNow().Get(false);
     bPressArmed = false;
     if (!IsValid(BattleView)) { return; }
     float MouseX = 0, MouseY = 0;
@@ -864,8 +867,9 @@ bool AExpeditionPlayerController::KeyboardFocusLost() const
 
 bool AExpeditionPlayerController::WindowHasFocus() const
 {
-    // Only a loss TRANSITION counts, never an absolute "has focus" state: a seat with no keyboard device never reports focus (FApp::HasFocus stays false, no window ever has SDL
-    // keyboard focus), and ordinary clicks must still work there. KeyboardFocusLost() is false until the window has had keyboard focus once.
+    // Only a loss TRANSITION during the press counts, never an absolute "has focus" state: a seat with no keyboard device never reports focus (FApp::HasFocus stays false, no
+    // window ever has SDL keyboard focus), and ordinary clicks must still work there, including after its only keyboard went away (#230). KeyboardFocusLost() is false until
+    // the window has had keyboard focus since the press began.
     return !KeyboardFocusLost();
 }
 

@@ -43,9 +43,10 @@ public:
     FDelegateHandle ActivationHandle;
     void StopListeningForActivation();
     /**
-     * True once the window has had SDL keyboard focus (Linux: FLinuxApplication's focus window) and no longer has it. While the left button is held the engine does NOT deactivate
-     * the application on that loss (FLinuxApplication::CheckIfApplicatioNeedsDeactivation skips it with a drag-window button down), so neither Slate's activation event nor FApp::HasFocus
-     * reports it; this is the signal that does. Always false on other platforms, and before the window first had focus (a seat with no keyboard never gives it).
+     * True once the window has had SDL keyboard focus (Linux: FLinuxApplication's focus window) since the current left press began and no longer has it. While the left button
+     * is held the engine does NOT deactivate the application on that loss (FLinuxApplication::CheckIfApplicatioNeedsDeactivation skips it with a drag-window button down), so neither
+     * Slate's activation event nor FApp::HasFocus reports it; this is the signal that does. Each press starts it afresh (Click), so a seat whose only keyboard went away keeps
+     * clicking (#230). Always false on other platforms, and while the window has not had focus during the press (a seat with no keyboard never gives it).
      */
     bool KeyboardFocusLost() const;
     mutable bool bSawKeyboardFocus = false;
@@ -53,7 +54,7 @@ public:
     TOptional<bool> KeyboardFocusNow() const;
     /** Test support: stands in for the platform's keyboard focus report (unset: the platform's again). */
     void SimulateKeyboardFocus(TOptional<bool> bFocused) { SimulatedKeyboardFocus = bFocused; }
-    /** False once the window has lost keyboard focus it had (KeyboardFocusLost); true otherwise, including on a seat that never had one. */
+    /** False once the window has lost keyboard focus it had during the current press (KeyboardFocusLost); true otherwise, including on a seat with no keyboard. */
     bool WindowHasFocus() const;
     AExpeditionBattleView* GetBattleView() const { return BattleView; }
     int32 Selection() const { return SelectedId; }
