@@ -516,6 +516,28 @@ bool FLeftClickAfterKeyboardGoneTest::RunTest(const FString& Parameters)
         Frames(*Game, 3);
         TestTrue(TEXT("A fresh click with focus back commits"), PlainClick(*Game, Aim, Cell));
     }
+    {
+        // #269 review: the press is queued with focus, and another client takes the keyboard before the frame that dispatches it. The press starts its latch
+        // in that frame, after the loss; the loss must still spend it.
+        TUniquePtr<FHarness> Game = Resumed(*this, Data);
+        if (!TestTrue(TEXT("The party holds the turn (queued press)"), Game.IsValid())) { return false; }
+        Game->Player->SimulateKeyboardFocus(true);
+        FIntPoint Cell;
+        if (!TestTrue(TEXT("The hero has a cell to walk to (queued press)"), FreeMove(*Game, Cell))) { return false; }
+        Point(*Game, Aim, Cell);
+        Frames(*Game, 3);
+        const FStamp Was = Stamp(*Game);
+        Down(*Game, EKeys::LeftMouseButton);
+        Game->Player->SimulateKeyboardFocus(false);
+        Game->Frame(1.0f / 30.0f);
+        Up(*Game, EKeys::LeftMouseButton);
+        Frames(*Game, 3);
+        Game->Settle();
+        TestTrue(TEXT("A press whose focus loss came before the frame that dispatched it commits nothing"), Same(Was, Stamp(*Game)));
+        // The keyboard stays gone and no window has it (as when the device disappears): the next fresh press commits (#230).
+        Game->Player->PreviewMode(ECombatCommandType::Attack);
+        TestTrue(TEXT("With the keyboard still gone, the next fresh click commits"), PlainClick(*Game, Aim, Cell));
+    }
     return !HasAnyErrors();
 }
 
