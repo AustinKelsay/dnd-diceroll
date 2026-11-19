@@ -28,3 +28,14 @@ ERollMode FStandardActionRules::DexSaveWhileDodging(bool bDodging)
 }
 
 bool FStandardActionRules::LeavingReachProvokes(bool bDisengaged) { return !bDisengaged; }
+
+const TCHAR* FStandardActionRules::CostLabel(EActionCost Cost)
+{
+	switch (Cost)
+	{
+	case EActionCost::BonusAction: return TEXT("Bonus");
+	case EActionCost::Reaction: return TEXT("Reaction");
+	case EActionCost::Free: return TEXT("Free");
+	default: return TEXT("Action");
+	}
+}

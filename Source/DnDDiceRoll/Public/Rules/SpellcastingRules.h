@@ -22,7 +22,7 @@ struct DNDDICEROLL_API FSpellDelivery
 struct DNDDICEROLL_API FSpellcastingRules
 {
     static bool IsSpellcaster(EAdventurerRole Role);
-    /** Cleric: Wisdom; Wizard: Intelligence. Non-casters return Intelligence and IsSpellcaster is false. */
+    /** Wis: Cleric/Druid/Ranger. Cha: Bard/Paladin/Sorcerer/Warlock. Int: Wizard/Artificer (and non-casters). */
     static EAbility SpellcastingAbility(EAdventurerRole Role);
     /** 8 + proficiency bonus + ability modifier. */
     static int32 SaveDc(int32 ProficiencyBonus, int32 AbilityModifier);

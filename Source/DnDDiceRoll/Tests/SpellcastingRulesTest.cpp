@@ -10,6 +10,10 @@ bool FSpellcastingDcAttackSaveTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Cleric casts with Wisdom"), FSpellcastingRules::SpellcastingAbility(EAdventurerRole::Cleric) == EAbility::Wisdom);
     TestTrue(TEXT("Wizard casts with Intelligence"), FSpellcastingRules::SpellcastingAbility(EAdventurerRole::Wizard) == EAbility::Intelligence);
     TestTrue(TEXT("Casters"), FSpellcastingRules::IsSpellcaster(EAdventurerRole::Wizard) && !FSpellcastingRules::IsSpellcaster(EAdventurerRole::Rogue));
+    TestTrue(TEXT("All casting roles"), FSpellcastingRules::IsSpellcaster(EAdventurerRole::Bard) && FSpellcastingRules::IsSpellcaster(EAdventurerRole::Druid) && FSpellcastingRules::IsSpellcaster(EAdventurerRole::Paladin) && FSpellcastingRules::IsSpellcaster(EAdventurerRole::Ranger) && FSpellcastingRules::IsSpellcaster(EAdventurerRole::Sorcerer) && FSpellcastingRules::IsSpellcaster(EAdventurerRole::Warlock) && FSpellcastingRules::IsSpellcaster(EAdventurerRole::Artificer));
+    TestTrue(TEXT("Cha casters"), FSpellcastingRules::SpellcastingAbility(EAdventurerRole::Sorcerer) == EAbility::Charisma && FSpellcastingRules::SpellcastingAbility(EAdventurerRole::Warlock) == EAbility::Charisma && FSpellcastingRules::SpellcastingAbility(EAdventurerRole::Bard) == EAbility::Charisma && FSpellcastingRules::SpellcastingAbility(EAdventurerRole::Paladin) == EAbility::Charisma);
+    TestTrue(TEXT("Wis casters"), FSpellcastingRules::SpellcastingAbility(EAdventurerRole::Druid) == EAbility::Wisdom && FSpellcastingRules::SpellcastingAbility(EAdventurerRole::Ranger) == EAbility::Wisdom);
+    TestTrue(TEXT("Artificer Int"), FSpellcastingRules::SpellcastingAbility(EAdventurerRole::Artificer) == EAbility::Intelligence);
     TestEqual(TEXT("Save DC: 8 + 2 + 3"), FSpellcastingRules::SaveDc(2, 3), 13);
     TestEqual(TEXT("Spell attack: 2 + 3"), FSpellcastingRules::AttackBonus(2, 3), 5);
     TestTrue(TEXT("Fire Bolt is a spell attack"), FSpellcastingRules::Delivery(ESpell::FireBolt).Kind == ESpellDelivery::Attack);
