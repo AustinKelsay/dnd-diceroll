@@ -169,14 +169,18 @@ bool FAdvancementRules::OffersSubclassAt(EAdventurerRole Role, int32 NewClassLev
     return Choice > 0 && NewClassLevel == Choice;
 }
 
-bool FAdvancementRules::OffersAsiAt(int32 NewCharacterLevel)
+bool FAdvancementRules::OffersAsiAt(EAdventurerRole Role, int32 NewClassLevel)
 {
-    static const int32 AsiLevels[] = { 4, 8, 12, 16, 19 };
-    for (int32 Asi : AsiLevels)
+    // SRD 5.2.1 class tables: Ability Score Improvement at class levels 4, 8, 12 and 16 for every class; the Fighter also gains it
+    // at 6 and 14 and the Rogue at 10. Level 19 is Epic Boon, not an ASI. Keyed by class level, never character level.
+    if (Role == EAdventurerRole::None) { return false; }
+    switch (NewClassLevel)
     {
-        if (Asi == NewCharacterLevel && Asi <= XpTableCap) { return true; }
+    case 4: case 8: case 12: case 16: return true;
+    case 6: case 14: return Role == EAdventurerRole::Fighter;
+    case 10: return Role == EAdventurerRole::Rogue;
+    default: return false;
     }
-    return false;
 }
 
 int32 FAdvancementRules::CantripsKnown(EAdventurerRole Role, int32 ClassLevel)

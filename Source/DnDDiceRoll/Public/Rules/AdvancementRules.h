@@ -67,8 +67,12 @@ struct DNDDICEROLL_API FAdvancementRules
     static int32 SubclassChoiceLevel(EAdventurerRole Role);
     /** True when the class level being taken equals the subclass gate (existing subclasses first). */
     static bool OffersSubclassAt(EAdventurerRole Role, int32 NewClassLevel);
-    /** ASI choice levels by character level (4, 8, 12, 16, 19). Feat picks deferred — licensing. */
-    static bool OffersAsiAt(int32 NewCharacterLevel);
+    /**
+     * True when gaining NewClassLevel in Role grants Ability Score Improvement (SRD 5.2.1 class tables): class levels 4, 8, 12 and 16
+     * for every class, plus Fighter 6 and 14 and Rogue 10. Keyed by class level, not character level: a Fighter 2 / Rogue 2 has none,
+     * and a Fighter 4 / Rogue 1 has one. Level 19 is Epic Boon, not an ASI. Feat picks deferred (licensing).
+     */
+    static bool OffersAsiAt(EAdventurerRole Role, int32 NewClassLevel);
 
     /** Cantrips column of the SRD 5.2.1 class table at ClassLevel (clamped to 1..EngineLevelCap); 0 for classes without cantrips. */
     static int32 CantripsKnown(EAdventurerRole Role, int32 ClassLevel);

@@ -30,8 +30,8 @@ bool FAdvancementXpHpGatesTest::RunTest(const FString& Parameters)
 
     TestEqual(TEXT("Prof L5 is 3"), FAdvancementRules::ProficiencyBonus(5), 3);
     TestTrue(TEXT("Subclass at class L3"), FAdvancementRules::OffersSubclassAt(EAdventurerRole::Fighter, 3));
-    TestTrue(TEXT("ASI at character L4"), FAdvancementRules::OffersAsiAt(4));
-    TestFalse(TEXT("No ASI at L5"), FAdvancementRules::OffersAsiAt(5));
+    TestTrue(TEXT("ASI at Fighter level 4"), FAdvancementRules::OffersAsiAt(EAdventurerRole::Fighter, 4));
+    TestFalse(TEXT("No ASI at Fighter level 5"), FAdvancementRules::OffersAsiAt(EAdventurerRole::Fighter, 5));
 
     TestEqual(TEXT("Wizard cantrips L4"), FAdvancementRules::CantripsKnown(EAdventurerRole::Wizard, 4), 4);
     TestEqual(TEXT("Bard known L1"), FAdvancementRules::SpellsKnownOrPrepared(EAdventurerRole::Bard, 1, 3), 4);
@@ -118,6 +118,30 @@ bool FSpellcastingCounts521Test::RunTest(const FString& Parameters)
         }
     }
     TestEqual(TEXT("A Fighter prepares no spells"), FAdvancementRules::SpellsKnownOrPrepared(R::Fighter, 5, 3), 0);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAsiByClassLevelTest, "Project.Expedition.Rules.AsiByClassLevel",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FAsiByClassLevelTest::RunTest(const FString& Parameters)
+{
+    // #177 review finding 3: ASIs follow each class table (SRD 5.2.1), not total character level.
+    using R = EAdventurerRole;
+    TestFalse(TEXT("Fighter 2 / Rogue 2: the fourth character level (Rogue 2) grants no ASI"), FAdvancementRules::OffersAsiAt(R::Rogue, 2));
+    TestFalse(TEXT("Fighter 2 / Rogue 2: nor would Fighter 2"), FAdvancementRules::OffersAsiAt(R::Fighter, 2));
+    TestTrue(TEXT("Fighter 4 / Rogue 1: Fighter 4 at character level 5 grants an ASI"), FAdvancementRules::OffersAsiAt(R::Fighter, 4));
+    TestTrue(TEXT("Fighter 6 grants an ASI"), FAdvancementRules::OffersAsiAt(R::Fighter, 6));
+    TestTrue(TEXT("Fighter 14 grants an ASI"), FAdvancementRules::OffersAsiAt(R::Fighter, 14));
+    TestFalse(TEXT("Fighter 10 does not"), FAdvancementRules::OffersAsiAt(R::Fighter, 10));
+    TestTrue(TEXT("Rogue 10 grants an ASI"), FAdvancementRules::OffersAsiAt(R::Rogue, 10));
+    TestFalse(TEXT("Rogue 6 does not"), FAdvancementRules::OffersAsiAt(R::Rogue, 6));
+    TestFalse(TEXT("Wizard 6 does not"), FAdvancementRules::OffersAsiAt(R::Wizard, 6));
+    TestFalse(TEXT("No class at all grants nothing"), FAdvancementRules::OffersAsiAt(R::None, 4));
+    for (R Role : {R::Barbarian, R::Bard, R::Cleric, R::Druid, R::Fighter, R::Monk, R::Paladin, R::Ranger, R::Rogue, R::Sorcerer, R::Warlock, R::Wizard})
+    {
+        for (int32 Level : {4, 8, 12, 16}) { TestTrue(FString::Printf(TEXT("Class %d level %d grants an ASI"), (int32)Role, Level), FAdvancementRules::OffersAsiAt(Role, Level)); }
+        for (int32 Level : {1, 2, 3, 5, 19, 20}) { TestFalse(FString::Printf(TEXT("Class %d level %d grants no ASI"), (int32)Role, Level), FAdvancementRules::OffersAsiAt(Role, Level)); }
+    }
     return !HasAnyErrors();
 }
 #endif
