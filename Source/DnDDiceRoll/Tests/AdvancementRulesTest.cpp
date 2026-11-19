@@ -84,4 +84,40 @@ bool FAdvancementXpHpGatesTest::RunTest(const FString& Parameters)
 
     return !HasAnyErrors();
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpellcastingCounts521Test, "Project.Expedition.Rules.SpellcastingCounts521",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSpellcastingCounts521Test::RunTest(const FString& Parameters)
+{
+    // #177 review finding 2: the Cantrips and Prepared Spells columns of the SRD 5.2.1 class tables (pp. 31, 36, 41, 53, 58, 65, 71, 77).
+    using R = EAdventurerRole;
+    TestEqual(TEXT("Ranger 1 prepares 2"), FAdvancementRules::SpellsKnownOrPrepared(R::Ranger, 1, 3), 2);
+    TestEqual(TEXT("Sorcerer 3 prepares 6"), FAdvancementRules::SpellsKnownOrPrepared(R::Sorcerer, 3, 3), 6);
+    TestEqual(TEXT("Cleric 5 with WIS +3 prepares 9"), FAdvancementRules::SpellsKnownOrPrepared(R::Cleric, 5, 3), 9);
+    TestEqual(TEXT("Bard 5 prepares 9"), FAdvancementRules::SpellsKnownOrPrepared(R::Bard, 5, 3), 9);
+    TestEqual(TEXT("Druid 1 knows 2 cantrips"), FAdvancementRules::CantripsKnown(R::Druid, 1), 2);
+    TestEqual(TEXT("Cleric 4 knows 4 cantrips"), FAdvancementRules::CantripsKnown(R::Cleric, 4), 4);
+    struct FRow { R Role; const TCHAR* Name; int32 Cantrips[5]; int32 Prepared[5]; };
+    const FRow Rows[] = {
+        {R::Bard, TEXT("Bard"), {2, 2, 2, 3, 3}, {4, 5, 6, 7, 9}},
+        {R::Cleric, TEXT("Cleric"), {3, 3, 3, 4, 4}, {4, 5, 6, 7, 9}},
+        {R::Druid, TEXT("Druid"), {2, 2, 2, 3, 3}, {4, 5, 6, 7, 9}},
+        {R::Paladin, TEXT("Paladin"), {0, 0, 0, 0, 0}, {2, 3, 4, 5, 6}},
+        {R::Ranger, TEXT("Ranger"), {0, 0, 0, 0, 0}, {2, 3, 4, 5, 6}},
+        {R::Sorcerer, TEXT("Sorcerer"), {4, 4, 4, 5, 5}, {2, 4, 6, 7, 9}},
+        {R::Warlock, TEXT("Warlock"), {2, 2, 2, 3, 3}, {2, 3, 4, 5, 6}},
+        {R::Wizard, TEXT("Wizard"), {3, 3, 3, 4, 4}, {4, 5, 6, 7, 9}},
+    };
+    for (const FRow& Row : Rows)
+    {
+        for (int32 Level = 1; Level <= 5; ++Level)
+        {
+            TestEqual(FString::Printf(TEXT("%s %d cantrips"), Row.Name, Level), FAdvancementRules::CantripsKnown(Row.Role, Level), Row.Cantrips[Level - 1]);
+            TestEqual(FString::Printf(TEXT("%s %d prepared spells"), Row.Name, Level), FAdvancementRules::SpellsKnownOrPrepared(Row.Role, Level, 3), Row.Prepared[Level - 1]);
+            TestEqual(FString::Printf(TEXT("%s %d ignores the ability modifier"), Row.Name, Level), FAdvancementRules::SpellsKnownOrPrepared(Row.Role, Level, -1), FAdvancementRules::SpellsKnownOrPrepared(Row.Role, Level, 5));
+        }
+    }
+    TestEqual(TEXT("A Fighter prepares no spells"), FAdvancementRules::SpellsKnownOrPrepared(R::Fighter, 5, 3), 0);
+    return !HasAnyErrors();
+}
 #endif

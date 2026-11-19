@@ -70,7 +70,12 @@ struct DNDDICEROLL_API FAdvancementRules
     /** ASI choice levels by character level (4, 8, 12, 16, 19). Feat picks deferred — licensing. */
     static bool OffersAsiAt(int32 NewCharacterLevel);
 
+    /** Cantrips column of the SRD 5.2.1 class table at ClassLevel (clamped to 1..EngineLevelCap); 0 for classes without cantrips. */
     static int32 CantripsKnown(EAdventurerRole Role, int32 ClassLevel);
+    /**
+     * Prepared Spells column of the SRD 5.2.1 class table at ClassLevel (clamped to 1..EngineLevelCap). 5.2.1 fixes the count per
+     * class level, so SpellcastingAbilityModifier is ignored for SRD classes; only the non-SRD roster Artificer still reads it.
+     */
     static int32 SpellsKnownOrPrepared(EAdventurerRole Role, int32 ClassLevel, int32 SpellcastingAbilityModifier);
 
     /** SRD multiclass: ability score >= 13 for the class (and both for some). Scores are full 1-30 values. */

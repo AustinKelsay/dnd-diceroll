@@ -181,49 +181,44 @@ bool FAdvancementRules::OffersAsiAt(int32 NewCharacterLevel)
 
 int32 FAdvancementRules::CantripsKnown(EAdventurerRole Role, int32 ClassLevel)
 {
+    // SRD 5.2.1 class tables, Cantrips column, levels 1-5 (Bard p. 31, Cleric p. 36, Druid p. 41, Sorcerer p. 65, Warlock p. 71, Wizard p. 77).
     const int32 L = FMath::Clamp(ClassLevel, 1, EngineLevelCap);
+    static const int32 TwoThenThree[] = { 0, 2, 2, 2, 3, 3 };
+    static const int32 ThreeThenFour[] = { 0, 3, 3, 3, 4, 4 };
+    static const int32 FourThenFive[] = { 0, 4, 4, 4, 5, 5 };
     switch (Role)
     {
-    case EAdventurerRole::Bard: return L >= 4 ? 3 : 2;
+    case EAdventurerRole::Bard:
+    case EAdventurerRole::Druid:
+    case EAdventurerRole::Warlock: return TwoThenThree[L];
     case EAdventurerRole::Cleric:
-    case EAdventurerRole::Druid: return 3;
-    case EAdventurerRole::Sorcerer: return L >= 4 ? 5 : 4;
-    case EAdventurerRole::Warlock: return L >= 4 ? 3 : 2;
-    case EAdventurerRole::Wizard: return L >= 4 ? 4 : 3;
-    case EAdventurerRole::Artificer: return 2;
+    case EAdventurerRole::Wizard: return ThreeThenFour[L];
+    case EAdventurerRole::Sorcerer: return FourThenFive[L];
+    case EAdventurerRole::Artificer: return 2; // Not in SRD 5.2.1; roster-only legacy value, unchanged.
     default: return 0;
     }
 }
 
 int32 FAdvancementRules::SpellsKnownOrPrepared(EAdventurerRole Role, int32 ClassLevel, int32 SpellcastingAbilityModifier)
 {
+    // SRD 5.2.1 class tables, Prepared Spells column, levels 1-5 (pp. 31, 36, 41, 53, 58, 65, 71, 77). 5.2.1 fixes the count per
+    // class level, so the ability modifier no longer matters for SRD classes.
     const int32 L = FMath::Clamp(ClassLevel, 1, EngineLevelCap);
+    static const int32 FullCaster[] = { 0, 4, 5, 6, 7, 9 };
+    static const int32 Sorcerer[] = { 0, 2, 4, 6, 7, 9 };
+    static const int32 HalfCasterAndWarlock[] = { 0, 2, 3, 4, 5, 6 };
     switch (Role)
     {
     case EAdventurerRole::Bard:
-    {
-        static const int32 Known[] = { 0, 4, 5, 6, 7, 8 };
-        return Known[L];
-    }
-    case EAdventurerRole::Ranger:
-    {
-        static const int32 Known[] = { 0, 0, 2, 3, 3, 4 };
-        return Known[L];
-    }
-    case EAdventurerRole::Sorcerer:
-    case EAdventurerRole::Warlock:
-    {
-        static const int32 Known[] = { 0, 2, 3, 4, 5, 6 };
-        return Known[L];
-    }
     case EAdventurerRole::Cleric:
     case EAdventurerRole::Druid:
+    case EAdventurerRole::Wizard: return FullCaster[L];
+    case EAdventurerRole::Sorcerer: return Sorcerer[L];
     case EAdventurerRole::Paladin:
-    case EAdventurerRole::Wizard:
-    case EAdventurerRole::Artificer:
-        return FMath::Max(1, SpellcastingAbilityModifier + L);
-    default:
-        return 0;
+    case EAdventurerRole::Ranger:
+    case EAdventurerRole::Warlock: return HalfCasterAndWarlock[L];
+    case EAdventurerRole::Artificer: return FMath::Max(1, SpellcastingAbilityModifier + L); // Not in SRD 5.2.1; roster-only legacy formula, unchanged.
+    default: return 0;
     }
 }
 
