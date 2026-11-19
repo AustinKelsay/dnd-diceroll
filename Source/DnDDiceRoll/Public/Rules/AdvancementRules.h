@@ -84,7 +84,10 @@ struct DNDDICEROLL_API FAdvancementRules
 
     /** SRD multiclass: ability score >= 13 for the class (and both for some). Scores are full 1-30 values. */
     static bool MeetsMulticlassPrerequisite(EAdventurerRole Role, int32 Str, int32 Dex, int32 Con, int32 Intelligence, int32 Wis, int32 Cha);
-    /** Proficiencies granted when taking the first level in a new class while already having another (SRD multiclass table). */
+    /**
+     * Proficiencies and training from the SRD 5.2.1 "As a Multiclass Character" traits when taking a first level in NewClass while
+     * already having another class. The Hit Point Die and level 1 features are not listed; Monk, Sorcerer and Wizard return none.
+     */
     static TArray<FString> MulticlassProficienciesGained(EAdventurerRole NewClass);
     /**
      * Multiclass spellcaster level for the spell slot table (Warlock pact slots stay separate via SlotsFor(Warlock,...)).

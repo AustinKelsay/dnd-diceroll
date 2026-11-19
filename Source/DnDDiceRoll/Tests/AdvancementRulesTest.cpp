@@ -144,4 +144,31 @@ bool FAsiByClassLevelTest::RunTest(const FString& Parameters)
     }
     return !HasAnyErrors();
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMulticlassTraits521Test, "Project.Expedition.Rules.MulticlassTraits521",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FMulticlassTraits521Test::RunTest(const FString& Parameters)
+{
+    // #177 review finding 5: the SRD 5.2.1 "As a Multiclass Character" traits (one per class section).
+    using R = EAdventurerRole;
+    auto Gained = [](R Role) { return FAdvancementRules::MulticlassProficienciesGained(Role); };
+    const TArray<FString> MartialKit = {TEXT("Light armor"), TEXT("Medium armor"), TEXT("Shields"), TEXT("Martial weapons")};
+    TestTrue(TEXT("Druid: Light armor and Shields only"), Gained(R::Druid) == TArray<FString>({TEXT("Light armor"), TEXT("Shields")}));
+    TestEqual(TEXT("Monk: Hit Point Die only"), Gained(R::Monk).Num(), 0);
+    TestEqual(TEXT("Sorcerer: Hit Point Die only"), Gained(R::Sorcerer).Num(), 0);
+    TestEqual(TEXT("Wizard: Hit Point Die only"), Gained(R::Wizard).Num(), 0);
+    TestTrue(TEXT("Fighter: Light and Medium armor, Shields, Martial weapons"), Gained(R::Fighter) == MartialKit);
+    TestTrue(TEXT("Paladin: Light and Medium armor, Shields, Martial weapons"), Gained(R::Paladin) == MartialKit);
+    TestTrue(TEXT("Ranger: the martial kit plus one Ranger skill"), Gained(R::Ranger) == TArray<FString>({TEXT("Light armor"), TEXT("Medium armor"), TEXT("Shields"), TEXT("Martial weapons"), TEXT("One Ranger skill")}));
+    TestTrue(TEXT("Barbarian: Martial weapons and Shields"), Gained(R::Barbarian) == TArray<FString>({TEXT("Martial weapons"), TEXT("Shields")}));
+    TestTrue(TEXT("Cleric: Light and Medium armor and Shields"), Gained(R::Cleric) == TArray<FString>({TEXT("Light armor"), TEXT("Medium armor"), TEXT("Shields")}));
+    TestTrue(TEXT("Warlock: Light armor only"), Gained(R::Warlock) == TArray<FString>({TEXT("Light armor")}));
+    TestTrue(TEXT("Rogue: Light armor, one Rogue skill, Thieves' tools"), Gained(R::Rogue) == TArray<FString>({TEXT("Light armor"), TEXT("One Rogue skill"), TEXT("Thieves' tools")}));
+    TestTrue(TEXT("Bard: Light armor, one skill, one instrument"), Gained(R::Bard) == TArray<FString>({TEXT("Light armor"), TEXT("One skill"), TEXT("One musical instrument")}));
+    for (R Role : {R::Barbarian, R::Bard, R::Cleric, R::Druid, R::Fighter, R::Monk, R::Paladin, R::Ranger, R::Rogue, R::Sorcerer, R::Warlock, R::Wizard})
+    {
+        TestFalse(FString::Printf(TEXT("Class %d grants no Simple weapons"), (int32)Role), Gained(Role).Contains(TEXT("Simple weapons")));
+    }
+    return !HasAnyErrors();
+}
 #endif

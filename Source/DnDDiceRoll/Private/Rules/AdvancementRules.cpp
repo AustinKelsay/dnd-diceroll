@@ -250,38 +250,35 @@ bool FAdvancementRules::MeetsMulticlassPrerequisite(EAdventurerRole Role, int32 
 
 TArray<FString> FAdvancementRules::MulticlassProficienciesGained(EAdventurerRole NewClass)
 {
-    // SRD multiclass proficiency columns (weapons/armor/tools/skills abbreviated as labels for menus).
+    // SRD 5.2.1 "As a Multiclass Character" traits for each class (labels for menus). Only the proficiencies and training are
+    // listed: every class also grants its Hit Point Die and level 1 features, which are not proficiencies.
     TArray<FString> Out;
     switch (NewClass)
     {
     case EAdventurerRole::Barbarian:
-        Out.Add(TEXT("Shields")); Out.Add(TEXT("Simple weapons")); Out.Add(TEXT("Martial weapons")); break;
+        Out.Add(TEXT("Martial weapons")); Out.Add(TEXT("Shields")); break;
     case EAdventurerRole::Bard:
         Out.Add(TEXT("Light armor")); Out.Add(TEXT("One skill")); Out.Add(TEXT("One musical instrument")); break;
     case EAdventurerRole::Cleric:
         Out.Add(TEXT("Light armor")); Out.Add(TEXT("Medium armor")); Out.Add(TEXT("Shields")); break;
     case EAdventurerRole::Druid:
-        Out.Add(TEXT("Light armor")); Out.Add(TEXT("Medium armor")); Out.Add(TEXT("Shields (nonmetal)")); break;
+        Out.Add(TEXT("Light armor")); Out.Add(TEXT("Shields")); break;
     case EAdventurerRole::Fighter:
-        Out.Add(TEXT("Light armor")); Out.Add(TEXT("Medium armor")); Out.Add(TEXT("Shields"));
-        Out.Add(TEXT("Simple weapons")); Out.Add(TEXT("Martial weapons")); break;
-    case EAdventurerRole::Monk:
-        Out.Add(TEXT("Simple weapons")); Out.Add(TEXT("Shortswords")); break;
     case EAdventurerRole::Paladin:
-        Out.Add(TEXT("Light armor")); Out.Add(TEXT("Medium armor")); Out.Add(TEXT("Shields"));
-        Out.Add(TEXT("Simple weapons")); Out.Add(TEXT("Martial weapons")); break;
+        Out.Add(TEXT("Light armor")); Out.Add(TEXT("Medium armor")); Out.Add(TEXT("Shields")); Out.Add(TEXT("Martial weapons")); break;
     case EAdventurerRole::Ranger:
-        Out.Add(TEXT("Light armor")); Out.Add(TEXT("Medium armor")); Out.Add(TEXT("Shields"));
-        Out.Add(TEXT("Simple weapons")); Out.Add(TEXT("Martial weapons")); Out.Add(TEXT("One skill")); break;
+        Out.Add(TEXT("Light armor")); Out.Add(TEXT("Medium armor")); Out.Add(TEXT("Shields")); Out.Add(TEXT("Martial weapons"));
+        Out.Add(TEXT("One Ranger skill")); break;
     case EAdventurerRole::Rogue:
-        Out.Add(TEXT("Light armor")); Out.Add(TEXT("One skill")); Out.Add(TEXT("Thieves' tools")); break;
-    case EAdventurerRole::Sorcerer:
-        break;
+        Out.Add(TEXT("Light armor")); Out.Add(TEXT("One Rogue skill")); Out.Add(TEXT("Thieves' tools")); break;
     case EAdventurerRole::Warlock:
-        Out.Add(TEXT("Light armor")); Out.Add(TEXT("Simple weapons")); break;
+        Out.Add(TEXT("Light armor")); break;
+    case EAdventurerRole::Monk:
+    case EAdventurerRole::Sorcerer:
     case EAdventurerRole::Wizard:
-        break;
+        break; // Hit Point Die only.
     case EAdventurerRole::Artificer:
+        // Not in SRD 5.2.1; roster-only legacy values, unchanged.
         Out.Add(TEXT("Light armor")); Out.Add(TEXT("Medium armor")); Out.Add(TEXT("Shields"));
         Out.Add(TEXT("Thieves' tools")); Out.Add(TEXT("Tinker's tools")); break;
     default:
