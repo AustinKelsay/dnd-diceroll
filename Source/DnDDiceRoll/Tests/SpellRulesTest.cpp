@@ -98,7 +98,7 @@ bool FSpellFactsSlotsTest::RunTest(const FString& Parameters)
     const FSpellFacts& MageArmor = FSpellRules::Facts(ESpell::MageArmor);
     TestTrue(TEXT("Mage Armor: Wizard Abjuration 8 hours, not concentration"), MageArmor.Level == 1 && MageArmor.School == ESpellSchool::Abjuration && MageArmor.bWizard && !MageArmor.bCleric && !MageArmor.bConcentration && MageArmor.bMaterial && FCString::Strcmp(MageArmor.Duration, TEXT("8 hours")) == 0);
 
-    // Lean #116/#117 finish â€” SRD 5.2.1 verified rows.
+    // Lean #116/#117 finish — SRD 5.2.1 verified rows.
     const FSpellFacts& Ray = FSpellRules::Facts(ESpell::RayOfFrost);
     TestTrue(TEXT("Ray of Frost: Wizard cold cantrip 1d8"), Ray.Level == 0 && Ray.bWizard && Ray.DamageType == EDamageType::Cold && Ray.DieCount == 1 && Ray.DieSides == 8 && !Ray.bConcentration);
     TestTrue(TEXT("Shocking Grasp: Wizard lightning touch cantrip"), FSpellRules::Facts(ESpell::ShockingGrasp).DamageType == EDamageType::Lightning && FSpellRules::Facts(ESpell::ShockingGrasp).RangeFeet == 0);
