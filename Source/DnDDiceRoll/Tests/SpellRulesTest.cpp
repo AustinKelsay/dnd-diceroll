@@ -113,7 +113,7 @@ bool FSpellFactsSlotsTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Feather Fall reaction"), FString(FSpellRules::Facts(ESpell::FeatherFall).CastingTime), FString(TEXT("1 reaction")));
     const FSpellFacts& Detect = FSpellRules::Facts(ESpell::DetectMagic);
     TestTrue(TEXT("Detect Magic: ritual concentration both classes"), Detect.bRitual && Detect.bConcentration && Detect.bCleric && Detect.bWizard);
-    TestTrue(TEXT("Detect Magic nearly universal"), Detect.bBard && Detect.bDruid && Detect.bPaladin && Detect.bRanger && Detect.bSorcerer && Detect.bArtificer && !Detect.bWarlock);
+    TestTrue(TEXT("Detect Magic is on every 5.2.1 caster list"), Detect.bBard && Detect.bDruid && Detect.bPaladin && Detect.bRanger && Detect.bSorcerer && Detect.bArtificer && Detect.bWarlock);
     const FSpellFacts& Sleep = FSpellRules::Facts(ESpell::Sleep);
     TestTrue(TEXT("Sleep 5.2.1: concentration Wis sphere 60 ft"), Sleep.bConcentration && Sleep.RangeFeet == 60 && Sleep.bWizard && !Sleep.bCleric && Sleep.bMaterial);
     TestTrue(TEXT("Sleep also Bard/Sorcerer"), Sleep.bBard && Sleep.bSorcerer);
@@ -127,7 +127,7 @@ bool FSpellFactsSlotsTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Hold Person full list"), FSpellRules::Facts(ESpell::HoldPerson).bBard && FSpellRules::Facts(ESpell::HoldPerson).bDruid && FSpellRules::Facts(ESpell::HoldPerson).bSorcerer && FSpellRules::Facts(ESpell::HoldPerson).bWarlock);
     TestEqual(TEXT("Aid +5 HP flat"), FSpellRules::Facts(ESpell::Aid).FlatBonus, 5);
     TestFalse(TEXT("Aid is not concentration"), FSpellRules::Facts(ESpell::Aid).bConcentration);
-    TestTrue(TEXT("Aid Cleric/Paladin/Artificer"), FSpellRules::Facts(ESpell::Aid).bCleric && FSpellRules::Facts(ESpell::Aid).bPaladin && FSpellRules::Facts(ESpell::Aid).bArtificer && !FSpellRules::Facts(ESpell::Aid).bBard);
+    TestTrue(TEXT("Aid Bard/Cleric/Druid/Paladin/Ranger (+Artificer roster)"), FSpellRules::Facts(ESpell::Aid).bBard && FSpellRules::Facts(ESpell::Aid).bCleric && FSpellRules::Facts(ESpell::Aid).bDruid && FSpellRules::Facts(ESpell::Aid).bPaladin && FSpellRules::Facts(ESpell::Aid).bRanger && FSpellRules::Facts(ESpell::Aid).bArtificer);
 
     for (int32 SpellIndex = 0; SpellIndex < (int32)ESpell::Count; ++SpellIndex)
     {
@@ -138,6 +138,23 @@ bool FSpellFactsSlotsTest::RunTest(const FString& Parameters)
     }
     TestTrue(TEXT("SpellsOnList Wizard cantrips nonempty"), FSpellRules::SpellsOnList(EAdventurerRole::Wizard, 0).Num() > 0);
     TestTrue(TEXT("SpellsOnList Warlock L2 includes Misty Step"), FSpellRules::SpellsOnList(EAdventurerRole::Warlock, 2).Contains(ESpell::MistyStep));
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpellListTags521Test, "Project.Expedition.Rules.SpellListTags521",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSpellListTags521Test::RunTest(const FString& Parameters)
+{
+    // #177 review finding 6: SRD 5.2.1 class lists (pp. 34, 44, 60, 74) and spell headers (Aid p. 107).
+    using R = EAdventurerRole;
+    for (R Role : {R::Bard, R::Cleric, R::Druid, R::Paladin, R::Ranger}) { TestTrue(FString::Printf(TEXT("Aid is on class %d's list"), (int32)Role), FSpellRules::OnClassList(Role, ESpell::Aid)); }
+    for (R Role : {R::Sorcerer, R::Warlock, R::Wizard}) { TestFalse(FString::Printf(TEXT("Aid is not on class %d's list"), (int32)Role), FSpellRules::OnClassList(Role, ESpell::Aid)); }
+    for (R Role : {R::Bard, R::Cleric, R::Warlock}) { TestTrue(FString::Printf(TEXT("Bane is on class %d's list"), (int32)Role), FSpellRules::OnClassList(Role, ESpell::Bane)); }
+    for (R Role : {R::Druid, R::Paladin, R::Ranger, R::Sorcerer, R::Wizard}) { TestFalse(FString::Printf(TEXT("Bane is not on class %d's list"), (int32)Role), FSpellRules::OnClassList(Role, ESpell::Bane)); }
+    for (R Role : {R::Bard, R::Cleric, R::Druid, R::Paladin, R::Ranger, R::Sorcerer, R::Warlock, R::Wizard}) { TestTrue(FString::Printf(TEXT("Detect Magic is on class %d's list"), (int32)Role), FSpellRules::OnClassList(Role, ESpell::DetectMagic)); }
+    const TArray<ESpell> Warlock1 = FSpellRules::SpellsOnList(R::Warlock, 1);
+    TestTrue(TEXT("A Warlock can prepare Bane and Detect Magic"), Warlock1.Contains(ESpell::Bane) && Warlock1.Contains(ESpell::DetectMagic));
+    TestTrue(TEXT("A Bard, Druid or Ranger can prepare Aid"), FSpellRules::SpellsOnList(R::Bard, 2).Contains(ESpell::Aid) && FSpellRules::SpellsOnList(R::Druid, 2).Contains(ESpell::Aid) && FSpellRules::SpellsOnList(R::Ranger, 2).Contains(ESpell::Aid));
     return !HasAnyErrors();
 }
 #endif
