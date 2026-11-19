@@ -83,7 +83,8 @@ bool FSchema4UpgradeRoundTripTest::RunTest(const FString& Parameters)
     // between battles (reward and camp taken).
     TArray<FExpeditionRun> Runs;
     // #218: and revision 10, through 4 -> 5 -> 6.
-    for (const int32 Revision : {8, 9, FBuildCatalog::Revision})
+    // #240: and revision 11 (move-through), whose rule is not a saved field.
+    for (const int32 Revision : {8, 9, 10, FBuildCatalog::Revision})
     {
         FExpeditionRun Mid; Mid.NewRun(42, Error, TEXT("seeded-fixture"), EFighterSubclass::Champion, ERuleset::Compact, Revision);
         Mid.ChooseRoute(Mid.Progress().Offers[0].Id, Error);

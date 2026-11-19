@@ -1,6 +1,7 @@
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/OverviewLayout.h"
 #include "Combat/ActionFacts.h"
+#include "Run/ProgressionQuery.h"
 #include "Presentation/ActionText.h"
 #include "Presentation/BrazierRing.h"
 #include "Presentation/ExpeditionAudio.h"
@@ -10,6 +11,7 @@
 #include "Presentation/OccluderFade.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Presentation/ExpeditionPlayerController.h"
+#include "Presentation/WaystoneSetPiece.h"
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
@@ -28,11 +30,14 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerController.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "Misc/Paths.h"
+#include "Sound/SoundClass.h"
+#include "Sound/SoundMix.h"
 #include "Sound/SoundWaveProcedural.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -224,6 +229,8 @@ AExpeditionBattleView::AExpeditionBattleView()
     Grade->bUnbound = true;
     SceneryRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Scenery"));
     SceneryRoot->SetupAttachment(RootComponent);
+    SetPieceComponent = CreateDefaultSubobject<UWaystoneSetPiece>(TEXT("WaystoneSetPiece"));
+    SetPieceComponent->SetupAttachment(SceneryRoot);
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeAsset(TEXT("/Engine/BasicShapes/Cube.Cube"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CylinderAsset(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereAsset(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
@@ -703,6 +710,8 @@ void AExpeditionBattleView::BeginPlay()
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoPalettes"))) { bPalettes = false; }
     // -ExpeditionNoAccents keeps the subclass palettes but not the party-slot accents (the baseline the accent region is measured against).
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoAccents"))) { bAccents = false; }
+    // -ExpeditionNoJourney draws today's overview instead of the journey map (#248): the like-for-like baseline for its cost on one package.
+    if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoJourney"))) { bJourneyAllowed = false; }
     // -ExpeditionLooseParts draws every themed part as its own component, as before #144 (for A/B profiling on one build).
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionLooseParts"))) { bLooseParts = true; }
     // -ExpeditionPrimitives keeps the engine-primitive presentation for comparison.
@@ -722,7 +731,52 @@ void AExpeditionBattleView::BeginPlay()
     AttachSilhouette();
     // The theme owns the cell size and figure height; no theme means the same defaults.
     BoardMetric = Theme ? FBoardMetric(Theme->CellSize, Theme->FigureHeight) : FBoardMetric();
+    // Recorded cues (#242). -ExpeditionSynthAudio keeps the synthesized ones for comparison; a cue whose recordings are missing falls back alone.
+    CueSerials.Init(0, ExpeditionCueCount);
+    if (ExpeditionAudio::UseRecordedCues(FCommandLine::Get()))
+    {
+        CueBank.Load(LoadObject<UExpeditionCueSounds>(nullptr, ExpeditionAudio::CueSoundsPath, nullptr, LOAD_Quiet | LOAD_NoWarn));
+        TArray<FString> Synthesized;
+        for (EExpeditionCue Cue : CueBank.SynthesizedCues()) { Synthesized.Add(ExpeditionAudio::CueName(Cue)); }
+        UE_LOG(LogExpeditionAudio, Log, TEXT("Recorded cues for %d of %d cues; synthesis for: %s"), ExpeditionCueCount - Synthesized.Num(), ExpeditionCueCount,
+            Synthesized.IsEmpty() ? TEXT("none") : *FString::Join(Synthesized, TEXT(", ")));
+    }
+    else { UE_LOG(LogExpeditionAudio, Log, TEXT("-ExpeditionSynthAudio: every cue plays its synthesis")); }
+    // Ambience beds (#244): a bed with no recording is silence, never synthesis.
+    AmbienceBank.Load(LoadObject<UExpeditionAmbienceSounds>(nullptr, ExpeditionAmbience::SoundsPath, nullptr, LOAD_Quiet | LOAD_NoWarn));
+    {
+        TArray<FString> Recorded;
+        for (EExpeditionAmbience Bed : AmbienceBank.RecordedBeds()) { Recorded.Add(ExpeditionAmbience::Name(Bed)); }
+        UE_LOG(LogExpeditionAudio, Log, TEXT("Ambience beds recorded: %d of %d (%s)"), Recorded.Num(), ExpeditionAmbienceCount - 1,
+            Recorded.IsEmpty() ? TEXT("none; every bed is silent") : *FString::Join(Recorded, TEXT(", ")));
+    }
+    // The score (#245): a track or sting with no recording is silence, never synthesis.
+    MusicBank.Load(LoadObject<UExpeditionMusicSounds>(nullptr, ExpeditionMusic::SoundsPath, nullptr, LOAD_Quiet | LOAD_NoWarn));
+    {
+        const USoundWave* Won = MusicBank.Sting(EExpeditionSting::Victory);
+        const USoundWave* Lost = MusicBank.Sting(EExpeditionSting::Defeat);
+        Music.SetStingLengths(Won ? Won->GetDuration() : 0.0f, Lost ? Lost->GetDuration() : 0.0f);
+        const TArray<FString> Recorded = MusicBank.RecordedPieces();
+        UE_LOG(LogExpeditionAudio, Log, TEXT("Music recorded: %d of %d (%s)"), Recorded.Num(), ExpeditionMusicCount - 1 + 2,
+            Recorded.IsEmpty() ? TEXT("none; the music is silent") : *FString::Join(Recorded, TEXT(", ")));
+    }
+    // The mix (#246): the bus classes, the player's volumes from the user settings file, one sound mix pushed for the whole session.
+    MasterClass = LoadObject<USoundClass>(nullptr, ExpeditionMix::MasterClassPath, nullptr, LOAD_Quiet | LOAD_NoWarn);
+    EffectsClass = CueBank.Class() ? CueBank.Class() : LoadObject<USoundClass>(nullptr, ExpeditionMix::EffectsClassPath, nullptr, LOAD_Quiet | LOAD_NoWarn);
+    if (!bSettingsConfigured)
+    {
+        SettingsPath = FExpeditionAudioSettings::DefaultPath(FCommandLine::Get());
+        if (!FExpeditionAudioSettings::Load(SettingsPath, VolumeSettings)) { UE_LOG(LogExpeditionAudio, Display, TEXT("Volume settings %s could not be read; using the defaults"), *SettingsPath); }
+    }
+    VolumeMix = NewObject<USoundMix>(this, TEXT("ExpeditionVolumes"), RF_Transient);
+    ApplyMix();
+    UGameplayStatics::PushSoundMixModifier(this, VolumeMix);
+    UE_LOG(LogExpeditionAudio, Log, TEXT("Volumes from %s: master %s, effects %s, ambience %s, music %s"), *SettingsPath,
+        *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Master)), *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Effects)),
+        *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Ambience)), *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Music)));
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
+    // The finale set piece's Flare and Shatter sound their own cues (#246).
+    OnSetPieceCue(nullptr);
     Show.OnShake = [this](float Amount) { Shake(Amount); };
     Feedback.Add(TEXT("Welcome. Start a new expedition or continue your saved one."));
     bUnfinishedCheckpoint = Session.HasUnfinishedCheckpoint();
@@ -754,14 +808,20 @@ void AExpeditionBattleView::ClearPresentation()
     Groups.Reset(); RingBank = nullptr; RingGroup = INDEX_NONE; OverlayBase = INDEX_NONE; RingStates.Reset();
     LogicalParts = 0; LogicalProps = 0;
     CampLight = nullptr; WaystoneLight = nullptr;
+    if (SetPieceComponent) { SetPieceComponent->Clear(); }
     Swaying.Reset();
     Occluder = FExpeditionPart(); bOccluderBoardSent = false; Dressing.Reset(); BrazierCells.Reset(); VariantsByCell.Reset(); SpotsByCell.Reset();
     bVigilKit = false; bRootKit = false; bVaultKit = false; WorldProp = FExpeditionProp(); ObstaclePieces = 0; ArchPieces = 0;
+    JourneyDrawn.Reset(); JourneyLook = JourneyLayout::FJourneyLook();
 }
 
 void AExpeditionBattleView::RebuildBoard()
 {
     ++Revision;
+    // Any rebuild (the fly-in's own handover, a Resume, Return to menu, a new run) leaves no fly-in behind: a resumed fight never replays it (#249).
+    FlyIn = ERouteFlyInStage::None; bFlyInHeld = false; FlyInSeconds = 0.0f;
+    // A rebuild is a hard cut to another scene (the dark battle board, the bright journey map): the exposure and temporal history start again from it, with no visible adaptation.
+    CutCamera();
     ClearPresentation();
     // Themed boards draw their static parts, rings and effects from shared instanced groups (#144); the primitive look never does.
     bInstancedParts = Theme && !bLooseParts;
@@ -777,10 +837,14 @@ void AExpeditionBattleView::RebuildBoard()
         const FEncounterIdentity Identity = FExpeditionRun::Encounter(Progress(), Route);
         ObstacleKind = Identity.ObstacleKind;
         Seed = Route.EncounterSeed;
-        // The theme stays chosen by stage: the finale is the Vault, otherwise the road (Dangerous: the drowned Vigil, Guarded: the forest).
-        BoardTheme = Identity.Stage == EEncounterStage::Finale ? EBoardTheme::Vault : Route.bDangerous ? EBoardTheme::Ruins : EBoardTheme::Meadow;
+        // The theme is the route's world, which the rules own (FExpeditionRun::WorldOf, shared with the journey query): the finale is the
+        // Vault, otherwise the road (Dangerous: the drowned Vigil, Guarded: the forest).
+        BoardTheme = Identity.World == EExpeditionWorld::Vault ? EBoardTheme::Vault : Identity.World == EExpeditionWorld::Vigil ? EBoardTheme::Ruins : EBoardTheme::Meadow;
     }
+    // The themed build replaces this with the kit it actually drew (the Vault falls back to the Vigil when incomplete).
+    AmbienceKit = KitKindFor(BoardTheme);
     bOverview = WantsOverview();
+    bJourneyShown = bOverview && bJourneySet && HasRun();
     SceneryRoot->SetRelativeScale3D(FVector(SceneScale()));
     ApplyTheme();
     if (bOverview) { BuildOverview(); }
@@ -804,6 +868,7 @@ void AExpeditionBattleView::RebuildBoard()
     LastFocusId = INDEX_NONE;
     bCameraPlaced = false;
     UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateCamera(0.0f); UpdateOccluder(); FlushGroups();
+    SelectAmbience();
 }
 
 float AExpeditionBattleView::FramedDistance() const
@@ -986,6 +1051,7 @@ void AExpeditionBattleView::UseTheme(UDiceRollTheme* Value)
 void AExpeditionBattleView::UsePrimitives()
 {
     Theme = nullptr; ThemeMaterial = nullptr; OverviewTable = nullptr; OverviewRoot = nullptr; OverviewVigil = nullptr; OverviewVault = nullptr; bOverviewR002 = false;
+    JourneySet = FDiceRollJourney(); JourneyHold.Reset(); bJourneySet = false;
     BoardMetric = FBoardMetric();
     RebuildBoard();
 }
@@ -1050,7 +1116,16 @@ void AExpeditionBattleView::ApplyTheme()
         Settings.ColorContrast = FVector4(1.12f, 1.12f, 1.12f, 1.0f);
         Settings.VignetteIntensity = bOverview ? 0.85f : 0.6f;
         Settings.AutoExposureBias = bOverview ? -0.8f : BoardTheme == EBoardTheme::Vault ? -1.4f : -1.0f;
+        // The journey map (#248) is read end to end: a lighter vignette and a little more exposure than the overview's candlelit corners.
+        if (bOverview && bJourneyShown) { Settings.VignetteIntensity = 0.45f; Settings.AutoExposureBias = -0.25f; }
         Settings.BloomIntensity = 0.45f;
+    }
+    if (!bBattleLook)
+    {
+        // The battle look's fixed exposure band is for its biome's luminance (the Vault's is the darkest): the tabletop and the journey map (#248) adapt on their own,
+        // whichever board came before, so a route screen or an ending reached from a fight looks as one reached from Resume.
+        Settings.bOverride_AutoExposureMinBrightness = false;
+        Settings.bOverride_AutoExposureMaxBrightness = false;
     }
     if (bBattleLook)
     {
@@ -1573,8 +1648,11 @@ void AExpeditionBattleView::BuildEffects(const FCombatEncounter& Encounter)
         WaystoneGain = bApse ? VaultWaystoneGain : 1.0f;
         WaystoneSlots.Add(MakeSlot(Cylinder, Pedestal + FVector(0, 0, 45), FVector(0.7f, 0.7f, 0.9f), FLinearColor(0.25f, 0.25f, 0.32f), FRotator::ZeroRotator, true));
         if (bApse) { SetSlot(WaystoneSlots.Last(), false, WaystoneSlots.Last().Location, WaystoneSlots.Last().Rotation, WaystoneSlots.Last().Scale, WaystoneSlots.Last().Colour); }
-        WaystoneSlots.Add(MakeSlot(Cube, Pedestal + FVector(0, 0, 140), FVector(0.32f, 0.32f, 0.32f), FLinearColor(0.3f, 0.9f, 1.0f) * (4.0f * (bApse ? VaultShardGlow : 1.0f)), FRotator(45, 45, 0), true));
+        WaystoneShardColour = FLinearColor(0.3f, 0.9f, 1.0f) * (4.0f * (bApse ? VaultShardGlow : 1.0f));
+        WaystoneSlots.Add(MakeSlot(Cube, Pedestal + FVector(0, 0, 140), FVector(0.32f, 0.32f, 0.32f), WaystoneShardColour, FRotator(45, 45, 0), true));
         WaystoneLight = MakeLight(nullptr, Pedestal + FVector(0, 0, 160), FLinearColor(0.3f, 0.85f, 1.0f), 250.0f, 1300.0f);
+        // The finale's set piece (#250) around this pedestal: the seal, its flight plan and the shot (ExpeditionBattleViewSetPiece.cpp).
+        BuildSetPiece(Pedestal, bApse, Encounter);
     }
 }
 
@@ -1888,10 +1966,19 @@ void AExpeditionBattleView::UpdateEffects()
     if (WaystoneSlots.Num() == 2 && WaystoneLight)
     {
         const bool bClaimed = HasRun() && Progress().bArtifactRecovered;
-        const float Rise = bClaimed ? 60.0f + 20.0f * FMath::Sin(Clock * 1.5f) : 10.0f * FMath::Sin(Clock * 1.8f);
+        // With the finale's set piece (#250) the artifact rises when the set piece lifts it, and the flare drives the light and its glow; without
+        // it the artifact rises with the victory, as before.
+        const bool bSetPiece = SetPieceComponent && SetPieceComponent->IsBound();
+        const float Lift = bSetPiece ? SetPieceComponent->LiftAlpha() : bClaimed ? 1.0f : 0.0f;
+        const float Flare = bSetPiece ? SetPieceComponent->FlareGain() : 1.0f;
+        auto Between = [Lift](float Resting, float Lifted) { return Lift <= 0.0f ? Resting : Lift >= 1.0f ? Lifted : FMath::Lerp(Resting, Lifted, Lift); };
+        const float Rise = Between(10.0f * FMath::Sin(Clock * 1.8f), 60.0f + 20.0f * FMath::Sin(Clock * 1.5f));
+        const float Spin = Clock * 40.0f + (bSetPiece ? SetPieceComponent->ExtraSpin() : 0.0f);
         const FVector Base = WaystoneSlots[0].Location;
-        SetSlot(WaystoneSlots[1], true, Base + FVector(0, 0, 95 + Rise), FRotator(45, Clock * 40.0f, 45), WaystoneSlots[1].Scale, WaystoneSlots[1].Colour);
-        WaystoneLight->SetIntensity((bClaimed ? 320.0f : 200.0f) * WaystoneGain * (0.85f + 0.15f * FMath::Sin(Clock * 2.5f)));
+        // The flare scales the shard's own colour, never the colour last drawn (SetSlot stores what it draws), so it cannot compound.
+        SetSlot(WaystoneSlots[1], true, Base + FVector(0, 0, 95 + Rise), FRotator(45, Spin, 45), WaystoneSlots[1].Scale,
+            Flare == 1.0f ? WaystoneShardColour : WaystoneShardColour * FMath::Sqrt(Flare));
+        WaystoneLight->SetIntensity(Between(200.0f, 320.0f) * WaystoneGain * (0.85f + 0.15f * FMath::Sin(Clock * 2.5f)) * Flare);
     }
 }
 
@@ -1982,6 +2069,24 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
 {
     const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
     Camera->FieldOfView = bOverview ? OverviewFieldOfView : ExpeditionCameraRig::FieldOfView;
+    // The route fly-in's move (#249) owns the camera until its cut: a pure function of its time, from the journey's pose into the chosen diorama.
+    if (FlyIn == ERouteFlyInStage::Moving)
+    {
+        const FTransform Pose = RouteFlyIn::At(FlyInMove, FlyInSeconds);
+        Camera->FieldOfView = JourneyLayout::CameraFieldOfView;
+        Camera->SetWorldLocationAndRotation(Pose.GetLocation(), Pose.GetRotation());
+        bCameraPlaced = true;
+        return;
+    }
+    // The journey map (#248) is one fixed, composed view: the HUD's bands are laid out against exactly this camera (JourneyLayout).
+    if (ShowingJourney())
+    {
+        const FTransform Pose = JourneyCameraTransform();
+        Camera->FieldOfView = JourneyLayout::CameraFieldOfView;
+        Camera->SetWorldLocationAndRotation(Pose.GetLocation(), Pose.GetRotation());
+        bCameraPlaced = true;
+        return;
+    }
     // Yaw and distance first: the lean and the fit below belong to the pose rendered this frame, not to the targets.
     const bool bSnap = !bCameraPlaced || DeltaSeconds <= 0.0f;
     if (bSnap)
@@ -2143,10 +2248,13 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
         }
     }
     const FShakedPose Shaken = PoseFor(ShakeScale);
-    const FVector Eye = GetActorTransform().TransformPosition(FVector(Shaken.FocusXY.X, Shaken.FocusXY.Y, Focus.Z)) + Offset + Framing + Shaken.Extra;
-    Camera->SetWorldLocation(Eye);
+    FVector Eye = GetActorTransform().TransformPosition(FVector(Shaken.FocusXY.X, Shaken.FocusXY.Y, Focus.Z)) + Offset + Framing + Shaken.Extra;
     // On the tabletop, aim below the dioramas so they sit above the centred menus and route cards.
-    Camera->SetWorldRotation((-Offset - FVector(0.0f, 0.0f, bOverview ? Span * 0.32f : 0.0f)).Rotation());
+    FRotator Look = (-Offset - FVector(0.0f, 0.0f, bOverview ? Span * 0.32f : 0.0f)).Rotation();
+    // The finale's set piece (#250) takes the camera to its shot while it plays and holds it once settled; a no-op otherwise.
+    if (!bOverview && SetPieceComponent) { SetPieceComponent->FrameCamera(Eye, Look); }
+    Camera->SetWorldLocation(Eye);
+    Camera->SetWorldRotation(Look);
     UpdateFarGrade();
 }
 
@@ -2197,6 +2305,7 @@ void AExpeditionBattleView::Pan(float Right, float Away)
     const FVector Base = BaseFocus();
     FVector2D Offset = PanOffset + Step;
     LimitPan(FVector2D(Base), Offset);
+    if (!Offset.Equals(PanOffset, 0.01)) { ++PlayerPanCount; }
     PanOffset = Offset;
 }
 
@@ -2264,25 +2373,52 @@ void AExpeditionBattleView::Record(const FCombatResult& Result)
     if (Feedback.Num() > 6) { Feedback.RemoveAt(0); }
 }
 
+void AExpeditionBattleView::RecordLevelGain()
+{
+    // After victories 1-4 (#218): "Level 3: +1 basic damage (Aria, Bram, Cass)", from the progression facts.
+    if (!Session.HasRun() || Progress().Phase != EExpeditionPhase::Reward) { return; }
+    const FProgressionFacts Facts = FProgressionQuery::For(Session.Run());
+    TArray<FString> Names;
+    for (const FHeroProgressFacts& Hero : Facts.Heroes) { if (Hero.bLevelled) { Names.Add(Hero.Name); } }
+    if (!Names.IsEmpty()) { Record({true, FString::Printf(TEXT("Level %d: +1 basic damage (%s)"), Facts.SurvivorLevel, *FString::Join(Names, TEXT(", ")))}); }
+}
+
 void AExpeditionBattleView::Present(const TArray<FCombatResult>& Results)
 {
-    Show.Enqueue(Results, Rules().Snapshot());
+    // A battle won or lost ends the whole run only when the committed run phase says so: the finale (the fifth fight) won, or any defeat (#243).
+    const bool bEndsRun = HasRun() && (Progress().Phase == EExpeditionPhase::Victory || Progress().Phase == EExpeditionPhase::Defeat);
+    Show.Enqueue(Results, Rules().Snapshot(), bEndsRun);
     if (PlaybackSpeed == EPlaybackSpeed::Instant) { Show.Finish(); }
 }
 
-void AExpeditionBattleView::SkipPresentation() { Show.Finish(); }
+void AExpeditionBattleView::SkipPresentation()
+{
+    FinishFlyIn(); Show.Finish(); SettleSetPiece();
+    // The last result's numbers on the board are presentation too: skipping them brings the journey (and the route cards) at once.
+    if (OverviewPending() && !PlaybackPresenting()) { RebuildBoard(); }
+}
+
+bool AExpeditionBattleView::OverviewPending() const { return Theme && HasRun() && !bOverview && WantsOverview(); }
+
+void AExpeditionBattleView::CutCamera()
+{
+    ++CameraCutCount;
+    if (APlayerController* Player = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr; Player && Player->PlayerCameraManager) { Player->PlayerCameraManager->SetGameCameraCutThisFrame(); }
+}
 
 void AExpeditionBattleView::CycleSpeed()
 {
     PlaybackSpeed = PlaybackSpeed == EPlaybackSpeed::Normal ? EPlaybackSpeed::Fast : PlaybackSpeed == EPlaybackSpeed::Fast ? EPlaybackSpeed::Instant : EPlaybackSpeed::Normal;
     Show.Speed = PlaybackSpeed == EPlaybackSpeed::Fast ? 2.2f : 1.0f;
-    if (PlaybackSpeed == EPlaybackSpeed::Instant) { Show.Finish(); }
+    if (PlaybackSpeed == EPlaybackSpeed::Instant) { FinishFlyIn(); Show.Finish(); SettleSetPiece(); }
     PlayCue(EExpeditionCue::Click);
 }
 
 bool AExpeditionBattleView::Execute(const FCombatCommand& Command)
 {
     if (bShowRecords) { return false; }
+    // A command while the route fly-in plays (autoplay, tests: a player's keys and clicks only skip it) finishes the move first, so it acts on the board it names.
+    if (!bFlyInHeld) { FinishFlyIn(); }
     const FCombatantState* Unit = Rules().Find(Command.ActorId);
     if (!Unit || Unit->Side != ECombatSide::Party) { return false; }
     FCombatResult Result = Session.Submit(Command);
@@ -2295,6 +2431,7 @@ bool AExpeditionBattleView::Execute(const FCombatCommand& Command)
         if (Facts.Cost != EActionCostKind::None && !Facts.Blockers.IsEmpty()) { Result.Feedback = ExpeditionStyle::BlockerText(Facts.Blockers[0]); }
     }
     Record(Result);
+    if (Result.bAccepted) { RecordLevelGain(); }
     // An accepted order completes whatever is still being shown (already resolved), then plays.
     // Rejected input leaves playback untouched, so stray clicks never skip animation.
     if (Result.bAccepted) { Show.Finish(); Present({Result}); }
@@ -2311,36 +2448,56 @@ void AExpeditionBattleView::ChooseRoute(int32 Index)
     if (Session.ChooseRoute(Id, Error))
     {
         Record({true, TEXT("Route committed. Injuries, uses and permanent deaths carry; no automatic rest.")});
-        EnemyDelay = 0; RebuildBoard();
-        const FCombatantState* First = Rules().Find(Rules().ActiveId());
-        Show.ShowBanner(LocationName().ToUpper(), FString::Printf(TEXT("Encounter %d of %d  ·  %s acts first"), Progress().History.Num(), FExpeditionRun::EncounterCount,
-            First ? *First->Name : TEXT("")), BoardTheme == EBoardTheme::Vault ? FLinearColor(0.5f, 0.85f, 1.0f) : FLinearColor(1.0f, 0.82f, 0.45f), 2.4f);
+        EnemyDelay = 0;
         PlayCue(EExpeditionCue::Route);
+        // The route is committed (run, random streams and checkpoint): the fly-in (#249) only presents it, and builds the board at its cut.
+        if (StartFlyIn(Index)) { return; }
+        RebuildBoard();
+        ShowRouteBanner();
     }
     else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
 }
 
-void AExpeditionBattleView::ClaimReward(int32 RecipientId)
+void AExpeditionBattleView::ShowRouteBanner()
+{
+    const FCombatantState* First = Rules().Find(Rules().ActiveId());
+    Show.ShowBanner(LocationName().ToUpper(), FString::Printf(TEXT("Encounter %d of %d  ·  %s acts first"), Progress().History.Num(), FExpeditionRun::EncounterCount,
+        First ? *First->Name : TEXT("")), BoardTheme == EBoardTheme::Vault ? FLinearColor(0.5f, 0.85f, 1.0f) : FLinearColor(1.0f, 0.82f, 0.45f), 2.4f);
+}
+
+void AExpeditionBattleView::ClaimReward(int32 RecipientId, ERewardCard Card)
 {
     if (bShowRecords) { return; }
     FString Error;
     const FCombatantState* Before = Rules().Find(RecipientId);
     const FCombatantState Previous = Before ? *Before : FCombatantState();
-    if (Session.ClaimReward(RecipientId, Error))
+    if (Session.ClaimReward(RecipientId, Card, Error))
     {
         Show.Finish();
-        Record({true, TEXT("Reward claimed once for selected survivor. Continue at camp or choose the next route.")});
+        const TCHAR* CardName = Card == ERewardCard::Reserve ? TEXT("Reserve") : Card == ERewardCard::Honed ? TEXT("Honed") : TEXT("Gear");
+        // The camp is offered once, after the first reward (Recovery); every later claim goes straight to the next route (#251).
+        Record({true, FString::Printf(TEXT("%s takes %s. %s"), *Previous.Name, CardName,
+            Progress().Phase == EExpeditionPhase::Recovery ? TEXT("Continue at camp or choose the next route.") : TEXT("Choose the next route."))});
         Show.Sync(Rules().Snapshot());
         if (const FCombatantState* After = Rules().Find(RecipientId))
         {
             const FVector2D Cell(After->Cell.X, After->Cell.Y);
-            Show.ShowText(Cell, FString::Printf(TEXT("+%d GEAR"), After->WeaponRank - Previous.WeaponRank), FLinearColor(1.0f, 0.82f, 0.3f), 1.2f, 2.2f);
+            const FString Gain = Card == ERewardCard::Reserve ? FString(TEXT("RESERVE")) : Card == ERewardCard::Honed ? FString(TEXT("HONED")) :
+                FString::Printf(TEXT("+%d GEAR"), After->WeaponRank - Previous.WeaponRank);
+            Show.ShowText(Cell, Gain, FLinearColor(1.0f, 0.82f, 0.3f), 1.2f, 2.2f);
             Show.ShowText(Cell, FString::Printf(TEXT("+%d POTIONS"), After->Potions - Previous.Potions), FLinearColor(0.5f, 1.0f, 0.6f), 1.0f, 2.2f);
             Show.ShowSparkles(Cell, FLinearColor(1.0f, 0.82f, 0.3f), 12);
         }
         PlayCue(EExpeditionCue::Loot);
     }
     else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
+}
+
+void AExpeditionBattleView::RefuseRewardRecipient(int32 RecipientId)
+{
+    const FCombatantState* Unit = Rules().Find(RecipientId);
+    Record({false, FString::Printf(TEXT("%s has fallen and cannot receive a reward."), Unit ? *Unit->Name : TEXT("That hero"))});
+    PlayCue(EExpeditionCue::Click);
 }
 
 void AExpeditionBattleView::Recover(bool bTake)
@@ -2478,24 +2635,181 @@ void AExpeditionBattleView::PageRecords(int32 Direction)
 
 void AExpeditionBattleView::PlayCue(EExpeditionCue Cue)
 {
+    // The serial counts every request, heard or not, so the variation a play gets never depends on the audio device.
+    const int32 Index = static_cast<int32>(Cue);
+    const uint32 Serial = CueSerials.IsValidIndex(Index) ? CueSerials[Index]++ : 0;
+    // Combat cues duck the beds and the music briefly so they cut through (#246); counted with or without an audio device.
+    if (ExpeditionMix::Ducks(Cue)) { AmbienceDucker.Trigger(); MusicDucker.Trigger(); }
     UWorld* World = GetWorld();
     if (!World || !World->bAllowAudioPlayback || !GEngine || !GEngine->UseSound()) { return; }
-    const int32 Variation = SoundVariation++ % 4;
-    const int32 Key = static_cast<int32>(Cue) * 8 + Variation;
-    const TArray<int16>* Pcm = SoundCache.Find(Key);
-    if (!Pcm) { Pcm = &SoundCache.Add(Key, ExpeditionAudio::Synthesize(Cue, Variation)); }
-    if (Pcm->IsEmpty()) { return; }
-    USoundWaveProcedural* Wave = NewObject<USoundWaveProcedural>(this);
-    Wave->SetSampleRate(ExpeditionAudio::SampleRate);
-    Wave->NumChannels = 1;
-    Wave->Duration = Pcm->Num() / static_cast<float>(ExpeditionAudio::SampleRate);
-    Wave->SoundGroup = SOUNDGROUP_Default;
-    Wave->bLooping = false;
-    Wave->QueueAudio(reinterpret_cast<const uint8*>(Pcm->GetData()), Pcm->Num() * sizeof(int16));
-    if (UAudioComponent* Voice = UGameplayStatics::SpawnSound2D(this, Wave, ExpeditionAudio::Volume(Cue)))
+    const FExpeditionCuePlay Play = CueBank.Choose(Cue, Serial);
+    USoundWave* Wave = Play.Wave;
+    if (Wave)
+    {
+        UE_LOG(LogExpeditionAudio, Verbose, TEXT("Cue %s #%u: %s"), *ExpeditionAudio::CueName(Cue), Serial, *Wave->GetPathName());
+    }
+    else
+    {
+        const int32 Key = Index * 8 + Play.Variation;
+        const TArray<int16>* Pcm = SoundCache.Find(Key);
+        if (!Pcm) { Pcm = &SoundCache.Add(Key, ExpeditionAudio::Synthesize(Cue, Play.Variation)); }
+        if (Pcm->IsEmpty()) { return; }
+        USoundWaveProcedural* Synth = NewObject<USoundWaveProcedural>(this);
+        Synth->SetSampleRate(ExpeditionAudio::SampleRate);
+        Synth->NumChannels = 1;
+        Synth->Duration = Pcm->Num() / static_cast<float>(ExpeditionAudio::SampleRate);
+        Synth->SoundGroup = SOUNDGROUP_Default;
+        Synth->SoundClassObject = EffectsClass;
+        Synth->bLooping = false;
+        Synth->QueueAudio(reinterpret_cast<const uint8*>(Pcm->GetData()), Pcm->Num() * sizeof(int16));
+        Wave = Synth;
+        UE_LOG(LogExpeditionAudio, Verbose, TEXT("Cue %s #%u: synthesis variation %d"), *ExpeditionAudio::CueName(Cue), Serial, Play.Variation);
+    }
+    if (UAudioComponent* Voice = UGameplayStatics::SpawnSound2D(this, Wave, Play.Volume))
     {
         Voices.Add(Voice);
-        VoiceEnds.Add(Clock + Wave->Duration + 0.15f);
+        VoiceEnds.Add(Clock + Wave->GetDuration() + 0.15f);
+    }
+}
+
+void AExpeditionBattleView::SelectAmbience()
+{
+    const EExpeditionAmbience Bed = ExpeditionAmbience::BedFor(HasRun(), bOverview, AmbienceKit);
+    const EExpeditionAmbience Previous = AmbienceBed();
+    if (!Ambience.Select(static_cast<uint8>(Bed), ExpeditionAmbience::CrossfadeSeconds)) { return; }
+    const USoundWave* Wave = AmbienceBank.Wave(Bed);
+    UE_LOG(LogExpeditionAudio, Log, TEXT("Ambience %s -> %s: %s"), *ExpeditionAmbience::Name(Previous), *ExpeditionAmbience::Name(Bed),
+        Bed == EExpeditionAmbience::None ? TEXT("silence") : Wave ? *Wave->GetPathName() : TEXT("no recording, silence"));
+}
+
+void AExpeditionBattleView::UpdateAmbience(float DeltaSeconds)
+{
+    Ambience.Tick(DeltaSeconds);
+    // A voice whose layer has faded out (or was dropped to make room) stops; the director never keeps more than two layers.
+    for (auto It = AmbienceVoices.CreateIterator(); It; ++It)
+    {
+        const uint32 Id = It.Key();
+        if (Ambience.Layers().ContainsByPredicate([Id](const FAudioLayer& Layer) { return Layer.Id == Id; })) { continue; }
+        if (IsValid(It.Value())) { It.Value()->Stop(); It.Value()->DestroyComponent(); }
+        It.RemoveCurrent();
+    }
+    UWorld* World = GetWorld();
+    if (!World || !World->bAllowAudioPlayback || !GEngine || !GEngine->UseSound()) { return; }
+    for (const FAudioLayer& Layer : Ambience.Layers())
+    {
+        const EExpeditionAmbience Bed = static_cast<EExpeditionAmbience>(Layer.Key);
+        USoundWave* Wave = AmbienceBank.Wave(Bed);
+        if (!Wave) { continue; }
+        const float Volume = AmbienceBank.Volume(Bed) * Layer.Amplitude() * AmbienceDucker.Gain();
+        TObjectPtr<UAudioComponent>& Voice = AmbienceVoices.FindOrAdd(Layer.Id);
+        if (!IsValid(Voice))
+        {
+            const float Start = FMath::Fmod(Layer.Position(), FMath::Max(Wave->GetDuration(), 0.01f));
+            Voice = UGameplayStatics::CreateSound2D(this, Wave, Volume, 1.0f, 0.0f, nullptr, false, false);
+            if (!Voice) { AmbienceVoices.Remove(Layer.Id); continue; }
+            Voice->Play(Start);
+            UE_LOG(LogExpeditionAudio, Log, TEXT("Ambience voice %u plays %s from %.1f s"), Layer.Id, *Wave->GetPathName(), Start);
+        }
+        Voice->SetVolumeMultiplier(Volume);
+    }
+}
+
+void AExpeditionBattleView::ConfigureSettings(const FString& Path)
+{
+    SettingsPath = Path;
+    bSettingsConfigured = true;
+    if (!FExpeditionAudioSettings::Load(SettingsPath, VolumeSettings)) { UE_LOG(LogExpeditionAudio, Display, TEXT("Volume settings %s could not be read; using the defaults"), *SettingsPath); }
+    ApplyMix();
+}
+
+bool AExpeditionBattleView::SetVolume(EExpeditionBus Bus, float Value)
+{
+    if (!VolumeSettings.Set(Bus, Value)) { return false; }
+    ApplyMix();
+    if (!FExpeditionAudioSettings::Save(SettingsPath, VolumeSettings)) { UE_LOG(LogExpeditionAudio, Warning, TEXT("Could not write the volume settings to %s"), *SettingsPath); }
+    PlayCue(EExpeditionCue::Click);
+    return true;
+}
+
+void AExpeditionBattleView::ApplyMix()
+{
+    // Master scales its children through the class hierarchy (SC_Master -> SC_Effects, SC_Ambience, SC_Music); each bus scales only itself.
+    for (int32 Index = 0; Index < ExpeditionBusCount; ++Index) { AppliedClassVolumes[Index] = ExpeditionMix::Amplitude(VolumeSettings.Get(static_cast<EExpeditionBus>(Index))); }
+    if (!VolumeMix || !GetWorld()) { return; }
+    auto Apply = [this](USoundClass* Class, EExpeditionBus Bus, bool bChildren)
+    {
+        if (Class) { UGameplayStatics::SetSoundMixClassOverride(this, VolumeMix, Class, AppliedClassVolumes[static_cast<int32>(Bus)], 1.0f, 0.0f, bChildren); }
+    };
+    Apply(MasterClass, EExpeditionBus::Master, true);
+    Apply(EffectsClass, EExpeditionBus::Effects, false);
+    Apply(AmbienceBank.Class(), EExpeditionBus::Ambience, false);
+    Apply(MusicBank.Class(), EExpeditionBus::Music, false);
+}
+
+FExpeditionMusicMoment AExpeditionBattleView::MusicMoment() const
+{
+    FExpeditionMusicMoment Now;
+    Now.bRunInPlay = HasRun();
+    if (!Now.bRunInPlay) { return Now; }
+    Now.Phase = Progress().Phase;
+    Now.Encounter = Progress().History.Num();
+    Now.bFinale = !Progress().History.IsEmpty() && FExpeditionRun::Encounter(Progress(), Progress().History.Last().Route).World == EExpeditionWorld::Vault;
+    // The finale set piece counts as presenting too: the victory sting follows it once the Waystone has settled (#246).
+    Now.bPresenting = IsPresenting() || SetPieceBusy();
+    return Now;
+}
+
+void AExpeditionBattleView::UpdateMusic(float DeltaSeconds)
+{
+    const EExpeditionMusic Before = Music.Current();
+    const TOptional<EExpeditionSting> Started = Music.Update(MusicMoment(), DeltaSeconds);
+    if (Music.Current() != Before)
+    {
+        const USoundWave* Wave = MusicBank.Track(Music.Current());
+        UE_LOG(LogExpeditionAudio, Log, TEXT("Music %s -> %s: %s"), *ExpeditionMusic::Name(Before), *ExpeditionMusic::Name(Music.Current()),
+            Music.Current() == EExpeditionMusic::None ? TEXT("silence under the sting") : Wave ? *Wave->GetPathName() : TEXT("no recording, silence"));
+    }
+    if (Started)
+    {
+        const USoundWave* Wave = MusicBank.Sting(*Started);
+        UE_LOG(LogExpeditionAudio, Log, TEXT("Music sting %s: %s"), *ExpeditionMusic::StingName(*Started), Wave ? *Wave->GetPathName() : TEXT("no recording, silence"));
+    }
+    // A voice whose layer has faded out stops; the crossfade remembers where that track was, so it picks up there next time.
+    for (auto It = MusicVoices.CreateIterator(); It; ++It)
+    {
+        const uint32 Id = It.Key();
+        if (Music.Fade().Layers().ContainsByPredicate([Id](const FAudioLayer& Layer) { return Layer.Id == Id; })) { continue; }
+        if (IsValid(It.Value())) { It.Value()->Stop(); It.Value()->DestroyComponent(); }
+        It.RemoveCurrent();
+    }
+    if (StingVoice && (!Music.Sting() || !IsValid(StingVoice))) { if (IsValid(StingVoice)) { StingVoice->Stop(); StingVoice->DestroyComponent(); } StingVoice = nullptr; }
+    UWorld* World = GetWorld();
+    if (!World || !World->bAllowAudioPlayback || !GEngine || !GEngine->UseSound()) { return; }
+    if (Started)
+    {
+        if (USoundWave* Wave = MusicBank.Sting(*Started))
+        {
+            if (IsValid(StingVoice)) { StingVoice->Stop(); StingVoice->DestroyComponent(); }
+            StingVoice = UGameplayStatics::CreateSound2D(this, Wave, MusicBank.StingVolume(*Started), 1.0f, 0.0f, nullptr, false, false);
+            if (StingVoice) { StingVoice->Play(); }
+        }
+    }
+    for (const FAudioLayer& Layer : Music.Fade().Layers())
+    {
+        const EExpeditionMusic Track = static_cast<EExpeditionMusic>(Layer.Key);
+        USoundWave* Wave = MusicBank.Track(Track);
+        if (!Wave) { continue; }
+        const float Volume = MusicBank.TrackVolume(Track) * Layer.Amplitude() * MusicDucker.Gain();
+        TObjectPtr<UAudioComponent>& Voice = MusicVoices.FindOrAdd(Layer.Id);
+        if (!IsValid(Voice))
+        {
+            const float Start = FMath::Fmod(Layer.Position(), FMath::Max(Wave->GetDuration(), 0.01f));
+            Voice = UGameplayStatics::CreateSound2D(this, Wave, Volume, 1.0f, 0.0f, nullptr, false, false);
+            if (!Voice) { MusicVoices.Remove(Layer.Id); continue; }
+            Voice->Play(Start);
+            UE_LOG(LogExpeditionAudio, Log, TEXT("Music voice %u plays %s from %.1f s"), Layer.Id, *Wave->GetPathName(), Start);
+        }
+        Voice->SetVolumeMultiplier(Volume);
     }
 }
 
@@ -2514,13 +2828,23 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
     Clock += DeltaSeconds;
-    if (!bShowRecords) { Show.Tick(DeltaSeconds); }
+    if (!bShowRecords && !bSettingsHold) { Show.Tick(DeltaSeconds); }
+    // The set piece waits behind Settings as playback does (#246); it already waits behind Records.
+    if (!bSettingsHold) { UpdateSetPiece(DeltaSeconds); }
+    // The route fly-in (#249) is settled when Settings opens (it hides the HUD, so it never waits behind the panel).
+    UpdateFlyIn(DeltaSeconds);
     if (ImpactTargetId != INDEX_NONE) { Show.HoldImpact(ImpactTargetId); }
-    // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles.
-    if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
+    // The ending's view choice belongs to one finished run: any other phase (a new run, a resume into a fight) starts from the default again.
+    if (EndingView != EEndingView::Default && (!HasRun() || (Progress().Phase != EExpeditionPhase::Victory && Progress().Phase != EExpeditionPhase::Defeat))) { EndingView = EEndingView::Default; }
+    // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles and the last result's numbers have gone (at once under Instant).
+    if (Theme && WantsOverview() != bOverview && !PlaybackPresenting() && ((Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) || PlaybackSpeed == EPlaybackSpeed::Instant)) { RebuildBoard(); }
     UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds); UpdateOccluder(); FlushGroups();
     ExpireVoices();
-    if (!HasRun() || bShowRecords || bCheckpointBlocked || bHoldEnemyTurns) { return; }
+    AmbienceDucker.Tick(DeltaSeconds);
+    MusicDucker.Tick(DeltaSeconds);
+    UpdateAmbience(DeltaSeconds);
+    UpdateMusic(DeltaSeconds);
+    if (!HasRun() || bShowRecords || bSettingsHold || bCheckpointBlocked || bHoldEnemyTurns) { return; }
     const FCombatantState* Active = Rules().Find(Rules().ActiveId());
     if (Progress().Phase != EExpeditionPhase::Combat || Rules().Snapshot().Phase != EBattlePhase::Fighting || !Active || Active->Side != ECombatSide::Enemy || IsPresenting())
     { EnemyDelay = 0; return; }
@@ -2576,7 +2900,32 @@ UStaticMesh* AExpeditionBattleView::UnitMesh(const FCombatantState& Unit) const
 
 bool AExpeditionBattleView::WantsOverview() const
 {
-    return OverviewTable && (!HasRun() || Progress().Phase == EExpeditionPhase::Route);
+    if (!OverviewTable) { return false; }
+    if (!HasRun()) { return true; }
+    const EExpeditionPhase Phase = Progress().Phase;
+    // With the journey set, a finished run can show the whole road on the war table (#248); today's overview never showed the ending.
+    return Phase == EExpeditionPhase::Route || (bJourneySet && EndingWantsJourney());
+}
+
+bool AExpeditionBattleView::EndingWantsJourney() const
+{
+    if (!HasRun()) { return false; }
+    const EExpeditionPhase Phase = Progress().Phase;
+    if (Phase != EExpeditionPhase::Victory && Phase != EExpeditionPhase::Defeat) { return false; }
+    // A victory keeps the Vault board by default: the Waystone set piece (#250) plays and settles there, and a resumed victory shows it settled.
+    return EndingView == EEndingView::Default ? Phase == EExpeditionPhase::Defeat : EndingView == EEndingView::Journey;
+}
+
+bool AExpeditionBattleView::CanToggleEndingJourney() const
+{
+    return bJourneySet && OverviewTable && HasRun() && (Progress().Phase == EExpeditionPhase::Victory || Progress().Phase == EExpeditionPhase::Defeat) && !IsPresenting();
+}
+
+void AExpeditionBattleView::ToggleEndingJourney()
+{
+    if (!CanToggleEndingJourney()) { return; }
+    EndingView = EndingWantsJourney() ? EEndingView::Board : EEndingView::Journey;
+    RebuildBoard();
 }
 
 EDiceRollKit AExpeditionBattleView::KitKindFor(EBoardTheme Theme)
@@ -2609,6 +2958,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     // Atomic: every Vault piece loads before anything is placed, or the whole finale draws the Vigil kit (a dangling or unloadable piece never leaves a half kit).
     if (Kit.Kind == EDiceRollKit::Vault && !(World && VaultPiecesLoad(Kit))) { Kit = Theme->KitFor(EDiceRollKit::Vigil); World = ThemeMesh(*Kit.World); }
     if (!World) { return false; }
+    AmbienceKit = Kit.Kind;
     const bool bForest = Kit.Kind == EDiceRollKit::Root;
     // No per-cell tiles (#142): the world's own flat ground is the playing surface, so it sits at board level and the
     // contextual grid draws on it. The theme's tile meshes are no longer placed (primitive boards keep their cube tiles).
@@ -2944,10 +3294,21 @@ void AExpeditionBattleView::LoadOverviewSet()
     const FDiceRollOverview Set = Theme ? Theme->LoadOverview() : FDiceRollOverview();
     OverviewTable = Set.Table; OverviewRoot = Set.Root; OverviewVigil = Set.Vigil; OverviewVault = Set.Vault;
     bOverviewR002 = Set.bR002 && Set.Table;
+    // The journey map (#248) raises the r002 dioramas, so it needs that set; without either, the route screen is today's overview.
+    JourneySet = Theme && bOverviewR002 && bJourneyAllowed ? Theme->LoadJourney() : FDiceRollJourney();
+    bJourneySet = JourneySet.IsComplete();
+    if (!bJourneySet) { JourneySet = FDiceRollJourney(); }
+    JourneyHold.Reset();
+    if (bJourneySet)
+    {
+        JourneyHold = {JourneySet.Table, JourneySet.Map, JourneySet.Stage, JourneySet.EmblemRoot, JourneySet.EmblemVigil, JourneySet.EmblemVault, JourneySet.Pennant,
+            JourneySet.Lost, JourneySet.Ink, JourneySet.InkDashed, JourneySet.Fog, JourneySet.Goal, JourneySet.Plinth};
+    }
 }
 
 void AExpeditionBattleView::BuildOverview()
 {
+    if (bJourneyShown) { BuildJourney(); return; }
     // The table stands on a dark floor raised over the sandbox floor (top at Z=0); everything
     // past the candlelight falls away.
     const FVector Lift(0.0f, 0.0f, OverviewHeight);
@@ -2958,16 +3319,10 @@ void AExpeditionBattleView::BuildOverview()
     OverviewDrawnLights.Reset();
     Scenery.Add(MakePart(OverviewTable, nullptr, Lift, FVector::OneVector, FLinearColor::White, Toward));
     OverviewDrawnMeshes.Add(OverviewTable->GetFName());
-    // One diorama per offered road (OverviewLayout::Kinds): the forest for guarded roads, the drowned cathedral for dangerous roads and,
+    // One diorama per offered road, from the journey query (OverviewLayout::Kinds): the forest for the Root, the drowned cathedral for the Vigil and,
     // with the r002 set, the Vault for the finale. The title shows the first two worlds.
-    TArray<bool> Dangerous;
-    bool bFinale = false;
-    if (HasRun())
-    {
-        bFinale = Progress().EncountersCompleted + 1 >= FExpeditionRun::EncounterCount;
-        for (const FExpeditionRoute& Route : Progress().Offers) { Dangerous.Add(Route.bDangerous); }
-    }
-    const TArray<OverviewLayout::EDiorama> Kinds = OverviewLayout::Kinds(HasRun(), bFinale, Dangerous, OverviewVault != nullptr);
+    const FJourney Journey = HasRun() ? FJourneyQuery::For(Progress()) : FJourney();
+    const TArray<OverviewLayout::EDiorama> Kinds = OverviewLayout::Kinds(HasRun() ? &Journey : nullptr, OverviewVault != nullptr);
     for (const OverviewLayout::FPlacement& Spot : OverviewLayout::Layout(Kinds, bOverviewR002, HasRun()))
     {
         UStaticMesh* Diorama = Spot.Kind == OverviewLayout::EDiorama::Vault ? OverviewVault : Spot.Kind == OverviewLayout::EDiorama::Vigil ? OverviewVigil : OverviewRoot;
@@ -2996,6 +3351,156 @@ void AExpeditionBattleView::BuildOverview()
         FlameStrength.Last() = Strengths[Index];
         OverviewDrawnLights.Add(Candles[Index]);
     }
+}
+
+// ---------------------------------------------------------------------------------------
+// The war-table journey map (#248). Everything it shows comes from FJourneyQuery through JourneyLayout::Look; nothing here reads or writes rules state.
+
+namespace
+{
+FLinearColor TokenColor(JourneyLayout::EStageMark Mark)
+{
+    using JourneyLayout::EStageMark;
+    switch (Mark)
+    {
+    // Tints multiply the token's pale bronze: above 1 brightens it in the candlelight.
+    case EStageMark::Cleared: return FLinearColor(1.6f, 1.25f, 0.6f);
+    case EStageMark::Lost: return FLinearColor(1.1f, 0.24f, 0.14f);
+    case EStageMark::Current: return FLinearColor(1.9f, 1.75f, 1.4f);
+    case EStageMark::Unreached: return FLinearColor(0.7f, 0.66f, 0.6f);
+    default: return FLinearColor(0.45f, 0.43f, 0.41f);
+    }
+}
+}
+
+void AExpeditionBattleView::AddJourneyPart(FName Role, UStaticMesh* Mesh, int32 Index, const FVector& Location, const FRotator& Rotation, const FVector& Scale, const FLinearColor& Color, bool bOwnMaterial)
+{
+    if (!Mesh) { return; }
+    const FVector Lift(0.0f, 0.0f, OverviewHeight);
+    FExpeditionPart Part = bOwnMaterial ? MakeOwnMaterialPart(Mesh, Lift + Location, Scale, Rotation) : MakePart(Mesh, nullptr, Lift + Location, Scale, Color, Rotation);
+    if (bOwnMaterial && Part.Mesh) { Part.Mesh->SetCastShadow(false); }
+    // A card keeps its own material; its Color parameter carries the part's tint (the fog bank is lifted so it reads as pale fog in the candlelight).
+    if (bOwnMaterial && Part.Material) { Part.Material->SetVectorParameterValue(TEXT("Color"), Color); }
+    Scenery.Add(Part);
+    FJourneyPart Drawn;
+    Drawn.Role = Role; Drawn.Mesh = Mesh->GetFName(); Drawn.Index = Index; Drawn.Local = FTransform(Rotation, Location, Scale); Drawn.Color = Color;
+    JourneyDrawn.Add(Drawn);
+    OverviewDrawnMeshes.Add(Mesh->GetFName());
+}
+
+void AExpeditionBattleView::BuildJourney()
+{
+    using namespace JourneyLayout;
+    OverviewDrawnMeshes.Reset();
+    OverviewDrawnLights.Reset();
+    const FJourney Journey = FJourneyQuery::For(Progress());
+    JourneyLook = Look(Journey);
+    // The table stands on the same dark floor as the overview's; assets face +X and the camera looks from -Y, so they turn -90 degrees to face it.
+    Scenery.Add(MakePart(Cube, nullptr, FVector(0, 0, 5.0f), FVector(400.0f, 400.0f, 0.1f), FLinearColor(0.008f, 0.006f, 0.005f)));
+    const FRotator Toward(0.0f, -90.0f, 0.0f);
+    AddJourneyPart(TEXT("Table"), JourneySet.Table, INDEX_NONE, FVector::ZeroVector, Toward, FVector::OneVector, FLinearColor::White);
+    AddJourneyPart(TEXT("Map"), JourneySet.Map, INDEX_NONE, FVector::ZeroVector, Toward, FVector::OneVector, FLinearColor::White);
+    // The road: trailhead, the five stages, the Vault. Ink into a stage is walked once the party has reached it (a fight fought, or the fork it stands at).
+    auto Ink = [this](const FVector2D& From, const FVector2D& To, bool bWalked, int32 Index)
+    {
+        const FVector2D Delta = To - From;
+        const float Heading = FMath::RadiansToDegrees(FMath::Atan2(Delta.Y, Delta.X));
+        AddJourneyPart(bWalked ? TEXT("Ink") : TEXT("InkDashed"), bWalked ? JourneySet.Ink : JourneySet.InkDashed, Index, FVector(From.X, From.Y, MapTop + 0.05f),
+            FRotator(0.0f, Heading, 0.0f), FVector(Delta.Size() / 100.0f, 1.0f, 1.0f), FLinearColor::White);
+    };
+    for (const FStageLook& Stage : JourneyLook.Stages)
+    {
+        const FVector2D Spot = StageSpot(Stage.Index);
+        Ink(Stage.Index == 0 ? TrailheadSpot() : StageSpot(Stage.Index - 1), Spot, Stage.bWalkedIn, Stage.Index);
+        const FVector At(Spot.X, Spot.Y, MapTop);
+        AddJourneyPart(TEXT("Token"), JourneySet.Stage, Stage.Index, At, Toward, FVector::OneVector, TokenColor(Stage.Mark));
+        UStaticMesh* Emblem = Stage.Emblem == EExpeditionWorld::Root ? JourneySet.EmblemRoot : Stage.Emblem == EExpeditionWorld::Vigil ? JourneySet.EmblemVigil
+            : Stage.Emblem == EExpeditionWorld::Vault ? JourneySet.EmblemVault : nullptr;
+        // A lost stage's emblem is dimmed: the world is known, the road ended there.
+        if (Emblem) { AddJourneyPart(TEXT("Emblem"), Emblem, Stage.Index, At, Toward, FVector::OneVector, Stage.Mark == EStageMark::Lost ? FLinearColor(1.2f, 1.1f, 1.1f) : FLinearColor(2.4f, 2.4f, 2.4f)); }
+        if (Stage.bPennant) { AddJourneyPart(TEXT("Pennant"), JourneySet.Pennant, Stage.Index, At, Toward, FVector::OneVector, FLinearColor(1.5f, 1.5f, 1.5f)); }
+        if (Stage.bBroken) { AddJourneyPart(TEXT("Lost"), JourneySet.Lost, Stage.Index, At, Toward, FVector::OneVector, FLinearColor::White); }
+        // Fog banks turn by a presentation-only hash of the stage, so neighbours do not repeat (never combat or run RNG).
+        if (Stage.bFog) { AddJourneyPart(TEXT("Fog"), JourneySet.Fog, Stage.Index, FVector(Spot.X, Spot.Y, MapTop + FogLift), FRotator(0.0f, -90.0f + (Hash(Stage.Index, 31) - 0.5f) * 40.0f, 0.0f), FVector::OneVector, FLinearColor(6.4f, 6.1f, 5.7f), true); }
+    }
+    if (!JourneyLook.Stages.IsEmpty()) { Ink(StageSpot(JourneyLook.Stages.Num() - 1), GoalSpot(), JourneyLook.bGoalReached, INDEX_NONE); }
+    AddJourneyPart(TEXT("Goal"), JourneySet.Goal, INDEX_NONE, GoalPoint(), Toward, FVector::OneVector, JourneyLook.bGoalReached ? FLinearColor(1.25f, 1.2f, 1.1f) : FLinearColor::White);
+    // The current fork: ink from the stage the party stands at down to each raised offer; the dioramas on their plinths, lit from above.
+    for (const FRaisedLook& Raised : JourneyLook.Raised)
+    {
+        if (JourneyLook.ForkStage != INDEX_NONE && Raised.Offer != INDEX_NONE)
+        { Ink(StageSpot(JourneyLook.ForkStage), FVector2D(Raised.Spot.X, Raised.Spot.Y + 36.0f * Raised.Scale), true, JourneyLook.ForkStage); }
+        UStaticMesh* Diorama = Raised.Kind == EDiorama::Vault ? OverviewVault.Get() : Raised.Kind == EDiorama::Vigil ? OverviewVigil.Get() : OverviewRoot.Get();
+        const FRotator Turn = Toward + FRotator(0.0f, Raised.Yaw, 0.0f);
+        AddJourneyPart(TEXT("Plinth"), JourneySet.Plinth, Raised.Offer, FVector(Raised.Spot.X, Raised.Spot.Y, MapTop), Turn, FVector(Raised.Scale), FLinearColor::White);
+        AddJourneyPart(TEXT("Diorama"), Diorama, Raised.Offer, FVector(Raised.Spot.X, Raised.Spot.Y, MapTop + PlinthHeight * Raised.Scale), Turn, FVector(Raised.Scale), FLinearColor::White);
+    }
+    const FVector Lift(0.0f, 0.0f, OverviewHeight);
+    // Only the two candles flicker (their intensity is set every frame, UpdateEffects); the lamps over the chart and the plinths and the keep's light are steady,
+    // so they cost nothing per frame on the game thread.
+    auto Light = [&](const FVector& At, const FLinearColor& Color, float Strength, float Radius, bool bFlicker)
+    {
+        UPointLightComponent* Made = MakeLight(nullptr, Lift + At, Color, Strength, Radius);
+        if (bFlicker)
+        {
+            Flames.Add(Made);
+            FlameStrength.SetNum(Flames.Num());
+            FlameStrength.Last() = Strength;
+        }
+        OverviewDrawnLights.Add(At);
+    };
+    for (const FVector& Candle : Candles()) { Light(Candle, FLinearColor(1.0f, 0.62f, 0.32f), 16.0f, 420.0f, true); }
+    Light(MapLamp(), FLinearColor(1.0f, 0.8f, 0.58f), 60.0f * 0.8f, 520.0f, false);
+    for (const FRaisedLook& Raised : JourneyLook.Raised) { Light(LampOver(Raised), FLinearColor(1.0f, 0.86f, 0.66f), 30.0f * 0.8f, 190.0f, false); }
+    Light(GoalPoint() + FVector(0.0f, -8.0f, 26.0f), FLinearColor(0.45f, 0.9f, 1.0f), (JourneyLook.bGoalReached ? 6.0f : 3.0f) * 0.8f, 80.0f, false);
+}
+
+bool AExpeditionBattleView::RaisedDioramaTransform(int32 Offer, FTransform& OutWorld) const
+{
+    if (!ShowingJourney()) { return false; }
+    for (const FJourneyPart& Part : JourneyDrawn)
+    {
+        if (Part.Role != TEXT("Diorama") || Part.Index != Offer) { continue; }
+        const FTransform Local(Part.Local.GetRotation(), Part.Local.GetLocation() + FVector(0.0f, 0.0f, OverviewHeight), Part.Local.GetScale3D());
+        OutWorld = Local * SceneryRoot->GetComponentTransform();
+        return true;
+    }
+    return false;
+}
+
+bool AExpeditionBattleView::RaisedScreenBox(int32 RaisedIndex, double W, double H, ExpeditionLayout::Rect& Out) const
+{
+    if (!ShowingJourney() || !JourneyLook.Raised.IsValidIndex(RaisedIndex) || !JourneySet.Plinth) { return false; }
+    // The camera is fixed, so the boxes change only with the build and the viewport: projected once per presentation revision and design size.
+    if (RaisedBoxRevision != Revision || RaisedBoxW != W || RaisedBoxH != H)
+    {
+        RaisedBoxRevision = Revision; RaisedBoxW = W; RaisedBoxH = H;
+        RaisedBoxes.Reset(); RaisedBoxValid.Reset();
+        for (const JourneyLayout::FRaisedLook& Raised : JourneyLook.Raised)
+        {
+            const UStaticMesh* Diorama = Raised.Kind == OverviewLayout::EDiorama::Vault ? OverviewVault.Get() : Raised.Kind == OverviewLayout::EDiorama::Vigil ? OverviewVigil.Get() : OverviewRoot.Get();
+            ExpeditionLayout::Rect Box{};
+            RaisedBoxValid.Add(Diorama && JourneyLayout::RaisedScreenBox(Diorama->GetBoundingBox(), JourneySet.Plinth->GetBoundingBox(), Raised, W, H, Box));
+            RaisedBoxes.Add(Box);
+        }
+    }
+    if (!RaisedBoxValid.IsValidIndex(RaisedIndex) || !RaisedBoxValid[RaisedIndex]) { return false; }
+    Out = RaisedBoxes[RaisedIndex];
+    return true;
+}
+
+void AExpeditionBattleView::SetJourneyAllowed(bool bAllowed)
+{
+    if (bJourneyAllowed == bAllowed) { return; }
+    bJourneyAllowed = bAllowed;
+    LoadOverviewSet();
+    RebuildBoard();
+}
+
+FTransform AExpeditionBattleView::JourneyCameraTransform() const
+{
+    const FTransform Table = FTransform(FVector(0.0f, 0.0f, OverviewHeight)) * SceneryRoot->GetComponentTransform();
+    return FTransform(Table.TransformVectorNoScale(JourneyLayout::CameraLook()).Rotation(), Table.TransformPosition(JourneyLayout::CameraEye()));
 }
 
 void AExpeditionBattleView::AddSway(USceneComponent* Component, float Degrees, float Flicker)

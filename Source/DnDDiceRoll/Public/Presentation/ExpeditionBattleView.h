@@ -6,15 +6,25 @@
 #include "Presentation/ExpeditionPalette.h"
 #include "Presentation/CameraRig.h"
 #include "Presentation/BoardOverlay.h"
+#include "Presentation/AudioCrossfade.h"
+#include "Presentation/ExpeditionAmbience.h"
+#include "Presentation/ExpeditionCueSounds.h"
+#include "Presentation/ExpeditionMix.h"
+#include "Presentation/ExpeditionMusic.h"
 #include "Presentation/ExpeditionPlayback.h"
 #include "Presentation/FoeLook.h"
 #include "Presentation/VigilKit.h"
+#include "Presentation/DiceRollTheme.h"
+#include "Presentation/JourneyLayout.h"
+#include "Presentation/RouteFlyIn.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
 #include "ExpeditionBattleView.generated.h"
 
 class UAnimSequence;
 class UAudioComponent;
+class USoundClass;
+class USoundMix;
 class UCameraComponent;
 class UExponentialHeightFogComponent;
 class UInstancedStaticMeshComponent;
@@ -28,6 +38,8 @@ class UStaticMesh;
 class UStaticMeshComponent;
 class APlayerController;
 class UDiceRollTheme;
+class UWaystoneSetPiece;
+enum class EWaystoneCue : uint8;
 enum class EDiceRollKit : uint8;
 struct FDiceRollCharacter;
 struct FDiceRollWorldKit;
@@ -239,6 +251,8 @@ public:
     virtual void Tick(float DeltaSeconds) override;
     const FCombatBattle& Rules() const { return Session.Run().Battle(); }
     const FExpeditionProgress& Progress() const { return Session.Run().Progress(); }
+    /** The whole run, for const queries such as FProgressionQuery (#218). */
+    const FExpeditionRun& CurrentRun() const { return Session.Run(); }
     const TArray<FString>& Messages() const { return Feedback; }
     /**
      * Submits a party command and plays it. Returns whether the rules accepted it. A rejection is explained in the log by
@@ -246,7 +260,12 @@ public:
      */
     bool Execute(const FCombatCommand& Command);
     void ChooseRoute(int32 Index);
-    void ClaimReward(int32 RecipientId);
+    /** Claims the reward for RecipientId with Card (#218); every rejection is logged by name and changes nothing. */
+    void ClaimReward(int32 RecipientId, ERewardCard Card = ERewardCard::Gear);
+    /** Says that RecipientId has fallen and cannot be chosen for the reward, with the refusal cue a rejected claim plays (#231). Changes nothing. */
+    void RefuseRewardRecipient(int32 RecipientId);
+    /** Logs the level the last victory's survivors reached (#218); nothing outside the Reward phase. */
+    void RecordLevelGain();
     void Recover(bool bTake);
     void NewRun(const TArray<FPartyBuildSelection>& Party);
     void NewRun(EFighterSubclass Subclass = EFighterSubclass::Champion);
@@ -275,6 +294,39 @@ public:
     const TArray<FVector>& OverviewLights() const { return OverviewDrawnLights; }
     /** True when the overview was drawn from the r002 set (war table and Root, Vigil and Vault dioramas). */
     bool OverviewIsR002() const { return bOverview && bOverviewR002; }
+    /** True while the overview is the war-table journey map (#248): a run's route screen or its ending, with the journey set and the r002 overview loaded. */
+    bool ShowingJourney() const { return bOverview && bJourneyShown; }
+    /** True when the theme's journey set loaded whole (the route screen then draws the journey map instead of today's overview). */
+    bool HasJourneySet() const { return bJourneySet; }
+    /**
+     * A finished run's view (#248 with #250): a defeat opens on the journey map; a victory keeps the Vault board, where the Waystone set piece (#250) settles, and either
+     * can be switched to the other (the ending's Journey button). Presentation state only: it is reset whenever the run is not finished and never saved.
+     */
+    bool CanToggleEndingJourney() const;
+    void ToggleEndingJourney();
+    /** -ExpeditionNoJourney, and tests that need today's overview or the battle board at the ending: the journey set is not loaded while this is off. Presentation only. */
+    void SetJourneyAllowed(bool bAllowed);
+    /** What the journey map shows, as last built (empty off the journey): the pure look and each part placed, by role, mesh and stage. */
+    const JourneyLayout::FJourneyLook& JourneyShown() const { return JourneyLook; }
+    struct FJourneyPart
+    {
+        FName Role;
+        FName Mesh;
+        /** The stage the part marks (tokens, emblems, pennants, lost markers, fog, the ink into it); the offer for a plinth or diorama; INDEX_NONE otherwise. */
+        int32 Index = INDEX_NONE;
+        /** In table-top cm (the overview's table frame). */
+        FTransform Local;
+        FLinearColor Color = FLinearColor::White;
+    };
+    const TArray<FJourneyPart>& JourneyParts() const { return JourneyDrawn; }
+    /**
+     * The seam for the fly-in (#249): the world transform of the diorama raised for offer 0 or 1 (false when that offer has none, or off the journey), and the journey camera's
+     * world pose, which the fly-in starts from before it hands over to the battle camera's opening framing.
+     */
+    bool RaisedDioramaTransform(int32 Offer, FTransform& OutWorld) const;
+    /** The design-unit box (W x H design units) of the RaisedIndex-th raised diorama on its plinth (JourneyLayout::RaisedScreenBox), for the HUD's click target and plaque. */
+    bool RaisedScreenBox(int32 RaisedIndex, double W, double H, ExpeditionLayout::Rect& Out) const;
+    FTransform JourneyCameraTransform() const;
     const TArray<FExpeditionEnding>& Records() const { return EndingRecords; }
     static constexpr int32 RecordsPerPage = 4;
     int32 RecordOffset() const { return RecordsOffset; }
@@ -290,13 +342,84 @@ public:
     /** True from the first frame of a roll until its card is gone: the left margin is the card's, so a combat hint waits (#190). */
     bool RollCardUp() const { return Show.Tray().bVisible && !Show.Tray().Dice.IsEmpty(); }
     void ClearRollPreview() { Show.ClearTrayPreview(); }
-    bool IsPresenting() const { return Show.IsBusy(); }
+    /**
+     * Queued playback, the finale's set piece (#250) playing or about to play, the route fly-in (#249) playing, or the board still showing the last result before the
+     * journey map takes over (OverviewPending): the HUD holds the next screen, enemies wait, and Skip settles it. A capture's held fly-in is a pose, not presentation still owed.
+     */
+    bool IsPresenting() const { return PlaybackPresenting() || OverviewPending(); }
+    /**
+     * The run wants the tabletop (a route screen, a defeat's journey) but the board still shows the result that led there: the camp's or the reward's floating numbers
+     * and sparkles, which the tabletop waits for. The route cards wait with it, so they appear on the same frame as the journey, never over the dark board (#249 on-screen
+     * pass). Skip and Instant settle it at once.
+     */
+    bool OverviewPending() const;
+    /** How many times the board was rebuilt as a camera cut (every RebuildBoard): the frame snaps eye adaptation and temporal history, so a switch between the dark battle
+     * board and the bright journey map never flashes or eases (#249 on-screen pass). Test support. */
+    uint32 CameraCuts() const { return CameraCutCount; }
     void SkipPresentation();
     void CycleSpeed();
+    /**
+     * The route fly-in (#249; RouteFlyIn.h). A route committed while the journey map shows plays a short move into the chosen diorama before the board is built,
+     * when a player watches this view (the player controller turns this on; a bare view, a capture run and Instant speed cut straight to the board, as before).
+     * It starts from the committed route choice itself (ChooseRoute after the session accepted it), whichever key, card or diorama asked for it.
+     */
+    void SetRouteFlyIn(bool bOn) { bRouteFlyIn = bOn; }
+    bool PlaysRouteFlyIn() const { return bRouteFlyIn; }
+    /** Moving: the camera flies toward the diorama, the journey still drawn. Arriving: the board is built and fades up at its opening framing. */
+    enum class ERouteFlyInStage : uint8 { None, Moving, Arriving };
+    ERouteFlyInStage FlyInStage() const { return FlyIn; }
+    bool FlyingIn() const { return FlyIn != ERouteFlyInStage::None; }
+    /** Seconds into the fly-in's timeline (RouteFlyIn::CutSeconds is the handover), the black over the screen now, and the offer being flown into. */
+    float FlyInTime() const { return FlyInSeconds; }
+    float FlyInFade() const { return FlyingIn() ? RouteFlyIn::Fade(FlyInSeconds) : 0.0f; }
+    int32 FlyInOffer() const { return FlyInRoute; }
+    const RouteFlyIn::FPath& FlyInPath() const { return FlyInMove; }
+    /** Converges the fly-in at once: a move still under way builds the board now (no fade), an arrival ends. Skip, Finish, Instant and a command call it; a no-op otherwise. */
+    void FinishFlyIn();
+    /** The world bounds of the diorama raised for an offer (false off the journey, or when the offer has none). */
+    bool RaisedDioramaBounds(int32 Offer, FBox& OutWorld) const;
+    /**
+     * Capture support: holds the fly-in at a time with no command. Before the cut it needs the journey's route screen and shows the move into Offer's diorama; from the
+     * cut on it needs a fight and shows its opening framing under the fade. False when the checkpoint does not fit the time. Clear lets go of it.
+     */
+    bool PreviewFlyIn(int32 Offer, float Seconds);
+    void ClearFlyInPreview();
+    bool HoldsFlyIn() const { return bFlyInHeld; }
+    /** The largest camera clip (the theme material's CameraFade, #143) on the scenery drawn now; 0 once the fly-in has switched it off for its move. Test support. */
+    float SceneryCameraFade() const;
     EPlaybackSpeed Speed() const { return PlaybackSpeed; }
     FString LocationName() const;
     void SetHighlights(const FBoardHighlights& Value) { Highlights = Value; }
     void PlayCue(EExpeditionCue Cue);
+    /** The ambience bed the board is heading to (#244): silence on the start screen, the war table on the overview, else the drawn world's bed. */
+    EExpeditionAmbience AmbienceBed() const { return static_cast<EExpeditionAmbience>(Ambience.Current()); }
+    /** The ambience crossfade: every live layer and its fade, whether or not an audio device plays it. */
+    const FAudioCrossfade& AmbienceFade() const { return Ambience; }
+    /** Ambience voices actually playing (zero without an audio device, or for a bed with no recording). */
+    int32 AmbienceVoiceCount() const { return AmbienceVoices.Num(); }
+    /** The music (#245): the track the director is heading to, its crossfade, and the run-end sting still sounding. */
+    EExpeditionMusic MusicTrack() const { return Music.Current(); }
+    const FExpeditionMusicDirector& MusicDirector() const { return Music; }
+    /** Music voices actually playing, the sting's included (zero without an audio device or a recording). */
+    int32 MusicVoiceCount() const { return MusicVoices.Num() + (StingVoice ? 1 : 0); }
+    /**
+     * The volume settings (#246), read from the user settings file at BeginPlay (never from or into the run checkpoint). SetVolume clamps
+     * and snaps a slider, applies the mix and writes the file; it returns whether the slider changed.
+     */
+    const FExpeditionAudioSettings& AudioSettings() const { return VolumeSettings; }
+    bool SetVolume(EExpeditionBus Bus, float Value);
+    bool NudgeVolume(EExpeditionBus Bus, int32 Steps) { return SetVolume(Bus, VolumeSettings.Get(Bus) + Steps * FExpeditionAudioSettings::Step); }
+    /** Selects the settings file (tests and isolated runs call it before BeginPlay): loads it and applies the mix. */
+    void ConfigureSettings(const FString& Path);
+    const FString& SettingsFile() const { return SettingsPath; }
+    /** What the mix applied: the amplitude a bus's sounds play at (Master times the bus) and each class's own adjuster (Master on SC_Master). */
+    float BusVolume(EExpeditionBus Bus) const { return ExpeditionMix::BusGain(VolumeSettings, Bus); }
+    float ClassVolume(EExpeditionBus Bus) const { return AppliedClassVolumes[static_cast<int32>(Bus)]; }
+    /** The duck combat cues put on the beds and the music (1 at rest). */
+    float AmbienceDuckGain() const { return AmbienceDucker.Gain(); }
+    float MusicDuckGain() const { return MusicDucker.Gain(); }
+    /** How many times a cue has been requested since the view began, heard or not (the serial its variation hash reads, #243). Test and trace support. */
+    uint32 CueRequests(EExpeditionCue Cue) const { return CueSerials.IsValidIndex(static_cast<int32>(Cue)) ? CueSerials[static_cast<int32>(Cue)] : 0; }
 
     // Camera and board geometry.
     void Orbit(float Degrees);
@@ -308,6 +431,8 @@ public:
      * unit when the turn changes.
      */
     void Pan(float Right, float Away);
+    /** Counts the pans that moved the player's pan offset, so a click held while the player pans is spent (#232); the focus easing on its own never counts. */
+    uint32 PlayerPans() const { return PlayerPanCount; }
     /** The camera focus the view settles on (view space, before the HUD offset), after the pan clamp. */
     FVector CameraFocus() const { return FocusTarget; }
     /** Whether the whole board is inside the safe rect from the pose the camera renders this frame (then nothing pans). */
@@ -391,6 +516,27 @@ public:
     int32 WaystoneLightCount() const { return WaystoneLight ? 1 : 0; }
     FVector WaystoneLightLocation() const;
     bool WaystoneDrawsPedestal() const { return WaystoneSlots.Num() == 2 && WaystoneSlots[0].bVisible; }
+    /** Test-only (#250): the colour the floating shard (the artifact) was last drawn with; transparent when the board has none. */
+    FLinearColor ArtifactShownColour() const;
+    /**
+     * The finale's set piece (#250; WaystoneSetPiece.h): bound on a finale board with the Vault kit and its meshes, or on the primitive look; Unbound
+     * otherwise, and the ending is then today's. Busy while it plays and while a won finale waits for playback to let it start.
+     */
+    const UWaystoneSetPiece* SetPiece() const;
+    bool SetPieceBusy() const;
+    /**
+     * The set piece's moments, called once each as it plays (never on skip, Instant or Resume). The view itself sounds Flare and Shatter
+     * (#246) and holds the run's victory sting until the set piece has settled; a handler set here (tests) hears the same moments after it.
+     */
+    void OnSetPieceCue(TFunction<void(EWaystoneCue)> Handler);
+    /** The cue a set-piece moment sounds (#246): Flare and Shatter have their own; Lift and Settled none (the Finale cue already played at the winning blow). */
+    static TOptional<EExpeditionCue> SetPieceSound(EWaystoneCue Cue);
+    /** Capture support: holds the set piece at a time in its timeline (a time at or past its end shows the settled state); Clear lets it settle. */
+    bool PreviewSetPiece(float Seconds);
+    void ClearSetPiecePreview();
+    bool HoldsSetPiece() const;
+    /** Test-only: builds the set piece from these mesh paths instead of WaystoneSetPiece::ThemedMeshPaths (a missing one leaves it Unbound); empty restores them. Rebuilds. */
+    void OverrideSetPieceMeshes(const TArray<FSoftObjectPath>& Paths);
     /** Builds the current board with another theme (capture and automation support: a copy of the shipped theme with the kit switched off or thinned). Null is the primitive presentation. */
     void UseTheme(UDiceRollTheme* Value);
     /**
@@ -466,6 +612,9 @@ public:
     USceneComponent* UnitRigRoot(int32 UnitId) const;
     /** Capture support: leave enemy turns unplayed so a look at a checkpoint never submits a command. */
     void HoldEnemyTurns(bool bHold) { bHoldEnemyTurns = bHold; }
+    /** The Settings panel (#246) holds the board as Records does: playback stops advancing and no enemy turn resolves until it closes. */
+    void HoldForSettings(bool bHold) { bSettingsHold = bHold; if (bHold) { EnemyDelay = 0; } }
+    bool HeldForSettings() const { return bSettingsHold; }
     /** Capture support: adapt exposure at once so a shot does not depend on the one before it. */
     void PrepareExposureForCapture();
     /** The one board metric: cell size, board top, pointer plane and figure height. Every cell-to-world conversion uses it. */
@@ -536,6 +685,7 @@ private:
     int32 DrawnKind = 0;
     bool bOverview = false;
     bool bHoldEnemyTurns = false;
+    bool bSettingsHold = false;
     /** Capture support (#189): the combatant whose flash is held at its peak, or INDEX_NONE. */
     int32 ImpactTargetId = INDEX_NONE;
     /** Rigged characters are used when the theme defines them; off for the static-figure comparison. */
@@ -566,8 +716,28 @@ private:
     /** What the overview scene drew last: the table and each diorama by mesh name, and the candle lights. Read by tests; presentation only. */
     TArray<FName> OverviewDrawnMeshes;
     TArray<FVector> OverviewDrawnLights;
-    /** Loads the overview set from the theme (the r002 set or the r001 one, never a mix) into the members above. */
+    /** The journey set (#248), loaded with the overview: every piece or none, and only beside the r002 overview. Held here so the raw pointers stay alive. */
+    FDiceRollJourney JourneySet;
+    UPROPERTY() TArray<TObjectPtr<UStaticMesh>> JourneyHold;
+    bool bJourneySet = false;
+    bool bJourneyShown = false;
+    bool bJourneyAllowed = true;
+    /** RaisedScreenBox's projections, kept per presentation revision and design size. */
+    mutable TArray<ExpeditionLayout::Rect> RaisedBoxes;
+    mutable TArray<bool> RaisedBoxValid;
+    mutable int32 RaisedBoxRevision = -1;
+    mutable double RaisedBoxW = 0.0, RaisedBoxH = 0.0;
+    enum class EEndingView : uint8 { Default, Journey, Board };
+    EEndingView EndingView = EEndingView::Default;
+    /** Whether a finished run shows the journey map now: the player's choice, else the default (defeat: the journey; victory: the board). */
+    bool EndingWantsJourney() const;
+    JourneyLayout::FJourneyLook JourneyLook;
+    TArray<FJourneyPart> JourneyDrawn;
+    /** Loads the overview set from the theme (the r002 set or the r001 one, never a mix) into the members above, and the journey set beside the r002 one. */
     void LoadOverviewSet();
+    /** The war-table journey map (#248): the journey table and map, the five stages from FJourneyQuery, the Vault, and the offered (or the ending's) dioramas raised on plinths. */
+    void BuildJourney();
+    void AddJourneyPart(FName Role, UStaticMesh* Mesh, int32 Index, const FVector& Location, const FRotator& Rotation, const FVector& Scale, const FLinearColor& Color, bool bOwnMaterial = false);
     UPROPERTY() TArray<FExpeditionSway> Swaying;
     /** Parts are instanced (themed look, default on); off draws them loose for the before/after comparison. */
     bool bLooseParts = false;
@@ -584,6 +754,7 @@ private:
     /** Where the focus settles: the board/unit focus plus the clamped pan. View space. */
     FVector FocusTarget = FVector::ZeroVector;
     FVector2D PanOffset = FVector2D::ZeroVector;
+    uint32 PlayerPanCount = 0;
     int32 LastFocusId = INDEX_NONE;
     /** Whether the map's sun cast shadows before the battle look took it over (the tabletop restores it). */
     TOptional<bool> StarterSunShadows;
@@ -656,6 +827,8 @@ private:
     /** Where the apse Waystone stands in scenery-local space (a Vault-kit board), and the light's gain there. */
     FVector ApseLocal = FVector::ZeroVector;
     float WaystoneGain = 1.0f;
+    /** The floating shard's own colour as built; the set piece's flare scales this, never the colour last drawn. */
+    FLinearColor WaystoneShardColour = FLinearColor::White;
     /** The world mesh of the last themed build. */
     /** The world mesh as placed (loose or instanced), for WorldMeshScale. Its component is owned by Scenery or a group. */
     FExpeditionProp WorldProp;
@@ -673,10 +846,76 @@ private:
     UPROPERTY() TArray<TObjectPtr<UPointLightComponent>> ShotLights;
     UPROPERTY() TObjectPtr<UPointLightComponent> CampLight;
     UPROPERTY() TObjectPtr<UPointLightComponent> WaystoneLight;
+    /** The finale's set piece (#250): a component of this actor under the scenery root, rebuilt with each board (ExpeditionBattleViewSetPiece.cpp). */
+    UPROPERTY() TObjectPtr<UWaystoneSetPiece> SetPieceComponent;
+    /** Whoever else listens to the set piece's moments (tests); the view always sounds them first. */
+    TFunction<void(EWaystoneCue)> SetPieceListener;
+    void HandleSetPieceCue(EWaystoneCue Cue);
+    TArray<FSoftObjectPath> SetPieceMeshOverride;
+    /** Builds the set piece around the Waystone's pedestal (scenery-local, reference cm): the apse on a Vault-kit board, the legacy corner pedestal otherwise. */
+    void BuildSetPiece(const FVector& Pedestal, bool bApse, const FCombatEncounter& Encounter);
+    /** Once per tick: starts the set piece when a won finale's playback is done (settled at once under Instant) and advances it at playback speed. */
+    void UpdateSetPiece(float DeltaSeconds);
+    /** Skip, Finish and Instant on a won finale: the set piece converges on its settled state. */
+    void SettleSetPiece();
+    /** Playback, the set piece and the fly-in: what the tabletop itself waits for before it is built. */
+    bool PlaybackPresenting() const { return Show.IsBusy() || SetPieceBusy() || (FlyIn != ERouteFlyInStage::None && !bFlyInHeld); }
+    uint32 CameraCutCount = 0;
+    /** Marks this frame a camera cut on the local player's camera manager (eye adaptation jumps to its target, temporal history resets). */
+    void CutCamera();
+    /** The route fly-in's state (#249): presentation only, never saved; a rebuild of the board for any other reason drops it. */
+    bool bRouteFlyIn = false;
+    ERouteFlyInStage FlyIn = ERouteFlyInStage::None;
+    float FlyInSeconds = 0.0f;
+    int32 FlyInRoute = INDEX_NONE;
+    RouteFlyIn::FPath FlyInMove;
+    bool bFlyInHeld = false;
+    /**
+     * The theme material clips scenery nearer the camera than CameraFade x its height (#143), which the move would trip as it nears the diorama (it ate the stage and
+     * holed the table in the burst). The journey's fixed camera never comes that near, so the move switches the clip off on the journey's parts; the journey is gone at the cut.
+     */
+    void StopSceneryCameraClip();
+    /** Starts the move into the committed offer's diorama; false (the caller cuts to the board) when no fly-in applies. */
+    bool StartFlyIn(int32 Offer);
+    /** Once per tick: advances the fly-in at playback speed, builds the board at the cut and ends it after the fade-up. */
+    void UpdateFlyIn(float DeltaSeconds);
+    /** Builds the committed route's board; with bArrive the fade-up follows. */
+    void HandOverFlyIn(bool bArrive);
+    /** The encounter's banner ("ROUTE NAME", encounter n of 5, who acts first): at the cut without a fly-in, when the fly-in ends with one. */
+    void ShowRouteBanner();
     UPROPERTY() TArray<TObjectPtr<UAudioComponent>> Voices;
     TArray<float> VoiceEnds;
     TMap<int32, TArray<int16>> SoundCache;
-    int32 SoundVariation = 0;
+    /** The recorded cues (#242); a cue it has no recording for plays the synthesis cached above. */
+    UPROPERTY() FExpeditionCueBank CueBank;
+    /** How many times each cue has sounded: the serial its presentation-only variation hash reads. */
+    TArray<uint32> CueSerials;
+    /** The ambience beds (#244) and their crossfade; one looping voice per live layer, keyed by the layer's id. */
+    UPROPERTY() FExpeditionAmbienceBank AmbienceBank;
+    FAudioCrossfade Ambience;
+    UPROPERTY() TMap<uint32, TObjectPtr<UAudioComponent>> AmbienceVoices;
+    /** The world kit the current board was drawn with (after the Vault's fallback to the Vigil), which picks its bed. */
+    EDiceRollKit AmbienceKit{};
+    void SelectAmbience();
+    void UpdateAmbience(float DeltaSeconds);
+    /** The score (#245); one looping voice per crossfade layer (by layer id) and the sting's own voice. */
+    UPROPERTY() FExpeditionMusicBank MusicBank;
+    FExpeditionMusicDirector Music;
+    UPROPERTY() TMap<uint32, TObjectPtr<UAudioComponent>> MusicVoices;
+    UPROPERTY() TObjectPtr<UAudioComponent> StingVoice;
+    FExpeditionMusicMoment MusicMoment() const;
+    void UpdateMusic(float DeltaSeconds);
+    /** The mix (#246): the settings and their file, one sound mix holding the four class adjusters, the classes, and the ducks. */
+    FExpeditionAudioSettings VolumeSettings;
+    FString SettingsPath;
+    bool bSettingsConfigured = false;
+    float AppliedClassVolumes[ExpeditionBusCount] = {1.0f, 1.0f, 1.0f, 1.0f};
+    UPROPERTY() TObjectPtr<USoundMix> VolumeMix;
+    UPROPERTY() TObjectPtr<USoundClass> MasterClass;
+    UPROPERTY() TObjectPtr<USoundClass> EffectsClass;
+    FAudioDucker AmbienceDucker{ExpeditionMix::AmbienceDuck};
+    FAudioDucker MusicDucker{ExpeditionMix::MusicDuck};
+    void ApplyMix();
 
     FExpeditionPart MakePart(UStaticMesh* Mesh, USceneComponent* Parent, FVector Location, FVector Scale, FLinearColor Color, FRotator Rotation = FRotator::ZeroRotator);
     UPointLightComponent* MakeLight(USceneComponent* Parent, FVector Location, FLinearColor Color, float Intensity, float Radius);

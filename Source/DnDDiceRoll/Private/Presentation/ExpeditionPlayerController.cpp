@@ -6,19 +6,53 @@
 #include "Presentation/ExpeditionAutoplay.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerInput.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Components/InputComponent.h"
 #include "Engine/GameViewportClient.h"
+#include "Widgets/SViewport.h"
 #include "Engine/World.h"
 #include "InputCoreTypes.h"
 #include "Combat/ActionFacts.h"
 #include "Party/BuildCatalog.h"
+#include "Framework/Application/SlateApplication.h"
+// The Linux platform application's focus window is read in game builds only: it is an engine-internal class used through its header, and the editor's PIE does not give the
+// controller the same object (reading it there crashed the PIE test).
+#define EXPEDITION_LINUX_FOCUS_POLL (PLATFORM_LINUX && !UE_SERVER && !WITH_EDITOR)
+#if EXPEDITION_LINUX_FOCUS_POLL
+#include "Linux/LinuxApplication.h"
+#endif
+
+namespace
+{
+/**
+ * The game's input mode: what FInputModeGameOnly sets up (the viewport has the keyboard, the game gets every input, held keys are flushed when the viewport loses
+ * focus), but with the pointer visible and uncaptured from launch (#171 item 6). FInputModeGameOnly also takes a hidden high-precision mouse capture, which on
+ * Linux is SDL's relative mouse mode: the cursor is hidden, the viewport reads the pointer as (0,0), nothing is hovered, and the first press only releases it.
+ */
+struct FExpeditionInputMode final : FInputModeDataBase
+{
+protected:
+    virtual void ApplyInputMode(FReply& SlateOperations, UGameViewportClient& GameViewportClient) const override
+    {
+        const TSharedPtr<SViewport> Widget = GameViewportClient.GetGameViewportWidget();
+        if (!Widget.IsValid()) { return; }
+        SlateOperations.SetUserFocus(Widget.ToSharedRef());
+        SlateOperations.LockMouseToWidget(Widget.ToSharedRef());
+        SlateOperations.ReleaseMouseCapture();
+        GameViewportClient.SetIgnoreInput(false);
+        GameViewportClient.SetHideCursorDuringCapture(false);
+        GameViewportClient.SetMouseCaptureMode(EMouseCaptureMode::CaptureDuringMouseDown);
+    }
+};
+}
 
 void AExpeditionPlayerController::BeginPlay()
 {
     Super::BeginPlay();
+    if (FSlateApplication::IsInitialized() && !ActivationHandle.IsValid()) { ActivationHandle = FSlateApplication::Get().OnApplicationActivationStateChanged().AddUObject(this, &AExpeditionPlayerController::OnApplicationActivation); }
     Preset();
     BattleView = GetWorld()->SpawnActor<AExpeditionBattleView>();
     if (!IsValid(BattleView)) { return; }
@@ -26,6 +60,10 @@ void AExpeditionPlayerController::BeginPlay()
     Capture = FExpeditionCaptureDirector::TryCreate(this, BattleView);
     // Autoplay plays real commands, so it never runs together with a capture (which only looks).
     if (!Capture.IsValid()) { Autoplay = FExpeditionAutoplayDirector::TryCreate(this, BattleView); }
+    // A player watches this view, so a committed route plays its fly-in (#249). A capture run only looks and holds moments itself. -ExpeditionNoFlyIn (or the
+    // EXPEDITION_NO_FLYIN environment variable, which reaches a perf pass) keeps today's cut on the same build: the before/after baseline for the transition's cost.
+    const bool bNoFlyIn = FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoFlyIn")) || !FPlatformMisc::GetEnvironmentVariable(TEXT("EXPEDITION_NO_FLYIN")).IsEmpty();
+    BattleView->SetRouteFlyIn(!Capture.IsValid() && !bNoFlyIn);
     if (Capture.IsValid())
     {
         bCapturing = true;
@@ -39,9 +77,7 @@ void AExpeditionPlayerController::BeginPlay()
         Settings->bAltEnterTogglesFullscreen = false;
     }
     bShowMouseCursor = true;
-    FInputModeGameOnly Mode;
-    Mode.SetConsumeCaptureMouseDown(false);
-    SetInputMode(Mode);
+    SetInputMode(FExpeditionInputMode());
     if (UGameViewportClient* Viewport = GetWorld()->GetGameViewport())
     {
         Viewport->SetMouseCaptureMode(EMouseCaptureMode::CaptureDuringMouseDown);
@@ -63,6 +99,7 @@ void AExpeditionPlayerController::SetupInputComponent()
     auto Bind = [this](FKey Key, void (AExpeditionPlayerController::*Handler)())
     { InputComponent->BindKey(Key, IE_Pressed, this, Handler); };
     Bind(EKeys::LeftMouseButton, &AExpeditionPlayerController::Click);
+    InputComponent->BindKey(EKeys::LeftMouseButton, IE_Released, this, &AExpeditionPlayerController::ClickReleased);
     InputComponent->BindKey(EKeys::RightMouseButton, IE_Pressed, this, &AExpeditionPlayerController::BeginDrag);
     InputComponent->BindKey(EKeys::RightMouseButton, IE_Released, this, &AExpeditionPlayerController::EndDrag);
     InputComponent->BindKey(EKeys::MiddleMouseButton, IE_Pressed, this, &AExpeditionPlayerController::BeginPan);
@@ -98,6 +135,8 @@ void AExpeditionPlayerController::SetupInputComponent()
     Bind(EKeys::R, &AExpeditionPlayerController::RescueMode);
     Bind(EKeys::P, &AExpeditionPlayerController::PotionMode);
     Bind(EKeys::L, &AExpeditionPlayerController::Loot);
+    // Reward cards (#218): G Gear, R Reserve, U Honed (H is Records). G and R are inert on the Reward screen otherwise (the builder preset, Rescue mode).
+    Bind(EKeys::U, &AExpeditionPlayerController::HonedCard);
     Bind(EKeys::Z, &AExpeditionPlayerController::FirstRoute);
     Bind(EKeys::X, &AExpeditionPlayerController::SecondRoute);
     Bind(EKeys::C, &AExpeditionPlayerController::Camp);
@@ -120,8 +159,39 @@ void AExpeditionPlayerController::SetupInputComponent()
     Bind(EKeys::BackSpace, &AExpeditionPlayerController::RequestReturnToMenu);
 }
 
+void AExpeditionPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    StopListeningForActivation();
+    Super::EndPlay(EndPlayReason);
+}
+
+void AExpeditionPlayerController::BeginDestroy()
+{
+    StopListeningForActivation();
+    Super::BeginDestroy();
+}
+
+void AExpeditionPlayerController::StopListeningForActivation()
+{
+    if (ActivationHandle.IsValid() && FSlateApplication::IsInitialized()) { FSlateApplication::Get().OnApplicationActivationStateChanged().Remove(ActivationHandle); }
+    ActivationHandle.Reset();
+}
+
+void AExpeditionPlayerController::OnApplicationActivation(bool bActive)
+{
+    if (!bActive) { NotifyWindowFocusLost(); }
+}
+
 void AExpeditionPlayerController::PlayerTick(float DeltaTime)
 {
+    // A window that has already lost focus spends the press before the superclass delivers any input, including a release it queued (#220).
+    // (Polled every tick, so the keyboard-focus latch sees focus the window gains during a press before it can lose it.)
+    // What the keyboard focus was when the last frame's input was processed: a press dispatched in this frame (inside Super::PlayerTick) starts its latch from it,
+    // so a loss that came after the press was queued but before this frame still spends it (#269 review).
+    bKeyboardFocusBeforeFrame = bKeyboardFocusAtLastPoll;
+    bKeyboardFocusAtLastPoll = KeyboardFocusNow().Get(false);
+    const bool bFocusLost = !WindowHasFocus();
+    if ((bPressArmed || DioramaPress != INDEX_NONE) && bFocusLost) { NotifyWindowFocusLost(); }
     Super::PlayerTick(DeltaTime);
     if (!IsValid(BattleView)) { return; }
     const FCombatBattle& Rules = BattleView->Rules();
@@ -142,9 +212,14 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         SelectedAction = ECombatCommandType::Attack;
         bModeTip = false;
     }
-    // Loot goes to a living survivor; keep the selection on one.
+    // Loot goes to a living survivor; keep the selection on one. A choice of a fallen hero is refused where it is made (RefusesRecipient, #231);
+    // this only starts a Reward screen entered or resumed with no conscious hero selected on the first survivor.
     if (BattleView->HasRun() && BattleView->Progress().Phase == EExpeditionPhase::Reward)
     {
+        // Every Reward phase, and every Resume (a new presentation revision), starts on Gear (#218).
+        const uint32 Screen = uint32(BattleView->PresentationRevision()) * 8 + uint32(BattleView->Progress().EncountersCompleted);
+        // The focus goes back with the card: the screen's own focus rule puts it on the Gear card again (#218 review).
+        if (Screen != RewardScreen) { RewardScreen = Screen; SelectedCard = ERewardCard::Gear; Focus = FMenuFocus(); }
         const FCombatantState* Selected = Rules.Find(SelectedId);
         if (!Selected || Selected->Life != ECombatLife::Conscious)
         {
@@ -163,6 +238,10 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         else if (FVector2D::DistSquared(Pointer, PointerAnchor) > PointerMoveSlop * PointerMoveSlop) { PointerAnchor = Pointer; bKeyboardCursor = false; }
     }
     else { bPointerSeen = false; }
+    // A press that the camera or the pointer has moved under is no click, even if they come back before the release (#220).
+    if (bPressArmed && !bPressVoided && !PressHolds()) { bPressVoided = true; }
+    // A diorama press (#248) is spent the moment the pointer leaves its diorama or the screen around it changes, even if both come back before the release.
+    if (DioramaPress != INDEX_NONE && !bDioramaVoided && (!PointerOnDiorama(DioramaPress) || !DioramaLive(DioramaPress) || DioramaContext() != DioramaStamp)) { bDioramaVoided = true; }
     if (bDragging && bHasMouse)
     {
         BattleView->Orbit((MouseX - DragX) * 0.35f);
@@ -483,15 +562,71 @@ void AExpeditionPlayerController::MoveCursor(FIntPoint ScreenOffset)
     }
     UseKeyboardCursor();
 }
-void AExpeditionPlayerController::CursorUp() { if (ShowingMenu()) { CycleMenuFocus(-1); } else { MoveCursor({0, 1}); } }
-void AExpeditionPlayerController::CursorDown() { if (ShowingMenu()) { CycleMenuFocus(1); } else { MoveCursor({0, -1}); } }
-void AExpeditionPlayerController::CursorLeft() { MoveCursor({-1, 0}); }
-void AExpeditionPlayerController::CursorRight() { MoveCursor({1, 0}); }
+void AExpeditionPlayerController::CursorUp() { if (ShowingMenu() || bShowSettings) { CycleMenuFocus(-1); } else { MoveCursor({0, 1}); } }
+void AExpeditionPlayerController::CursorDown() { if (ShowingMenu() || bShowSettings) { CycleMenuFocus(1); } else { MoveCursor({0, -1}); } }
+void AExpeditionPlayerController::CursorLeft() { if (bShowSettings) { NudgeFocusedSlider(-1); } else if (OnRewardScreen()) { StepRewardCard(-1); } else { MoveCursor({-1, 0}); } }
+void AExpeditionPlayerController::CursorRight() { if (bShowSettings) { NudgeFocusedSlider(1); } else if (OnRewardScreen()) { StepRewardCard(1); } else { MoveCursor({1, 0}); } }
+bool AExpeditionPlayerController::SettingsBus(const FString& Id, EExpeditionBus& Bus)
+{
+    FString Prefix, Name;
+    if (!Id.Split(TEXT(":"), &Prefix, &Name) || (Prefix != TEXT("Vol") && Prefix != TEXT("VolUp") && Prefix != TEXT("VolDown"))) { return false; }
+    for (int32 Index = 0; Index < ExpeditionBusCount; ++Index)
+    {
+        if (Name == FExpeditionAudioSettings::BusName(static_cast<EExpeditionBus>(Index))) { Bus = static_cast<EExpeditionBus>(Index); return true; }
+    }
+    return false;
+}
+bool AExpeditionPlayerController::NudgeFocusedSlider(int32 Steps)
+{
+    EExpeditionBus Bus;
+    if (!bShowSettings || !IsValid(BattleView) || !Focus.Id.ToString().StartsWith(TEXT("Vol:")) || !SettingsBus(Focus.Id.ToString(), Bus)) { return false; }
+    return BattleView->NudgeVolume(Bus, Steps);
+}
+void AExpeditionPlayerController::OpenSettings()
+{
+    if (!IsValid(BattleView) || bConfirmReturn || bConfirmAbandon || bShowSettings) { return; }
+    // From the Menu: keep what the Menu itself saved (the board's focus), so Esc can bring the Menu back as it was.
+    bSettingsFromMenu = ShowingMenu();
+    SettingsMenuSaved = SavedFocus;
+    CloseMenu();
+    // Settings over Help or Records replaces them and keeps the focus saved when they opened.
+    if (bShowHelp || BattleView->ShowingRecords()) { bShowHelp = false; if (BattleView->ShowingRecords()) { BattleView->ToggleRecords(); } }
+    else { SaveOverlayFocus(); }
+    // The route fly-in (#249) settles first: it hides the HUD, so it never waits behind the panel (a key or click only skips it; this is reached by a button pressed by code).
+    BattleView->FinishFlyIn();
+    bShowSettings = true;
+    // The board waits behind the panel: no playback step advances and no enemy turn resolves (as with Records).
+    BattleView->HoldForSettings(true);
+    bDragging = false; bPanning = false;
+    BattleView->PlayCue(EExpeditionCue::Click);
+}
+bool AExpeditionPlayerController::OnRewardScreen() const
+{
+    return AllowsGameplayInput() && !ShowingMenu() && BattleView->HasRun() && BattleView->Progress().Phase == EExpeditionPhase::Reward && !ShowingBuilder();
+}
+void AExpeditionPlayerController::SelectRewardCard(ERewardCard Card)
+{
+    if (!OnRewardScreen()) { return; }
+    SelectedCard = Card;
+    // The card's button takes the focus too, as an explicit choice for this screen (like Tab's), so it stays on later frames, Tab continues from it,
+    // Enter claims it and Help or Records give it back (#218 review).
+    Focus.Id = FName(Card == ERewardCard::Reserve ? TEXT("CardReserve") : Card == ERewardCard::Honed ? TEXT("CardHoned") : TEXT("CardGear"));
+    Focus.Screen = MenuScreenKey();
+    Focus.bTabChosen = true;
+}
+void AExpeditionPlayerController::StepRewardCard(int32 Direction)
+{
+    SelectRewardCard(static_cast<ERewardCard>((static_cast<int32>(SelectedCard) + 3 + Direction) % 3));
+}
+void AExpeditionPlayerController::GearCard() { SelectRewardCard(ERewardCard::Gear); }
+void AExpeditionPlayerController::ReserveCard() { SelectRewardCard(ERewardCard::Reserve); }
+void AExpeditionPlayerController::HonedCard() { SelectRewardCard(ERewardCard::Honed); }
 uint32 AExpeditionPlayerController::MenuScreenKey() const
 {
     // Phase is offset by one so that "no run yet" (0) differs from every phase.
     const uint32 Phase = BattleView->HasRun() ? uint32(BattleView->Progress().Phase) + 1 : 0;
-    return uint32(bShowHelp) | uint32(BattleView->ShowingRecords()) << 1 | uint32(ShowingBuilder()) << 2 | uint32(bConfirmReturn) << 3 | uint32(ShowingMenu()) << 4 | uint32(bConfirmAbandon) << 5 | Phase << 6;
+    return uint32(bShowHelp) | uint32(BattleView->ShowingRecords()) << 1 | uint32(ShowingBuilder()) << 2 | uint32(bConfirmReturn) << 3 | uint32(ShowingMenu()) << 4 | uint32(bConfirmAbandon) << 5
+        | uint32(bShowSettings) << 6 | Phase << 7;
 }
 void AExpeditionPlayerController::SaveOverlayFocus() { SavedFocus = Focus; }
 bool AExpeditionPlayerController::MenuAvailable() const
@@ -525,6 +660,14 @@ void AExpeditionPlayerController::CycleMenuFocus(int32 Direction)
     const int32 Index = Items.IndexOfByKey(Focus.Id);
     Focus.Id = Index == INDEX_NONE ? Items[Direction > 0 ? 0 : Items.Num() - 1] : Items[(Index + Items.Num() + Direction) % Items.Num()];
     Focus.bTabChosen = true;
+    // Tab onto a reward card chooses it (#218), keeping the screen's own focus order (#129).
+    if (OnRewardScreen())
+    {
+        const FString Id = Focus.Id.ToString();
+        if (Id == TEXT("CardGear")) { SelectedCard = ERewardCard::Gear; }
+        else if (Id == TEXT("CardReserve")) { SelectedCard = ERewardCard::Reserve; }
+        else if (Id == TEXT("CardHoned")) { SelectedCard = ERewardCard::Honed; }
+    }
 }
 void AExpeditionPlayerController::RestoreOverlayFocus()
 {
@@ -549,6 +692,8 @@ void AExpeditionPlayerController::UpdateMenuFocus()
     if (bConfirmReturn) { Preferred = TEXT("ReturnConfirm"); }
     // Abandon run defaults to keeping the run (#224).
     else if (bConfirmAbandon) { Preferred = TEXT("AbandonCancel"); }
+    // Settings opens on its first slider.
+    else if (bShowSettings) { Preferred = TEXT("Vol:Master"); }
     else if (OverlayOpen()) { Preferred = TEXT("Close"); }
     else if (ShowingMenu()) { Preferred = TEXT("Save"); }
     // With an unfinished checkpoint New Run would be refused, so the start screen's primary choice is Resume.
@@ -558,7 +703,7 @@ void AExpeditionPlayerController::UpdateMenuFocus()
         switch (BattleView->Progress().Phase)
         {
         case EExpeditionPhase::Route: Preferred = TEXT("Route0"); break;
-        case EExpeditionPhase::Reward: Preferred = TEXT("Claim"); break;
+        case EExpeditionPhase::Reward: Preferred = TEXT("CardGear"); break;
         case EExpeditionPhase::Recovery: Preferred = TEXT("Camp"); break;
         default: break;
         }
@@ -573,6 +718,8 @@ void AExpeditionPlayerController::ConfirmCell()
     if (!BattleView->InCombat() || !AllowsGameplayInput() || ShowingMenu())
     {
         const auto* Hud = Cast<AExpeditionHUD>(GetHUD());
+        // On the Reward screen Enter claims the chosen card, whether the focus is on a card or on Claim (#218).
+        if (OnRewardScreen() && (Focus.Id == NAME_None || Focus.Id.ToString().StartsWith(TEXT("Card")) || Focus.Id == TEXT("Claim"))) { Loot(); return; }
         if (Hud && Hud->MenuButtons().Contains(Focus.Id)) { HandleButton(Focus.Id); }
         return;
     }
@@ -586,32 +733,78 @@ void AExpeditionPlayerController::ConfirmCell()
     ActAtCell(GridCursor);
 }
 
-void AExpeditionPlayerController::SelectPartyIndex(int32 Index, bool bInspect)
+bool AExpeditionPlayerController::SelectPartyIndex(int32 Index, bool bInspect)
 {
-    if (!AllowsGameplayInput()) { return; }
-    if (CanSelectSubclass()) { Slot = FMath::Clamp(Index, 0, 3); return; }
+    if (!AllowsGameplayInput()) { return false; }
+    if (CanSelectSubclass()) { Slot = FMath::Clamp(Index, 0, 3); return true; }
     int32 PartyIndex = 0;
     for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
     {
         if (Unit.Side == ECombatSide::Party && PartyIndex++ == Index)
         {
+            if (RefusesRecipient(Unit)) { return false; }
             // Choosing the selected hero again toggles their full status (the acting hero is selected by default).
             if (bInspect) { InspectedId = SelectedId == Unit.Id && InspectedId != Unit.Id ? Unit.Id : INDEX_NONE; }
             SelectedId = Unit.Id;
-            return;
+            return true;
         }
     }
+    return false;
+}
+
+bool AExpeditionPlayerController::RefusesRecipient(const FCombatantState& Unit)
+{
+    // #231: on the Reward screen a fallen hero cannot be chosen, so Enter can never claim for a hero the player did not choose. The selection stays
+    // where it was; the refusal is said and cued only when there is a selection to keep (not for the reset to the first slot on a new presentation).
+    if (Unit.Life == ECombatLife::Conscious || !BattleView->HasRun() || BattleView->Progress().Phase != EExpeditionPhase::Reward) { return false; }
+    if (SelectedId != INDEX_NONE) { BattleView->RefuseRewardRecipient(Unit.Id); }
+    return true;
+}
+
+void AExpeditionPlayerController::ChooseAlly(const FCombatantState& Unit)
+{
+    if (RefusesRecipient(Unit)) { return; }
+    SelectedId = Unit.Id;
+    BattleView->PlayCue(EExpeditionCue::Click);
 }
 
 void AExpeditionPlayerController::Click()
 {
+    // Every left press starts the keyboard-focus latch afresh (#230): only a loss of focus the window had during this press, or since the last processed frame
+    // (the press may have been queued before it), spends it. A seat whose only keyboard went away (one that sleeps or disconnects) never reports focus again,
+    // and its next fresh click must still commit.
+    bSawKeyboardFocus = KeyboardFocusNow().Get(false) || bKeyboardFocusBeforeFrame;
+    bPressArmed = false;
     if (!IsValid(BattleView)) { return; }
     float MouseX = 0, MouseY = 0;
     const bool bHasMouse = PointerPosition(MouseX, MouseY);
+    DioramaPress = INDEX_NONE; bDioramaVoided = false;
     if (const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD()); Hud && bHasMouse)
     {
         FName Button;
-        if (Hud->ButtonAt(FVector2D(MouseX, MouseY), Button)) { HandleButton(Button); return; }
+        if (Hud->ButtonAt(FVector2D(MouseX, MouseY), Button))
+        {
+            // A click on a volume bar sets the slider where it landed and focuses that slider (#246).
+            EExpeditionBus Bus;
+            FBox2D Bar;
+            if (bShowSettings && Button.ToString().StartsWith(TEXT("Vol:")) && SettingsBus(Button.ToString(), Bus) && Hud->ButtonBox(Button, Bar) && Bar.GetSize().X > 0)
+            {
+                BattleView->SetVolume(Bus, (MouseX - Bar.Min.X) / Bar.GetSize().X);
+                Focus.Id = Button; Focus.Screen = MenuScreenKey(); Focus.bTabChosen = true;
+                return;
+            }
+            // An offered diorama (#248) is a press-and-release target, not a HUD button: its button only marks where it is. The Menu owns every click while it is open,
+            // even before the next frame takes the diorama's button away, so a press there closes it like any click beside it and chooses nothing.
+            const FString Name = Button.ToString();
+            if (Name.StartsWith(TEXT("Diorama")))
+            {
+                if (ShowingMenu()) { CloseMenu(); return; }
+                PressDiorama(FCString::Atoi(*Name.RightChop(7)));
+                return;
+            }
+            HandleButton(Button);
+            return;
+        }
         // A click beside the open Menu closes it and goes no further.
         if (ShowingMenu()) { CloseMenu(); return; }
         if (Hud->CoversBoard(FVector2D(MouseX, MouseY))) { return; }
@@ -631,20 +824,194 @@ void AExpeditionPlayerController::Click()
         const bool bCameraStill = bPreviewPoseValid && ProjectionPose(Pose) &&
             FVector::Dist(Pose.GetLocation(), PreviewPose.GetLocation()) <= PoseSlopCm &&
             FMath::RadiansToDegrees(Pose.GetRotation().AngularDistance(PreviewPose.GetRotation())) <= PoseSlopDegrees;
-        if (bCameraStill && HoverCell(Under) && Under == Cell) { ActAtCell(Cell); }
+        // The click is the press and its release: this only arms it (#220), so a camera that moves or a pointer that drags while the button is down spends it.
+        if (bCameraStill && HoverCell(Under) && Under == Cell)
+        {
+            bPressArmed = true; bPressVoided = false;
+            PressCell = Cell; PressPointer = FVector2D(MouseX, MouseY); PressContextStamp = PressContext();
+            PressYaw = BattleView->RenderedYaw(); PressDistance = BattleView->RenderedDistance(); PressPans = BattleView->PlayerPans();
+        }
         return;
     }
     // Nothing is previewed (playback, an enemy turn): a click may still choose an ally to inspect, which commits nothing.
     if (SelectedAction == ECombatCommandType::Attack && HoverCell(Cell))
     {
         for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
-        { if (Unit.Cell == Cell && Unit.Side == ECombatSide::Party) { SelectedId = Unit.Id; BattleView->PlayCue(EExpeditionCue::Click); return; } }
+        { if (Unit.Cell == Cell && Unit.Side == ECombatSide::Party) { ChooseAlly(Unit); return; } }
     }
+}
+
+uint32 AExpeditionPlayerController::PressContext() const
+{
+    uint32 Stamp = HashCombine(TargetingStamp(), GetTypeHash(ContextSerial));
+    Stamp = HashCombine(Stamp, GetTypeHash(uint32(OverlayOpen()) | uint32(ShowingMenu()) << 1 | uint32(ShowsTargeting()) << 2 | uint32(bKeyboardCursor) << 3));
+    if (IsValid(BattleView))
+    {
+        Stamp = HashCombine(Stamp, GetTypeHash(uint32(BattleView->HasRun()) | uint32(BattleView->InCombat()) << 1 | uint32(BattleView->IsPresenting()) << 2));
+        if (BattleView->HasRun()) { Stamp = HashCombine(Stamp, GetTypeHash(int32(BattleView->Progress().Phase))); }
+    }
+    return Stamp;
+}
+
+bool AExpeditionPlayerController::PressHolds() const
+{
+    float MouseX = 0, MouseY = 0;
+    if (!bPressArmed || bPressVoided || !IsValid(BattleView) || !PointerPosition(MouseX, MouseY) || PressContext() != PressContextStamp) { return false; }
+    // Only the camera the player moves spends the press: an orbit or a zoom (still easing or not) and a pan. The focus easing on its own toward the acting unit
+    // (after a move or a turn change) does not, so a slow deliberate click still commits (#232); the release still acts only on the cell previewed under the pointer.
+    return FVector2D::DistSquared(FVector2D(MouseX, MouseY), PressPointer) <= ClickSlop * ClickSlop &&
+        FMath::Abs(FMath::FindDeltaAngleDegrees(BattleView->RenderedYaw(), PressYaw)) <= PoseSlopDegrees &&
+        FMath::Abs(BattleView->RenderedDistance() - PressDistance) <= PoseSlopCm && BattleView->PlayerPans() == PressPans;
+}
+
+void AExpeditionPlayerController::FlushPressedKeys()
+{
+    NotifyWindowFocusLost();
+    Super::FlushPressedKeys();
+}
+
+TOptional<bool> AExpeditionPlayerController::KeyboardFocusNow() const
+{
+    if (SimulatedKeyboardFocus.IsSet()) { return SimulatedKeyboardFocus; }
+#if EXPEDITION_LINUX_FOCUS_POLL
+    // Only a running game window has the Linux platform application; an automation world has no viewport.
+    const UGameViewportClient* Client = GetWorld() ? GetWorld()->GetGameViewport() : nullptr;
+    if (!Client || !Client->Viewport || !FSlateApplication::IsInitialized()) { return {}; }
+    const TSharedPtr<GenericApplication> Platform = FSlateApplication::Get().GetPlatformApplication();
+    if (!Platform.IsValid()) { return {}; }
+    return static_cast<FLinuxApplication*>(Platform.Get())->GetCurrentFocusWindow().IsValid();
+#else
+    return {};
+#endif
+}
+
+bool AExpeditionPlayerController::KeyboardFocusLost() const
+{
+    const TOptional<bool> bFocused = KeyboardFocusNow();
+    if (!bFocused.IsSet()) { return false; }
+    if (*bFocused) { bSawKeyboardFocus = true; return false; }
+    return bSawKeyboardFocus;
+}
+
+bool AExpeditionPlayerController::WindowHasFocus() const
+{
+    // Only a loss TRANSITION during the press counts, never an absolute "has focus" state: a seat with no keyboard device never reports focus (FApp::HasFocus stays false, no
+    // window ever has SDL keyboard focus), and ordinary clicks must still work there, including after its only keyboard went away (#230). KeyboardFocusLost() is false until
+    // the window has had keyboard focus since the press began.
+    return !KeyboardFocusLost();
+}
+
+bool AExpeditionPlayerController::InputKey(const FInputKeyEventArgs& Params)
+{
+    if (bPressArmed && Params.Event == IE_Pressed && Params.Key != EKeys::LeftMouseButton) { bPressVoided = true; }
+    if (DioramaPress != INDEX_NONE && Params.Event == IE_Pressed && Params.Key != EKeys::LeftMouseButton) { bDioramaVoided = true; }
+    // The route fly-in (#249): any key or button pressed while it plays skips it and does nothing else. The press never reaches the bindings, and neither do its repeats
+    // or its release, so a skip click cannot arm or commit a board click (#221, #236) and a skip key cannot act in the fight it reveals. The wheel only waits.
+    if (IsValid(BattleView) && BattleView->FlyingIn() && !BattleView->HoldsFlyIn())
+    {
+        const bool bWheel = Params.Key == EKeys::MouseScrollUp || Params.Key == EKeys::MouseScrollDown || Params.Key == EKeys::MouseWheelAxis;
+        if (Params.Event == IE_Pressed && !Params.Key.IsAxis1D() && !Params.Key.IsAxis2D() && !Params.Key.IsAxis3D())
+        {
+            if (!bWheel) { FlyInSwallowed.Add(Params.Key); BattleView->FinishFlyIn(); }
+            return true;
+        }
+        if (bWheel) { return true; }
+    }
+    if (FlyInSwallowed.Contains(Params.Key))
+    {
+        if (Params.Event == IE_Released) { FlyInSwallowed.Remove(Params.Key); return true; }
+        if (Params.Event == IE_Repeat) { return true; }
+        // A new press of a key whose release was never seen (focus loss): it is an ordinary press again.
+        if (Params.Event == IE_Pressed) { FlyInSwallowed.Remove(Params.Key); }
+    }
+    return Super::InputKey(Params);
+}
+
+bool AExpeditionPlayerController::DioramaLive(int32 Offer) const
+{
+    if (!IsValid(BattleView) || Offer < 0 || Offer > 1 || ShowingMenu() || OverlayOpen() || !WindowHasFocus() || !AllowsGameplayInput()) { return false; }
+    if (!BattleView->ShowingJourney() || !BattleView->HasRun() || BattleView->IsPresenting() || BattleView->Progress().Phase != EExpeditionPhase::Route) { return false; }
+    if (!BattleView->Progress().Offers.IsValidIndex(Offer)) { return false; }
+    return BattleView->JourneyShown().Raised.ContainsByPredicate([Offer](const JourneyLayout::FRaisedLook& Raised) { return Raised.Offer == Offer; });
+}
+
+uint32 AExpeditionPlayerController::DioramaContext() const
+{
+    uint32 Stamp = PressContext();
+    if (IsValid(BattleView))
+    {
+        Stamp = HashCombine(Stamp, GetTypeHash(BattleView->PresentationRevision()));
+        if (BattleView->HasRun())
+        {
+            Stamp = HashCombine(Stamp, GetTypeHash(BattleView->Progress().EncountersCompleted));
+            for (const FExpeditionRoute& Route : BattleView->Progress().Offers) { Stamp = HashCombine(Stamp, GetTypeHash(Route.Id)); }
+        }
+    }
+    return Stamp;
+}
+
+bool AExpeditionPlayerController::PointerOnDiorama(int32 Offer) const
+{
+    float MouseX = 0, MouseY = 0;
+    const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD());
+    FName Button;
+    return Hud && PointerPosition(MouseX, MouseY) && Hud->ButtonAt(FVector2D(MouseX, MouseY), Button) && Button == FName(*FString::Printf(TEXT("Diorama%d"), Offer));
+}
+
+void AExpeditionPlayerController::PressDiorama(int32 Offer)
+{
+    DioramaPress = INDEX_NONE; bDioramaVoided = false;
+    const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD());
+    // Only the offer the last frame showed hovered under the pointer: a press that reaches another diorama before a frame has previewed it chooses nothing.
+    if (!Hud || Hud->PreviewedDiorama() != Offer || !PointerOnDiorama(Offer) || !DioramaLive(Offer)) { return; }
+    DioramaPress = Offer;
+    DioramaStamp = DioramaContext();
+}
+
+void AExpeditionPlayerController::ClickReleased()
+{
+    if (DioramaPress != INDEX_NONE)
+    {
+        // The release over the same diorama, with every live condition still holding, commits that offer's route: the card's own command.
+        const int32 Offer = DioramaPress;
+        const bool bSpent = bDioramaVoided;
+        DioramaPress = INDEX_NONE; bDioramaVoided = false;
+        bPressArmed = false;
+        if (!bSpent && PointerOnDiorama(Offer) && DioramaLive(Offer) && DioramaContext() == DioramaStamp)
+        {
+            if (Offer == 0) { FirstRoute(); } else { SecondRoute(); }
+        }
+        return;
+    }
+    const bool bWasArmed = bPressArmed;
+    const bool bHeld = PressHolds();
+    bPressArmed = false;
+    if (!bWasArmed || !bHeld || !IsValid(BattleView) || !WindowHasFocus()) { return; }
+    // The release is a click on the board only where the press was: not on a HUD button or panel the pointer slipped onto, not with the Menu or an overlay open, and not
+    // with the keyboard cursor showing. It never dispatches a HUD action: those act at the press.
+    float MouseX = 0, MouseY = 0;
+    if (!PointerPosition(MouseX, MouseY)) { return; }
+    if (const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD()))
+    {
+        FName Button;
+        if (Hud->ButtonAt(FVector2D(MouseX, MouseY), Button) || Hud->CoversBoard(FVector2D(MouseX, MouseY))) { return; }
+    }
+    if (ShowingMenu() || OverlayOpen() || bKeyboardCursor) { return; }
+    // The release acts on what the last frame still shows under the pointer: the cell the press found, previewed now with the camera still that camera.
+    FIntPoint Cell, Under;
+    FTransform Pose;
+    const bool bCameraStill = bPreviewPoseValid && ProjectionPose(Pose) &&
+        FVector::Dist(Pose.GetLocation(), PreviewPose.GetLocation()) <= PoseSlopCm &&
+        FMath::RadiansToDegrees(Pose.GetRotation().AngularDistance(PreviewPose.GetRotation())) <= PoseSlopDegrees;
+    if (bCameraStill && PreviewedPointerCell(Cell) && Cell == PressCell && HoverCell(Under) && Under == Cell) { ActAtCell(Cell); }
 }
 
 void AExpeditionPlayerController::HandleButton(FName Id)
 {
     if (!IsValid(BattleView)) { return; }
+    // No control is drawn while the route fly-in plays (#249) and a real press only skips it (InputKey), so a button reaching here then is pressed by code (autoplay,
+    // tests): it finishes the move first and then acts, as an accepted command finishes playback.
+    if (BattleView->FlyingIn() && !BattleView->HoldsFlyIn()) { BattleView->FinishFlyIn(); }
     const FString Name = Id.ToString();
     // The confirmation owns every click and key: only its two choices act.
     if (bConfirmReturn)
@@ -659,6 +1026,16 @@ void AExpeditionPlayerController::HandleButton(FName Id)
         else if (Name == TEXT("AbandonCancel")) { CloseOverlays(); }
         return;
     }
+    // Settings owns every click and key while open: its sliders, their steps and Close.
+    if (bShowSettings)
+    {
+        EExpeditionBus Bus;
+        if (Name == TEXT("Close")) { CloseOverlays(); }
+        else if (Name.StartsWith(TEXT("VolDown:")) && SettingsBus(Name, Bus)) { BattleView->NudgeVolume(Bus, -1); }
+        else if (Name.StartsWith(TEXT("VolUp:")) && SettingsBus(Name, Bus)) { BattleView->NudgeVolume(Bus, 1); }
+        return;
+    }
+    if (Name == TEXT("Settings")) { OpenSettings(); return; }
     if (Name == TEXT("ReplayTips")) { ReplayHints(); return; }
     if (!AllowsGameplayInput() && Name != TEXT("Close") && Name != TEXT("Help") && Name != TEXT("Records") && Name != TEXT("Older") && Name != TEXT("Newer")) { return; }
     // The hint's own buttons: they act on the hint and nothing else, and only while it is visible.
@@ -681,7 +1058,8 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     if (Name == TEXT("ClassNext")) { CycleClass(); return; }
     if (Name == TEXT("BuildNext")) { CycleBuild(); return; }
     if (Name == TEXT("Preset")) { Preset(); return; }
-    if (Name.StartsWith(TEXT("Party"))) { SelectPartyIndex(FCString::Atoi(*Name.RightChop(5))); BattleView->PlayCue(EExpeditionCue::Click); return; }
+    // A refused choice (a fallen hero on the Reward screen, #231) has already sounded its refusal.
+    if (Name.StartsWith(TEXT("Party"))) { if (SelectPartyIndex(FCString::Atoi(*Name.RightChop(5)))) { BattleView->PlayCue(EExpeditionCue::Click); } return; }
     if (Name == TEXT("Champion")) { Champion(); }
     else if (Name == TEXT("BattleMaster")) { BattleMaster(); }
     else if (Name == TEXT("Maneuver")) { SetMode(SpecialAction(1)); }
@@ -691,13 +1069,18 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     else if (Name == TEXT("MenuToggle")) { ToggleMenu(); }
     else if (Name == TEXT("Menu")) { RequestReturnToMenu(); }
     else if (Name == TEXT("Records")) { History(); }
+    else if (Name == TEXT("EndingJourney")) { BattleView->ToggleEndingJourney(); }
     else if (Name == TEXT("Speed")) { Speed(); }
     else if (Name == TEXT("Help")) { ToggleHelp(); }
     else if (Name == TEXT("Skip")) { Skip(); }
     else if (Name == TEXT("New")) { NewRun(); }
+    // A diorama on the journey map (#248) is never dispatched here: Click arms it and ClickReleased commits it (the same route command as these cards).
     else if (Name == TEXT("Route0")) { FirstRoute(); }
     else if (Name == TEXT("Route1")) { SecondRoute(); }
     else if (Name == TEXT("Claim")) { Loot(); }
+    else if (Name == TEXT("CardGear")) { SelectRewardCard(ERewardCard::Gear); }
+    else if (Name == TEXT("CardReserve")) { SelectRewardCard(ERewardCard::Reserve); }
+    else if (Name == TEXT("CardHoned")) { SelectRewardCard(ERewardCard::Honed); }
     else if (Name == TEXT("Camp")) { Camp(); }
     else if (Name == TEXT("SkipCamp")) { SkipCamp(); }
     else if (Name == TEXT("ModeAttack")) { SetMode(ECombatCommandType::Attack); }
@@ -726,7 +1109,7 @@ bool AExpeditionPlayerController::ActAtCell(FIntPoint Cell)
     {
         if (Unit.Cell != Cell || (Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Dead)) { continue; }
         // Clicking an ally in attack mode inspects them; their card stays highlighted.
-        if (Unit.Side == ECombatSide::Party && SelectedAction == ECombatCommandType::Attack) { SelectedId = Unit.Id; BattleView->PlayCue(EExpeditionCue::Click); }
+        if (Unit.Side == ECombatSide::Party && SelectedAction == ECombatCommandType::Attack) { ChooseAlly(Unit); }
         else { bAccepted = BattleView->Execute({SelectedAction, ActorId, {}, Unit.Id}); Acted(bAccepted); }
         return bAccepted;
     }
@@ -758,6 +1141,7 @@ EFighterSubclass AExpeditionPlayerController::StartupSubclass() const
 }
 void AExpeditionPlayerController::Preset()
 {
+    if (IsValid(BattleView) && OnRewardScreen()) { GearCard(); return; }
     if (IsValid(BattleView) && !CanSelectSubclass()) { return; }
     Party.Reset();
     const TCHAR* Names[] = {TEXT("Arden"), TEXT("Nix"), TEXT("Sera"), TEXT("Ivo")};
@@ -787,6 +1171,7 @@ void AExpeditionPlayerController::StepBuild(int32 Direction)
 void AExpeditionPlayerController::SetMode(ECombatCommandType Action)
 {
     if (!AllowsGameplayInput()) { return; }
+    ++ContextSerial;
     SelectedAction = Action;
     bModeTip = false;
     if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); }
@@ -813,7 +1198,7 @@ bool AExpeditionPlayerController::ShowsTargeting() const
 
 bool AExpeditionPlayerController::OverlayOpen() const
 {
-    return bShowHelp || bConfirmReturn || bConfirmAbandon || (IsValid(BattleView) && BattleView->ShowingRecords());
+    return bShowHelp || bShowSettings || bConfirmReturn || bConfirmAbandon || (IsValid(BattleView) && BattleView->ShowingRecords());
 }
 bool AExpeditionPlayerController::CanSelectSubclass() const
 {
@@ -829,10 +1214,10 @@ void AExpeditionPlayerController::AttackKey()
     if (IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift)) { return; }
     AttackMode();
 }
-void AExpeditionPlayerController::RescueMode() { KeyMode(ECombatCommandType::Rescue); }
+void AExpeditionPlayerController::RescueMode() { if (OnRewardScreen()) { ReserveCard(); return; } KeyMode(ECombatCommandType::Rescue); }
 void AExpeditionPlayerController::PotionMode() { KeyMode(ECombatCommandType::Potion); }
 void AExpeditionPlayerController::RoleMode() { KeyMode(RoleAction()); }
-void AExpeditionPlayerController::Loot() { if (AllowsGameplayInput()) { BattleView->ClaimReward(SelectedId); } }
+void AExpeditionPlayerController::Loot() { if (AllowsGameplayInput()) { BattleView->ClaimReward(SelectedId, SelectedCard); } }
 void AExpeditionPlayerController::FirstRoute() { if (AllowsGameplayInput()) { BattleView->ChooseRoute(0); LastActiveId = INDEX_NONE; } }
 void AExpeditionPlayerController::SecondRoute() { if (AllowsGameplayInput()) { BattleView->ChooseRoute(1); LastActiveId = INDEX_NONE; } }
 void AExpeditionPlayerController::Camp() { if (AllowsGameplayInput()) { BattleView->Recover(true); } }
@@ -881,8 +1266,8 @@ void AExpeditionPlayerController::ResolvePendingReturn()
     if (!bReturnPending || !AllowsGameplayInput()) { return; }
     if (!BattleView->CanReturnToMenu() || BattleView->Progress().Phase != PendingPhase) { bReturnPending = false; return; }
     // Everything committed is shown before leaving: the wait covers queued playback of committed
-    // actions (IsPresenting) and enemy turns. Decorative reward/camp sparkles, floating text and
-    // banners are not queued playback and never delay it. On the party's turn enemies cannot act,
+    // actions (IsPresenting, which includes the short hold behind a victory or defeat banner) and enemy turns. Decorative
+    // reward/camp sparkles, floating text and the other banners are not queued playback and never delay it. On the party's turn enemies cannot act,
     // so nothing resolves behind the question.
     if (BattleView->IsPresenting()) { return; }
     if (BattleView->InCombat())
@@ -935,7 +1320,7 @@ void AExpeditionPlayerController::LeaveExpedition()
 }
 void AExpeditionPlayerController::History()
 {
-    if (!IsValid(BattleView) || bConfirmReturn) { return; }
+    if (!IsValid(BattleView) || bConfirmReturn || bShowSettings) { return; }
     CloseMenu();
     const bool bOpening = !BattleView->ShowingRecords();
     // Records over Help keeps the focus saved when Help opened.
@@ -969,7 +1354,7 @@ void AExpeditionPlayerController::Skip()
 void AExpeditionPlayerController::Speed() { CloseMenu(); if (AllowsGameplayInput()) { BattleView->CycleSpeed(); } }
 void AExpeditionPlayerController::ToggleHelp()
 {
-    if (bConfirmReturn) { return; }
+    if (bConfirmReturn || bShowSettings) { return; }
     CloseMenu();
     if (!bShowHelp)
     {
@@ -986,6 +1371,22 @@ void AExpeditionPlayerController::CloseOverlays()
     if (bShowMenu) { CloseMenu(); return; }
     if (bConfirmReturn) { bConfirmReturn = false; RestoreOverlayFocus(); return; }
     if (bConfirmAbandon) { bConfirmAbandon = false; RestoreOverlayFocus(); BattleView->PlayCue(EExpeditionCue::Click); return; }
+    if (bShowSettings)
+    {
+        bShowSettings = false;
+        BattleView->HoldForSettings(false);
+        if (bSettingsFromMenu && MenuAvailable())
+        {
+            // Back to the Menu it was opened from, focused on its Settings row; closing the Menu then restores the board's focus.
+            bShowMenu = true;
+            SavedFocus = SettingsMenuSaved;
+            Focus = {FName(TEXT("Settings")), MenuScreenKey(), true};
+        }
+        else { RestoreOverlayFocus(); }
+        bSettingsFromMenu = false;
+        BattleView->PlayCue(EExpeditionCue::Click);
+        return;
+    }
     if (!bShowHelp && IsValid(BattleView) && !BattleView->ShowingRecords())
     {
         if (bReturnPending) { bReturnPending = false; return; }

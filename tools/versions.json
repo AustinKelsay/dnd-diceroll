@@ -10,5 +10,19 @@
   "host_gpu": "NVIDIA GeForce RTX 4080 SUPER, driver 615.78.08 (Vulkan)",
   "python_minimum": "3.11",
   "host_python": "3.14.8",
-  "git_lfs": "3.8.1"
+  "git_lfs": "3.8.1",
+  "hosts": {
+    "amaterasu": {
+      "role": "advisory",
+      "validated_on": "2026-11-13",
+      "issue": 51,
+      "host": "Amaterasu",
+      "host_os": "Windows 11 Home 10.0.26200, AMD64",
+      "host_gpu": "NVIDIA GeForce RTX 5080, driver 32.0.16.1692 (DirectX 12, feature level 12_2); AMD Radeon(TM) Graphics, driver 32.0.21036.18",
+      "host_python": "3.12.10",
+      "git": "2.55.0.windows.3",
+      "git_lfs": "3.7.1",
+      "source": "c84e80cc"
+    }
+  }
 }

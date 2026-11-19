@@ -5,6 +5,7 @@
 #include "Misc/AutomationTest.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Misc/SecureHash.h"
 #include "Party/BuildCatalog.h"
 #include "Persistence/ExpeditionSave.h"
 
@@ -355,6 +356,84 @@ bool FBalanceDeadlockTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("A live unit is not a wall"), BalanceHarness::Deadlocked(Live));
     FCombatSnapshot Ranged = S; Ranged.Encounter.Combatants[0].Range = 3;
     TestFalse(TEXT("A ranged hero reaches the brute from where it stands"), BalanceHarness::Deadlocked(Ranged));
+    // #240: under move-through (revision 11) the bodies are passable, so the same position is no longer a deadlock.
+    FCombatSnapshot Through = S; Through.Encounter.bMoveThrough = true;
+    TestFalse(TEXT("Under move-through the hero walks out over the bodies"), BalanceHarness::Deadlocked(Through));
+    FCombatSnapshot Walled = Through; Walled.Encounter.BlockedCells.Append({FIntPoint(7, 7), FIntPoint(6, 8), FIntPoint(8, 8)});
+    Walled.Encounter.Combatants.RemoveAll([](const FCombatantState& U) { return U.Life == ECombatLife::Dead; });
+    TestTrue(TEXT("Terrain still walls a hero in under move-through"), BalanceHarness::Deadlocked(Walled));
+    return !HasAnyErrors();
+}
+namespace BalanceHarnessTest
+{
+/** The MD5 of one seeded harness run: its three CSV rows and its final expedition snapshot as the real save encodes it (RNG, cells, HP, history). */
+FString RunDigest(const FString& PartyId, int32 Seed, int32 RoutePattern, int32 Revision, ERewardStrategy Strategy)
+{
+    const FPartySpec* Party = FindParty(PartyId);
+    if (!Party) { return TEXT("no such party"); }
+    FExpeditionSnapshot Final;
+    const TArray<FRunStats> Runs = {PlayRun(*Party, Seed, RoutePattern, &Final, nullptr, Revision, Strategy)};
+    FExpeditionRun Restored;
+    FExpeditionSaveData Data;
+    FString Json, Error;
+    Data.Current = Final;
+    if (!Restored.Restore(Final, Error)) { return TEXT("restore failed: ") + Error; }
+    const EExpeditionPhase Phase = Restored.Progress().Phase;
+    if (Phase == EExpeditionPhase::Victory || Phase == EExpeditionPhase::Defeat) { Data.Records.Add(FExpeditionSave::Ending(Restored)); }
+    if (!FExpeditionSave::Encode(Data, Json, Error)) { return TEXT("encode failed: ") + Error; }
+    return FMD5::HashAnsiString(*(RunsCsv(Runs) + EncountersCsv(Runs) + HeroesCsv(Runs) + Json));
+}
+}
+
+// #240: revision 10 keeps its movement for life. Seeded revision 10 runs, among them #217's stall (rot5-04, seed 20261116, route 7, reserve),
+// hash to the digests captured on staging 5223a0b4 before the move-through rule existed: rows, final snapshot and RNG byte for byte.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBalanceRevision10PinnedTest, "Project.Balance.Revision10RunsArePinned",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FBalanceRevision10PinnedTest::RunTest(const FString& Parameters)
+{
+    using namespace BalanceHarness;
+    struct FPinned { const TCHAR* Party; int32 Seed; int32 Route; ERewardStrategy Strategy; const TCHAR* Digest; };
+    const FPinned Pins[] = {
+        {TEXT("rot5-04"), 20261116, 7, ERewardStrategy::Reserve, TEXT("822b90f21e69722a9e147e645022e4fe")},
+        {TEXT("rot5-04"), 20261116, 7, ERewardStrategy::Mixed, TEXT("822b90f21e69722a9e147e645022e4fe")},
+        {TEXT("familiar"), 20261114, 5, ERewardStrategy::Mixed, TEXT("1e198137aef455c14379f03c1181fe82")},
+        {TEXT("melee"), 20261130, 21, ERewardStrategy::Gear, TEXT("2b4d0bc86d60db0b46bf7f2bc4f1868a")},
+        {TEXT("rot2-03"), 20261119, 10, ERewardStrategy::Honed, TEXT("854433607b9f4f2f32e86249a20ff360")},
+        {TEXT("dup-wizard"), 20261140, 31, ERewardStrategy::Mixed, TEXT("cb11074bb9ee0827e29fd3355c8b1c7d")},
+    };
+    for (const FPinned& Pin : Pins)
+    {
+        const FString Digest = BalanceHarnessTest::RunDigest(Pin.Party, Pin.Seed, Pin.Route, 10, Pin.Strategy);
+        const FString Where = FString::Printf(TEXT("%s seed %d route %d %s"), Pin.Party, Pin.Seed, Pin.Route, StrategyName(Pin.Strategy));
+        AddInfo(Where + TEXT(" digest ") + Digest);
+        TestEqual(Where + TEXT(": revision 10 plays as before"), Digest, FString(Pin.Digest));
+    }
+    return !HasAnyErrors();
+}
+
+// #241: revisions 7-9 keep their rules for life too. Seeded gear-only runs (the only card they offer) hash to digests captured on #240's head
+// 50f5dfc2, before revision 11's balance pass existed: rows, final snapshot and RNG byte for byte.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBalanceOlderRevisionsPinnedTest, "Project.Balance.Revisions7To9RunsArePinned",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FBalanceOlderRevisionsPinnedTest::RunTest(const FString& Parameters)
+{
+    using namespace BalanceHarness;
+    struct FPinned { const TCHAR* Party; int32 Seed; int32 Route; int32 Revision; const TCHAR* Digest; };
+    const FPinned Pins[] = {
+        {TEXT("familiar"), 20261114, 5, 9, TEXT("2d5800079ecd5ac92c8042698e41de3b")},
+        {TEXT("melee"), 20261130, 21, 9, TEXT("3f994faf5c87dec26951a9202267b1eb")},
+        {TEXT("rot2-03"), 20261119, 10, 8, TEXT("978443a5d4a949cb8c93595db9dc7ef0")},
+        {TEXT("dup-wizard"), 20261140, 31, 8, TEXT("16e3029c2dac28c1a985296009e1ec49")},
+        {TEXT("familiar"), 20261109, 0, 7, TEXT("784190ecc07a417eecd2f544ad1afd50")},
+        {TEXT("rot5-04"), 20261116, 7, 7, TEXT("bedccba15f7858244888a2b53190b9f5")},
+    };
+    for (const FPinned& Pin : Pins)
+    {
+        const FString Digest = BalanceHarnessTest::RunDigest(Pin.Party, Pin.Seed, Pin.Route, Pin.Revision, ERewardStrategy::Gear);
+        const FString Where = FString::Printf(TEXT("%s seed %d route %d revision %d"), Pin.Party, Pin.Seed, Pin.Route, Pin.Revision);
+        AddInfo(Where + TEXT(" digest ") + Digest);
+        TestEqual(Where + TEXT(": plays as before"), Digest, FString(Pin.Digest));
+    }
     return !HasAnyErrors();
 }
 #endif

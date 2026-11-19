@@ -74,6 +74,8 @@ const TCHAR* ExpeditionCapture::ModeName(ECaptureMode Mode)
     case ECaptureMode::Impact: return TEXT("impact");
     case ECaptureMode::Roll: return TEXT("roll");
     case ECaptureMode::Pose: return TEXT("pose");
+    case ECaptureMode::SetPiece: return TEXT("setpiece");
+    case ECaptureMode::FlyIn: return TEXT("flyin");
     case ECaptureMode::Start: return TEXT("start");
     }
     return TEXT("start");
@@ -169,6 +171,13 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
             if ((*Entry)->HasField(TEXT("hero")) && ((*Entry)->TryGetField(TEXT("hero"))->Type != EJson::Number || !(*Entry)->TryGetNumberField(TEXT("hero"), Hero) || Hero < 1.0 || Hero > 4.0 || Hero != FMath::FloorToDouble(Hero)))
             { Error = Shot.Name + TEXT(" needs a \"hero\" party slot from 1 to 4"); return false; }
             Shot.Hero = static_cast<int32>(Hero);
+            FString Card;
+            if ((*Entry)->HasField(TEXT("card")))
+            {
+                if (!(*Entry)->TryGetStringField(TEXT("card"), Card) || (Card != TEXT("gear") && Card != TEXT("reserve") && Card != TEXT("honed")))
+                { Error = Shot.Name + TEXT(" needs a \"card\" of gear, reserve or honed"); return false; }
+                Shot.Card = Card == TEXT("reserve") ? 1 : Card == TEXT("honed") ? 2 : 0;
+            }
         }
         else if (Mode == TEXT("start"))
         {
@@ -181,7 +190,31 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
         else if (Mode == TEXT("impact")) { Shot.Mode = ECaptureMode::Impact; }
         else if (Mode == TEXT("roll")) { Shot.Mode = ECaptureMode::Roll; }
         else if (Mode == TEXT("pose")) { Shot.Mode = ECaptureMode::Pose; }
-        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start, tooltip, hint, impact, roll, pose)"), *Shot.Name, *Mode); return false; }
+        else if (Mode == TEXT("setpiece"))
+        {
+            // The Waystone set piece held at a moment (#250): a burst of these, a few frames apart, shows its motion.
+            Shot.Mode = ECaptureMode::SetPiece;
+            double Seconds = 0.0;
+            if (!Number(*Entry, TEXT("time"), Seconds) || Seconds < 0.0 || Seconds > 10.0) { Error = Shot.Name + TEXT(" needs \"time\" in seconds from 0 to 10"); return false; }
+            Shot.Time = static_cast<float>(Seconds);
+        }
+        else if (Mode == TEXT("flyin"))
+        {
+            // The route fly-in held at a moment (#249): a burst over a route fixture (the move) and its fight (the fade-up) shows its motion.
+            Shot.Mode = ECaptureMode::FlyIn;
+            double Seconds = 0.0;
+            if (!Number(*Entry, TEXT("time"), Seconds) || Seconds < 0.0 || Seconds > RouteFlyIn::DurationSeconds + 1e-4)
+            { Error = FString::Printf(TEXT("%s needs \"time\" in seconds from 0 to %.2f"), *Shot.Name, RouteFlyIn::DurationSeconds); return false; }
+            Shot.Time = static_cast<float>(Seconds);
+            if ((*Entry)->HasField(TEXT("offer")))
+            {
+                double Offer = -1.0;
+                if ((*Entry)->TryGetField(TEXT("offer"))->Type != EJson::Number || !Number(*Entry, TEXT("offer"), Offer) || (Offer != 0.0 && Offer != 1.0))
+                { Error = Shot.Name + TEXT(" needs an \"offer\" of 0 or 1"); return false; }
+                Shot.Offer = static_cast<int32>(Offer);
+            }
+        }
+        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start, tooltip, hint, impact, roll, pose, setpiece, flyin)"), *Shot.Name, *Mode); return false; }
         if (Shot.Mode == ECaptureMode::Pose)
         {
             // A hero of a class held in one clip at one time (#150): the clip name as in EUnitPose ("Melee"), any case.
@@ -358,7 +391,8 @@ TSharedPtr<FExpeditionCaptureDirector> FExpeditionCaptureDirector::Create(AExped
 bool FExpeditionCaptureDirector::Idle() const
 {
     const AExpeditionBattleView* Board = View.Get();
-    if (!Board || Board->IsPresenting()) { return false; }
+    // A held set piece (#250) is a capture pose, not playback still owed.
+    if (!Board || (Board->IsPresenting() && !Board->HoldsSetPiece())) { return false; }
     const FExpeditionPlayback& Show = Board->Playback();
     const bool bBanner = !Show.Banner().Title.IsEmpty() && Show.Banner().Age <= Show.Banner().Life;
     return !bBanner && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty();
@@ -448,8 +482,22 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
     Board->ClearImpactPreview();
     Board->ClearRollPreview();
     Board->ClearPosePreview();
+    Board->ClearSetPiecePreview();
+    Board->ClearFlyInPreview();
     switch (Shot.Mode)
     {
+    case ECaptureMode::FlyIn:
+        // The fly-in at a moment: the camera and the fade follow from that time alone (the move before the cut, the fight's opening framing after it).
+        if (!Board->PreviewFlyIn(Shot.Offer, Shot.Time))
+        {
+            Skip = Shot.Time < RouteFlyIn::CutSeconds ? TEXT("the move needs a journey route screen with that offer's diorama") : TEXT("the arrival needs a fight");
+            return false;
+        }
+        return true;
+    case ECaptureMode::SetPiece:
+        // The set piece at a moment of its timeline: the flare, the seal, the artifact and the camera all follow from that time alone.
+        if (!Board->PreviewSetPiece(Shot.Time)) { Skip = TEXT("the checkpoint is not a won finale with the set piece"); return false; }
+        return true;
     case ECaptureMode::Battle:
     case ECaptureMode::Targeting:
     case ECaptureMode::Tooltip:
@@ -613,8 +661,17 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
         return true;
     }
     case ECaptureMode::Overview:
-        if (!Board->ShowingOverview()) { Skip = TEXT("the checkpoint is not at the route table"); return false; }
+        // A finished run's overview shot is its journey map (#248): a victory opens on the Vault board, so the shot switches to the journey first.
+        if (!Board->ShowingOverview() && Board->CanToggleEndingJourney()) { Board->ToggleEndingJourney(); }
+        // The route table, or (#218) the reward and camp screens, which are drawn over the board of the fight just won.
+        if (!Board->ShowingOverview() && !(Board->HasRun() && (Board->Progress().Phase == EExpeditionPhase::Reward || Board->Progress().Phase == EExpeditionPhase::Recovery)))
+        { Skip = TEXT("the checkpoint is not at the route table, the reward or the camp"); return false; }
         if (Shot.Hero > 0) { Player->SelectPartyIndex(Shot.Hero - 1, false); }
+        if (Shot.Card >= 0)
+        {
+            if (Board->Progress().Phase != EExpeditionPhase::Reward) { Skip = TEXT("a card needs a Reward-phase checkpoint"); return false; }
+            Player->SelectRewardCard(static_cast<ERewardCard>(Shot.Card));
+        }
         Board->SnapCameraToTargets();
         return true;
     case ECaptureMode::Start:
@@ -837,6 +894,16 @@ void FExpeditionCaptureDirector::WriteManifest() const
                 }
                 Shot->SetObjectField(TEXT("shooter"), Shooter);
             }
+        }
+        if (Result.Shot.Mode == ECaptureMode::FlyIn && Result.Status != TEXT("skipped"))
+        {
+            // The fly-in moment the shot held (#249): its time, the offer flown into and the black over the screen.
+            TSharedRef<FJsonObject> Held = MakeShared<FJsonObject>();
+            Held->SetNumberField(TEXT("time"), Result.Shot.Time);
+            Held->SetNumberField(TEXT("offer"), Result.Shot.Offer);
+            Held->SetNumberField(TEXT("fade"), RouteFlyIn::Fade(Result.Shot.Time));
+            Held->SetBoolField(TEXT("arrival"), Result.Shot.Time >= RouteFlyIn::CutSeconds);
+            Shot->SetObjectField(TEXT("flyin"), Held);
         }
         if (Result.Shot.Mode == ECaptureMode::Pose && Result.Status != TEXT("skipped"))
         {

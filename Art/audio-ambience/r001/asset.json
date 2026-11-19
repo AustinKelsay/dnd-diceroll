@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "asset_id": "audio-ambience",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Audio/DA_ExpeditionAmbience",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/244",
+  "provenance": {
+    "author": "Cut, layered and mixed by this project's agents from recordings by: AntumDeluge; gmason; isaiah658; jaggedstone; LEGIT Audio; pagdev; qubodup; Ted Kerr (wolfgang); thimras; Versilian Studios (recorded by Sam Gossner & Simon Dalzell; sample cutting by Elan Hickler/Soundemote)",
+    "license": "Every source is CC0 1.0 Universal (per-source statements in recipe.json and docs/assets.md); the edits are released the same way",
+    "origin": "Loopable Dungeon Ambience <https://opengameart.org/content/loopable-dungeon-ambience>; Dripping water loop <https://opengameart.org/content/dripping-water-loop>; Park ambiences <https://opengameart.org/content/park-ambiences>; Ambient Bird Sounds <https://opengameart.org/content/ambient-bird-sounds>; Crickets Ambient Noise - loopable <https://opengameart.org/content/crickets-ambient-noise-loopable>; Fireplace Sound Loop <https://opengameart.org/content/fireplace-sound-loop>; Fire Crackling <https://opengameart.org/content/fire-crackling>; The Shop (free samples) <https://opengameart.org/content/the-shop>; Underwater or space engine rumble <https://opengameart.org/content/underwater-or-space-engine-rumble>; VS Chamber Orchestra: Community Edition (VSCO-2-CE) at commit 440300901dfe9275fd84e0b7763af1f8443ae62e <https://github.com/sgossner/VSCO-2-CE>"
+  },
+  "recipe": {
+    "method": "tools/audio_beds.py build --recipe Art/audio-ambience/r001/recipe.json --downloads .local/ambience-downloads: per bed, an ffmpeg mix of the layers in recipe.json (trim, tape-style pitch, high/low-pass, fades, gain, pan, placements) to 48 kHz stereo float, rendered crossfade seconds past the loop length and folded over the head with an equal-power crossfade so the loop is seamless, then one gain to the ambience integrated loudness capped at -1 dBTP, then triangular dither to 16-bit PCM",
+    "approved_reference": "Ticket #244 and spec #239: the Drowned Vigil (dripping stone nave, distant wind), the Root of the World (leaves, wind, insects and birds), the Vault (a low hum and the Waystone's resonance), the war table (candle crackle and room tone); dark high fantasy",
+    "parameters": {
+      "categories": {
+        "ambience": {
+          "lufs": -30.0
+        }
+      },
+      "true_peak_ceiling_dbtp": -1.0,
+      "sample_rate": 48000,
+      "channels": 2,
+      "beds": {
+        "WarTable": {
+          "length_s": 45.0,
+          "crossfade_s": 3.0
+        },
+        "Vigil": {
+          "length_s": 60.0,
+          "crossfade_s": 4.0
+        },
+        "Root": {
+          "length_s": 60.0,
+          "crossfade_s": 4.0
+        },
+        "Vault": {
+          "length_s": 45.0,
+          "crossfade_s": 4.0
+        }
+      }
+    },
+    "model_revision": "not applicable (recorded sources, no generation)",
+    "raw_downloads": "not committed: each source file used is listed with its SHA-256 in recipe.json, and build refuses a mismatch"
+  },
+  "tools": {
+    "ffmpeg": "ffmpeg version n9.0.2 Copyright (c) 2000-2026 the FFmpeg developers",
+    "audio_beds.py": "tools/audio_beds.py at this commit"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/audio-ambience/r001/recipe.json",
+      "sha256": "1fe253454a73ddb0fe5594909ad72299dc0f739cc190a43d9a9bf5ae09f0a41e"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-ambience/r001/beds/WarTable.wav",
+      "sha256": "a1931fd95181acb58a5f03acf43b9738908693fdda1a4ba41e7d63f3a8a11bb6"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-ambience/r001/beds/Vigil.wav",
+      "sha256": "40d8b17375a3bc5df4683d74660c103c9fd820a76828e4ee2a5aa587830430b5"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-ambience/r001/beds/Root.wav",
+      "sha256": "e39c710b4ea3a6d2f8c1c96da48b6bdde5578b2f595be407c5bf6bb0acb14781"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-ambience/r001/beds/Vault.wav",
+      "sha256": "6b5938a4568e22681359e00232539732513a178ff652e26679c4545734f2fc7f"
+    }
+  ],
+  "import_policy": {
+    "name": "expedition-ambience-soundwave",
+    "version": 1,
+    "settings": {
+      "importer": "AssetImportTask (automated) from Content/Python/import_expedition_ambience.py",
+      "destination": "/Game/DnDDiceRoll/Audio/Ambience/SW_Amb_<Bed>",
+      "sound_class": "/Game/DnDDiceRoll/Audio/SC_Ambience",
+      "data_asset": "/Game/DnDDiceRoll/Audio/DA_ExpeditionAmbience (UExpeditionAmbienceSounds: bed -> loop and volume from recipe.json, ambience class)",
+      "compression": "engine defaults",
+      "looping": true,
+      "virtualization": "play when silent",
+      "rerun": "kept when DiceRollSourceSha256 matches; replaced only with DND_AMBIENCE_REIMPORT=1"
+    }
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": []
+  }
+}

@@ -328,7 +328,7 @@ class RootKitPlanTests(unittest.TestCase):
         self.assertIn("set_material_instance_vector_parameter_value(instance, \"Color\", wanted)", text)
 
     def test_kit_tags_are_distinct_and_the_script_writes_the_kits_own(self):
-        self.assertEqual(theme_plan.KIT_TAGS, ("vigil-kit-r002", "root-kit-r002", "vault-kit-r002", "overview-r002", "vigil-kit-r002-rose"))
+        self.assertEqual(theme_plan.KIT_TAGS, ("vigil-kit-r002", "root-kit-r002", "vault-kit-r002", "overview-r002", "vigil-kit-r002-rose", "setpiece-r001", "journey-r001"))
         text = SCRIPT.read_text()
         self.assertIn('library.set_metadata_tag(mesh, theme_plan.REVISION_TAG, row_tag)', text)
         self.assertIn('row_tag = theme_plan.ROW_TAGS.get(asset_id, kit["tag"])', text)
@@ -469,6 +469,50 @@ class VaultKitPlanTests(unittest.TestCase):
         self.assertIn("if (Kind == EDiceRollKit::Vault && !VaultKitComplete()) { Kind = EDiceRollKit::Vigil; }", theme)
 
 
+class JourneyPlanTests(unittest.TestCase):
+    """The war-table journey map r001 (#248): thirteen new meshes as a fifth kit, every row matching its asset record, nothing replaced."""
+
+    def test_every_journey_row_matches_its_asset_record_and_replaces_nothing(self):
+        old = r001_packages()
+        pointers = []
+        for asset_id, revision, name, folder, kind, prop, index, look in theme_plan.JOURNEY_R001:
+            record = json.loads((ROOT / "Art" / asset_id / ("r%03d" % revision) / "asset.json").read_text())
+            self.assertEqual((record["asset_id"], record["revision"]), (asset_id, revision))
+            self.assertEqual(record["unreal_package"], theme_plan.package_path(folder, name), asset_id)
+            self.assertNotIn(theme_plan.package_path(folder, name), old)
+            export = [entry for entry in record["files"] if entry["role"] == "export"]
+            self.assertEqual(len(export), 1)
+            source = theme_plan.export_path(asset_id, revision, name)
+            self.assertEqual(Path(source), ROOT / export[0]["path"], asset_id)
+            if is_lfs_pointer(source):
+                pointers.append(asset_id)
+            else:
+                self.assertEqual(theme_plan.sha256_file(source), export[0]["sha256"], asset_id)
+            self.assertEqual(kind, theme_plan.CARD if asset_id == "journey-fog" else theme_plan.LIT, asset_id)
+            self.assertEqual(theme_plan.record_lods(asset_id, revision), [], "small meshes drawn on one screen: no LODs")
+            self.assertIsNone(index)
+        self.assertEqual(len(theme_plan.JOURNEY_R001), 13)
+        ids = [row[0] for row in theme_plan.JOURNEY_R001]
+        self.assertFalse(set(ids) & set(theme_plan.ALL_REPLACEABLE))
+        self.assertEqual(set(theme_plan.JOURNEY_METRIC_GATE), set(ids))
+        rows = theme_plan.R002 + theme_plan.ROOT_R002 + theme_plan.VAULT_R002 + theme_plan.OVERVIEW_R002 + theme_plan.JOURNEY_R001
+        packages = [theme_plan.package_path(row[3], row[2]) for row in rows]
+        self.assertEqual(len(packages), len(set(packages)))
+        if pointers:
+            self.skipTest("LFS pointers, not hydrated exports (skipped the content hash of %d): git lfs pull to run it" % len(pointers))
+
+    def test_journey_properties_exist_in_the_theme_and_the_script_runs_the_kit(self):
+        header = (ROOT / "Source" / "DnDDiceRoll" / "Public" / "Presentation" / "DiceRollTheme.h").read_text()
+        for row in theme_plan.JOURNEY_R001:
+            self.assertIn(pascal(row[5]), header)
+        self.assertIn("bJourneyR001", header)
+        text = SCRIPT.read_text()
+        self.assertIn('"flag": "journey_r001"', text)
+        self.assertIn("theme_plan.JOURNEY_R001", text)
+        self.assertIn("THEME_JOURNEY_COMPLETE", text)
+        self.assertEqual(theme_plan.JOURNEY_TAG, "journey-r001")
+
+
 class OverviewPlanTests(unittest.TestCase):
     """The overview set r002 (#149, the last part): the war table and three dioramas as a fourth kit, and the Vigil occluders with the high-resolution rose."""
 
@@ -512,6 +556,44 @@ class OverviewPlanTests(unittest.TestCase):
         self.assertIn("theme_plan.OVERVIEW_R002", text)
         self.assertIn("THEME_OVERVIEW_COMPLETE", text)
         self.assertEqual(theme_plan.OVERVIEW_TAG, "overview-r002")
+
+    def test_every_setpiece_row_matches_its_asset_record_and_replaces_nothing(self):
+        # The Waystone set piece (#250): three new packages under Theme/SetPiece, no theme property and no LODs; the view loads them by path.
+        old = r001_packages()
+        pointers = []
+        for asset_id, revision, name, folder, kind, prop, index, look in theme_plan.SETPIECE_R001:
+            record = json.loads((ROOT / "Art" / asset_id / ("r%03d" % revision) / "asset.json").read_text())
+            self.assertEqual((record["asset_id"], record["revision"]), (asset_id, revision))
+            self.assertEqual(record["unreal_package"], theme_plan.package_path(folder, name), asset_id)
+            self.assertEqual(folder, "SetPiece")
+            self.assertNotIn(theme_plan.package_path(folder, name), old)
+            export = [entry for entry in record["files"] if entry["role"] == "export"]
+            self.assertEqual(len(export), 1)
+            source = theme_plan.export_path(asset_id, revision, name)
+            self.assertEqual(Path(source), ROOT / export[0]["path"], asset_id)
+            if is_lfs_pointer(source):
+                pointers.append(asset_id)
+            else:
+                self.assertEqual(theme_plan.sha256_file(source), export[0]["sha256"], asset_id)
+                self.assertLess(theme_plan.triangle_count(source), 1000, "small pieces: LOD-exempt")
+            self.assertEqual((kind, prop, index), (theme_plan.LIT, None, None), "no theme property: loaded by path")
+            self.assertEqual(theme_plan.record_lods(asset_id, revision), [])
+        ids = [row[0] for row in theme_plan.SETPIECE_R001]
+        self.assertEqual(len(ids), 3)
+        self.assertFalse(set(ids) & set(theme_plan.ALL_REPLACEABLE))
+        taken = {row[0] for row in theme_plan.R002 + theme_plan.ROOT_R002 + theme_plan.VAULT_R002 + theme_plan.OVERVIEW_R002}
+        self.assertFalse(taken & set(ids))
+        # The game loads exactly these packages (WaystoneSetPiece.cpp), so the table and the code name the same three.
+        code = (ROOT / "Source" / "DnDDiceRoll" / "Private" / "Presentation" / "WaystoneSetPiece.cpp").read_text()
+        for asset_id, revision, name, folder, *_ in theme_plan.SETPIECE_R001:
+            self.assertIn("%s.%s" % (theme_plan.package_path(folder, name), name), code)
+        text = SCRIPT.read_text()
+        self.assertIn("theme_plan.SETPIECE_R001", text)
+        self.assertIn('"flag": None', text)
+        self.assertIn("if prop is None:", text)
+        self.assertIn('if kit["flag"] is not None and', text)
+        if pointers:
+            self.skipTest("LFS pointers, not hydrated exports (skipped the content hash of %d): git lfs pull to run it" % len(pointers))
 
     def test_the_vigil_rose_replace_is_allow_listed_tagged_and_matches_its_record(self):
         self.assertEqual(set(theme_plan.ROSE_REPLACEABLE), {"world-vigil-occluders"})

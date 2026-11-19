@@ -53,6 +53,11 @@ constexpr int32 DrawnRecipes = 3, PressureRecipe = 3, FinaleRecipe = 6;
 constexpr int32 IdentityRevision = 9;
 /** Revision 10 (#218): Compact rewards offer Reserve and Honed beside Gear. Generation is revision 9's exactly. */
 constexpr int32 UpgradeRevision = 10;
+/** Revision 11 (#240, docs/runs/journey-checkpoint/M1-movement-contract.md): Compact moves pass through allies, Downed and dead creatures.
+ * Generation and rewards are revision 10's exactly. */
+constexpr int32 MoveThroughRevision = 11;
+/** Revision 11's balance pass (#241, docs/runs/journey-checkpoint/M2-balance-contract.md), in the same unreleased revision as move-through. */
+constexpr int32 BalanceRevision = 11;
 
 /** The saved FCombatantState::Role values (#188). Revisions 7 and 8 only ever use Raider and Archer. */
 enum class EFoeRole : uint8 { Raider, Archer, Skirmisher, Brute, Warden };
@@ -112,13 +117,13 @@ const TCHAR* RoleWord(EFoeRole Role, bool bDangerous)
 }
 
 /** The fixed risk table (contract 11), verified against the measured cost by report 12. */
-const TCHAR* RiskWord(int32 Stage, bool bDangerous)
+ERouteRisk RiskLevel(int32 Stage, bool bDangerous)
 {
     switch (StageOf(Stage))
     {
-    case EEncounterStage::Approach: return bDangerous ? TEXT("high") : TEXT("low");
-    case EEncounterStage::Pressure: return bDangerous ? TEXT("severe") : TEXT("moderate");
-    default: return bDangerous ? TEXT("severe") : TEXT("high");
+    case EEncounterStage::Approach: return bDangerous ? ERouteRisk::High : ERouteRisk::Low;
+    case EEncounterStage::Pressure: return bDangerous ? ERouteRisk::Severe : ERouteRisk::Moderate;
+    default: return bDangerous ? ERouteRisk::Severe : ERouteRisk::High;
     }
 }
 
@@ -144,7 +149,7 @@ void DescribeRoute(FExpeditionRoute& Route, int32 Stage, int32 Choice, bool bSec
         const FString Rewards = bFinale ? FString(TEXT("Recover the artifact; no loot")) : FString::Printf(TEXT("%s, +%d potion%s%s"), bUpgradeCards ? TEXT("1 upgrade choice") : TEXT("+1 gear"),
             Route.RewardPotions, Route.RewardPotions == 1 ? TEXT("") : TEXT("s"), Choice == 0 && bSecuredSupplies ? TEXT(" (secured supplies)") : TEXT(""));
         Route.Preview = FString::Printf(TEXT("%s | %d foes: %s | %s: %s | Risk: %s | %s"), Choice == 0 ? TEXT("Guarded") : TEXT("Dangerous"),
-            Route.EnemyCount, *FString::Join(Words, TEXT(", ")), Recipe.Terrain, Recipe.Note, RiskWord(Stage, Route.bDangerous), *Rewards);
+            Route.EnemyCount, *FString::Join(Words, TEXT(", ")), Recipe.Terrain, Recipe.Note, FExpeditionRun::RiskWord(RiskLevel(Stage, Route.bDangerous)), *Rewards);
         return;
     }
     Route.Preview = FString::Printf(TEXT("%s | %d %s | %s | +1 gear (rank 3 cap) | +%d potions%s"),
@@ -222,7 +227,32 @@ bool EnemyStats(ERuleset Ruleset, int32 Revision, EFoeRole Role, bool bDangerous
     Stats.DamageDie = Tuning.DamageDie;
     Stats.DamageBonus += Tuning.DamageDelta;
     Stats.Speed = Tuning.Speed;
+    if (FExpeditionRun::PlaysRevision11Balance(Ruleset, Revision))
+    {
+        // Revision 11 (#241): revision 10's foes, scaled by stage kind to take back what move-through gave the party (M2 contract section 3).
+        const int32 Kind = static_cast<int32>(StageOf(Stage)), Way = bDangerous ? 1 : 0;
+        Stats.HP = Stats.HP * Revision11Rules::EnemyHpPercent[Way][Kind] / 100;
+        Stats.DamageBonus += Revision11Rules::EnemyDamageDelta[Way][Kind];
+    }
     return true;
+}
+
+/** A hero's profile under its run's revision: the catalog's, with revision 11's Monk and Paladin adjustments (#241). Creation and restore
+ * both read it, so a saved hero is checked against the profile its run was created with. */
+void ApplyRevisionProfile(FCombatantState& Hero, ERuleset Ruleset, int32 Revision)
+{
+    if (!FExpeditionRun::PlaysRevision11Balance(Ruleset, Revision)) { return; }
+    int32 Hp = 0, Armor = 0;
+    if (Hero.AdventurerRole == EAdventurerRole::Monk) { Hp = Revision11Rules::MonkHpDelta; Armor = Revision11Rules::MonkArmorDelta; }
+    if (Hero.AdventurerRole == EAdventurerRole::Paladin) { Hp = Revision11Rules::PaladinHpDelta; Armor = Revision11Rules::PaladinArmorDelta; }
+    Hero.MaxHP += Hp; Hero.HP += Hp; Hero.ArmorClass += Armor;
+}
+
+/** The combat rules a run's revision selects that are never saved (#240, #241): every encounter the run builds or restores carries them. */
+void ApplyRevisionRules(FCombatEncounter& Encounter, ERuleset Ruleset, int32 Revision)
+{
+    Encounter.bMoveThrough = FExpeditionRun::MovesThroughUnits(Ruleset, Revision);
+    Encounter.bNearestTarget = Encounter.bSturdyRescue = FExpeditionRun::PlaysRevision11Balance(Ruleset, Revision);
 }
 
 int32 CountSurvivors(const FCombatBattle& Battle)
@@ -268,11 +298,12 @@ bool FExpeditionRun::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Sele
     Candidate.State.GenerationRandomState = Seed;
     auto Party = FCombatBattle::TutorialEncounter();
     Party.Ruleset = Ruleset;
+    ApplyRevisionRules(Party, Ruleset, Revision);
     for (int32 I = 0; I < 4; ++I)
     {
         const auto Cell = Party.Combatants[I].Cell;
         const auto& Slot = Selection[I];
-        if (Slot.Id != I + 1 || !FBuildCatalog::Create(Slot.BuildId, Slot.Id, Slot.Name, Party.Combatants[I]))
+        if (Slot.Id != I + 1 || !CreateHero(Slot.BuildId, Slot.Id, Slot.Name, Ruleset, Revision, Party.Combatants[I]))
         { Error = TEXT("Choose a valid build and name for each independent slot 1–4."); return false; }
         Party.Combatants[I].Cell = Cell;
     }
@@ -356,6 +387,7 @@ bool FExpeditionRun::EncounterLayout(const FExpeditionRoute& Route, int32 Stage,
 {
     FCombatEncounter Layout = FCombatBattle::TutorialEncounter();
     Layout.Ruleset = Ruleset;
+    ApplyRevisionRules(Layout, Ruleset, Revision);
     Layout.Width = Route.Width;
     Layout.Height = Route.Height;
     Layout.Combatants.SetNum(4);
@@ -417,11 +449,33 @@ bool FExpeditionRun::EncounterLayout(const FExpeditionRoute& Route, int32 Stage,
     return true;
 }
 
+EEncounterStage FExpeditionRun::StageKind(int32 Stage) { return StageOf(Stage); }
+
+EExpeditionWorld FExpeditionRun::WorldOf(EEncounterStage Stage, bool bDangerous)
+{
+    return Stage == EEncounterStage::Finale ? EExpeditionWorld::Vault : bDangerous ? EExpeditionWorld::Vigil : EExpeditionWorld::Root;
+}
+
+const TCHAR* FExpeditionRun::RiskWord(ERouteRisk Risk)
+{
+    switch (Risk)
+    {
+    case ERouteRisk::Low: return TEXT("low");
+    case ERouteRisk::Moderate: return TEXT("moderate");
+    case ERouteRisk::High: return TEXT("high");
+    case ERouteRisk::Severe: return TEXT("severe");
+    default: return TEXT("");
+    }
+}
+
 FEncounterIdentity FExpeditionRun::Encounter(const FExpeditionProgress& Progress, const FExpeditionRoute& Route)
 {
     FEncounterIdentity Identity;
-    Identity.Stage = StageOf(FMath::Clamp((Route.Id - 1) / 2, 0, EncounterCount - 1));
+    const int32 Stage = FMath::Clamp((Route.Id - 1) / 2, 0, EncounterCount - 1);
+    Identity.Stage = StageOf(Stage);
+    Identity.World = WorldOf(Identity.Stage, Route.bDangerous);
     const bool bIdentity = HasIdentity(Progress.Ruleset, Progress.CatalogRevision);
+    if (bIdentity) { Identity.Risk = RiskLevel(Stage, Route.bDangerous); }
     if (Route.Recipe < 0 || Route.Recipe >= (bIdentity ? static_cast<int32>(UE_ARRAY_COUNT(Recipes)) : DrawnRecipes)) { return Identity; }
     const FEncounterRecipe& Recipe = Recipes[Route.Recipe];
     Identity.ObstacleKind = Recipe.ObstacleKind;
@@ -469,6 +523,16 @@ void FExpeditionRun::ResolveCombat()
 }
 
 bool FExpeditionRun::OffersUpgradeCards(ERuleset Ruleset, int32 Revision) { return Ruleset == ERuleset::Compact && Revision >= UpgradeRevision; }
+bool FExpeditionRun::MovesThroughUnits(ERuleset Ruleset, int32 Revision) { return Ruleset == ERuleset::Compact && Revision >= MoveThroughRevision; }
+bool FExpeditionRun::PlaysRevision11Balance(ERuleset Ruleset, int32 Revision) { return Ruleset == ERuleset::Compact && Revision >= BalanceRevision; }
+
+bool FExpeditionRun::CreateHero(const FString& BuildId, int32 Id, const FString& Name, ERuleset Ruleset, int32 Revision, FCombatantState& Out)
+{
+    if (!FBuildCatalog::Create(BuildId, Id, Name, Out)) { return false; }
+    ApplyRevisionProfile(Out, Ruleset, Revision);
+    return true;
+}
+bool FExpeditionRun::CardsRefill(ERuleset Ruleset, int32 Revision) { return Revision11Rules::CardsRefill && PlaysRevision11Balance(Ruleset, Revision); }
 
 bool FExpeditionRun::ClaimReward(int32 RecipientId, FString& Error) { return ClaimReward(RecipientId, ERewardCard::Gear, Error); }
 
@@ -484,7 +548,7 @@ bool FExpeditionRun::ClaimReward(int32 RecipientId, ERewardCard Card, FString& E
     if (Card != ERewardCard::Gear && !OffersUpgradeCards(State.Ruleset, State.CatalogRevision)) { Error = TEXT("Gear only in this run."); return false; }
     // The cards draw no random numbers; a rejection changes nothing. The candidate battle is installed only when the claim is whole.
     FCombatBattle Candidate = Combat;
-    if (!FPartyContinuity::Reward(Candidate, RecipientId, State.History.Last().Route.RewardPotions, Card, Error)) { return false; }
+    if (!FPartyContinuity::Reward(Candidate, RecipientId, State.History.Last().Route.RewardPotions, Card, Error, CardsRefill(State.Ruleset, State.CatalogRevision))) { return false; }
     Combat = MoveTemp(Candidate);
     State.History.Last().RewardRecipient = RecipientId;
     State.History.Last().RewardCard = Card;
@@ -530,6 +594,9 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
     }
     FExpeditionRun Candidate;
     if (!Candidate.Combat.Restore(Snapshot.Battle, Error)) { return false; }
+    // The movement rule (#240) and revision 11's combat balance (#241) are never saved: they follow from the run's ruleset and revision,
+    // whatever the snapshot's in-memory flags say.
+    ApplyRevisionRules(Candidate.Combat.State.Encounter, P.Ruleset, P.CatalogRevision);
     Candidate.State = P;
     Candidate.bStarted = true;
     const bool bRoute = P.Phase == EExpeditionPhase::Route;
@@ -608,6 +675,7 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
                 U.FighterSubclass != Build->Profile.FighterSubclass || !FBuildCatalog::ValidResources(U)) { return Reject(); }
             const auto Spawn = Base.Cell;
             Base = Build->Profile; Base.Id = U.Id; Base.Name = U.Name; Base.Cell = Spawn;
+            ApplyRevisionProfile(Base, P.Ruleset, P.CatalogRevision);
             // Names are instance values; detached combat validation bounds them.
             const int32 ExpectedLevel = FMath::Min(5, P.EncountersCompleted + 1);
             int32 MinimumLevel = 1;

@@ -15,7 +15,7 @@ from mcp_client import MCP, decode_response
 from scaffold import new_class
 import dev as dev_module
 import struct
-from dev import FOE_LOOKS_PATTERN, Dev, build_warnings, core_count, load_poses, parse_resolution, resolution_argument, verify_capture
+from dev import AUTOMATION_DISABLE_HOME_SCREEN, FOE_LOOKS_PATTERN, Dev, build_warnings, core_count, load_poses, parse_resolution, resolution_argument, verify_capture
 
 
 class Response(io.BytesIO):
@@ -158,6 +158,12 @@ class WorkspaceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "1 or more"): Dev(self.w, host="linux", cores=0)
         dev = Dev(self.w, host="mac", cores=2)
         self.assertIn("-corelimit=2", dev.automation_command("Project.", self.root, self.root / "a.log"))
+
+    def test_automation_command_disables_the_editor_home_screen_probe(self):
+        for host in ("linux", "windows", "mac"):
+            dev = Dev(self.w, host=host)
+            command = [str(part) for part in dev.automation_command("Project.", self.root, self.root / "a.log")]
+            self.assertIn(AUTOMATION_DISABLE_HOME_SCREEN, command)
 
     def test_doctor_reports_missing_tools_and_guides_off_ultra(self):
         dev = Dev(self.w, host="linux")
@@ -423,6 +429,14 @@ class GalleryTests(unittest.TestCase):
             with self.assertRaises(ValueError, msg=bad): parse_resolution(bad)
         with self.assertRaises(argparse.ArgumentTypeError): resolution_argument("big")
 
+    def test_flyin_timeline_matches_the_game(self):
+        # The helper's fly-in limits (#249) are the game's own timeline in RouteFlyIn.h.
+        import re
+        header = (Path(__file__).resolve().parents[2] / "Source/DnDDiceRoll/Public/Presentation/RouteFlyIn.h").read_text()
+        value = lambda name: float(re.search(rf"constexpr float {name} = ([0-9.]+)f;", header).group(1))
+        self.assertAlmostEqual(dev_module.FLYIN_CUT_SECONDS, value("CutSeconds"))
+        self.assertAlmostEqual(dev_module.FLYIN_SECONDS, value("CutSeconds") + value("FadeInSeconds"))
+
     def test_poses_validation(self):
         self.assertEqual(len(load_poses(self.poses())), 3)
         self.assertEqual(len(load_poses(self.poses([{"name": "battle-far", "mode": "battle", "yaw": 0, "distance": "far"}]))), 1)
@@ -440,6 +454,21 @@ class GalleryTests(unittest.TestCase):
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast4-release-poses.json")), 13)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/palette-poses.json")), 18)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/route-poses.json")), 4)
+        # The Waystone set piece burst (#250): one shot per tenth of a second of its timeline, then the settled state.
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/setpiece-poses.json")), 48)
+        self.assertEqual(len(load_poses(self.poses([{"name": "sp", "mode": "setpiece", "time": 1.3}]))), 1)
+        for wrong in ({"name": "sp", "mode": "setpiece"}, {"name": "sp", "mode": "setpiece", "time": 11}, {"name": "sp", "mode": "setpiece", "time": True},
+                      {"name": "sp", "mode": "setpiece", "time": 1, "role": "Rogue"}, {"name": "sp", "mode": "battle", "yaw": 0, "distance": 1300, "time": 1}):
+            with self.assertRaises(ValueError, msg=str(wrong)):
+                load_poses(self.poses([wrong]))
+        # The route fly-in burst (#249): every 0.05 s of its timeline, the move and then the fade-up.
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/flyin-poses.json")), 42)
+        self.assertEqual(len(load_poses(self.poses([{"name": "fly", "mode": "flyin", "time": 0.8}, {"name": "fly-b", "mode": "flyin", "time": 2.05, "offer": 1}]))), 2)
+        for wrong in ({"name": "fly", "mode": "flyin"}, {"name": "fly", "mode": "flyin", "time": 2.1}, {"name": "fly", "mode": "flyin", "time": True},
+                      {"name": "fly", "mode": "flyin", "time": 1, "offer": 2}, {"name": "fly", "mode": "flyin", "time": 1, "offer": True},
+                      {"name": "fly", "mode": "flyin", "time": 1, "role": "Rogue"}, {"name": "fly", "mode": "overview", "offer": 0}):
+            with self.assertRaises(ValueError, msg=str(wrong)):
+                load_poses(self.poses([wrong]))
         self.assertEqual(len(load_poses(self.poses([{"name": "route-hero", "mode": "overview", "hero": 4}]))), 1)
         self.assertEqual(len(load_poses(self.poses([{"name": "hit", "mode": "impact", "yaw": 0, "distance": "default"},
                                                     {"name": "bolt", "mode": "impact", "effect": "spell", "frames": 6, "yaw": 90, "distance": 1300},

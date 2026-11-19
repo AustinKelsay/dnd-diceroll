@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "settleFrames": 60,
+  "shots": [
+    {"name": "journey", "mode": "overview"},
+    {"name": "journey-hero1", "mode": "overview", "hero": 1}
+  ]
+}

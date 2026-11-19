@@ -25,8 +25,9 @@ inline constexpr int32 MaxLookAheads = 16;
 /** Guard on harness loop iterations per run; only a harness bug could reach it. */
 inline constexpr int32 RunStepGuard = 100000;
 /** Bump when a policy rule changes, so result folders say which policy produced them. 2 (#218): version 1 plus the reward-card rule;
- * with the gear strategy it is version 1 exactly. */
-inline constexpr int32 PolicyVersion = 2;
+ * with the gear strategy it is version 1 exactly. 3 (#240): under move-through (revision 11) the units-block distances of rules 3 and 9
+ * pass allies, Downed heroes and bodies, as the rules' path search does; under revisions 7-10 it is version 2 exactly. */
+inline constexpr int32 PolicyVersion = 3;
 /** The extra fixed-seed batch of contract 13 section 6 (seeds 20261141 + i), chosen with DND_BALANCE_SEED_BASE. */
 inline constexpr int32 ExtraBatchSeed = 20261141;
 
@@ -87,6 +88,9 @@ struct FEncounterStats
     int32 Damage = 0, DamageTaken = 0, Healing = 0, Protection = 0, Downs = 0, Deaths = 0, Revives = 0, SpecialsUsed = 0;
     /** Enemy HP removed by party commands whose actor stood next to (Manhattan 1) the enemy that lost it (#188, layout identity). */
     int32 MeleeDamage = 0;
+    /** The rescue loop (#241, #187 item 1): downs of a hero already revived in this fight, and of those the ones that came before the revived
+     * hero's next own turn. Exported only to rescues.csv, so runs.csv, encounters.csv and heroes.csv keep their bytes. */
+    int32 Redowns = 0, QuickRedowns = 0;
 };
 
 struct FRunStats
@@ -127,7 +131,8 @@ bool ChooseReward(const FExpeditionRun& Run, ERewardStrategy Strategy, int32& Ou
 /**
  * True when no conscious unit of either side can ever bring an opponent within its range: from its cell it walks over open floor (bodies and
  * Downed heroes block, conscious units are treated as able to move aside) and no reachable cell lies within Range (Manhattan; sight ignored, so it
- * errs toward "not deadlocked") of a conscious opponent. A fight in this state can never end (#188, #217).
+ * errs toward "not deadlocked") of a conscious opponent. Under move-through (#240) bodies and Downed heroes do not block. A fight in this state
+ * can never end (#188, #217).
  */
 bool Deadlocked(const FCombatSnapshot& Snapshot);
 /** Text board and command log for one run, for reproducing a stall or outlier by seed. */
@@ -156,6 +161,8 @@ const TCHAR* BlockerName(EActionBlocker Blocker);
 FString RunsCsv(const TArray<FRunStats>& Runs);
 FString EncountersCsv(const TArray<FRunStats>& Runs);
 FString HeroesCsv(const TArray<FRunStats>& Runs);
+/** rescues.csv (#241): party, seed, stage, revives, redowns and quick_redowns per fight, written beside the group's other files. */
+FString RescuesCsv(const TArray<FRunStats>& Runs);
 
 /**
  * True when Path lies inside the checkout's .local/: lexically after collapsing "..", and on Unix also physically, with

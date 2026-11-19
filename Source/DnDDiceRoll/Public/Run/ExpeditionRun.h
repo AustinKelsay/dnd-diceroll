@@ -74,6 +74,16 @@ struct DNDDICEROLL_API FExpeditionProgress
 enum class EEncounterStage : uint8 { Approach, Pressure, Finale };
 
 /**
+ * The little world a route is fought in, named for the kit that dresses it (UDiceRollTheme::KitFor): Root is the forest of the guarded roads,
+ * Vigil the drowned cathedral of the dangerous roads, Vault the finale. Unknown is a world no route has revealed yet (a fogged stage).
+ * Derived from the stage and the road alone (FExpeditionRun::WorldOf), so presentation and the journey query agree by construction.
+ */
+enum class EExpeditionWorld : uint8 { Unknown, Root, Vigil, Vault };
+
+/** The route card's risk word (contract 11). None where the run's rules never disclosed one: SRD runs and catalog revisions before 9. */
+enum class ERouteRisk : uint8 { None, Low, Moderate, High, Severe };
+
+/**
  * What presentation may know about one route's encounter (#188), derived only from saved fields: the route's recipe and id,
  * and the run's revision and ruleset. Rules hold no presentation types (ADR-0001); this names the layout, nothing about how it looks.
  */
@@ -86,6 +96,10 @@ struct DNDDICEROLL_API FEncounterIdentity
     FString Layout;
     /** The party enters along the front row (the camera's home side) and the enemies wait at the back; otherwise left to right. */
     bool bFrontToBack = false;
+    /** The world the route is fought in: the Vault for the finale, otherwise the Vigil for a dangerous road and the Root for a guarded one. */
+    EExpeditionWorld World = EExpeditionWorld::Root;
+    /** The risk word the route card shows (None before catalog revision 9 and in SRD runs). */
+    ERouteRisk Risk = ERouteRisk::None;
 };
 
 /** Detached serialization contract: export both values together. Battle is a
@@ -121,6 +135,19 @@ public:
     bool ClaimReward(int32 RecipientId, ERewardCard Card, FString& Error);
     /** True when runs of Ruleset created under Revision offer Reserve and Honed: Compact runs from catalog revision 10. */
     static bool OffersUpgradeCards(ERuleset Ruleset, int32 Revision);
+    /** True when runs of Ruleset created under Revision move through allies, Downed and dead creatures (FCombatEncounter::bMoveThrough, #240):
+     * Compact runs from catalog revision 11. Revisions 7-10 and SRD keep the older rule, under which every unit blocks its cell. */
+    static bool MovesThroughUnits(ERuleset Ruleset, int32 Revision);
+    /** True when runs of Ruleset created under Revision play catalog revision 11's balance (#241, M2 contract): Compact runs from revision 11.
+     * It selects the revision 11 enemy numbers, the Monk and Paladin profiles, enemy target choice (FCombatEncounter::bNearestTarget), Rescue
+     * (bSturdyRescue) and the cards' refill (CardsRefill). */
+    static bool PlaysRevision11Balance(ERuleset Ruleset, int32 Revision);
+    /** The hero NewRun creates from BuildId for Ruleset and Revision: the catalog profile (FBuildCatalog::Create), with revision 11's Monk and
+     * Paladin adjustments in Compact (#241). The party builder previews with it, so its HP and AC are the ones the run starts with. */
+    static bool CreateHero(const FString& BuildId, int32 Id, const FString& Name, ERuleset Ruleset, int32 Revision, FCombatantState& Out);
+    /** True when this run's Reserve and Honed cards refill the recipient's special pools to its caps (Revision11Rules::CardsRefill): Compact
+     * from revision 11. Reserve then refills to its new cap instead of adding one use. */
+    static bool CardsRefill(ERuleset Ruleset, int32 Revision);
     bool Recover(bool bTakeRecovery, FString& Error);
     FCombatResult Submit(const FCombatCommand& Command);
     TArray<FCombatResult> PlayEnemyTurn();
@@ -130,6 +157,12 @@ public:
     static FString RecoveryDescription();
     /** The identity of Route's encounter in a run with Progress's revision and ruleset. A const query: it never rolls or validates. */
     static FEncounterIdentity Encounter(const FExpeditionProgress& Progress, const FExpeditionRoute& Route);
+    /** The stage kind of a 0-based fight index: fights 0-1 approach, 2-3 pressure, 4 the finale. */
+    static EEncounterStage StageKind(int32 Stage);
+    /** The world a route at Stage is fought in: the Vault for the finale, otherwise the Vigil if bDangerous, else the Root. */
+    static EExpeditionWorld WorldOf(EEncounterStage Stage, bool bDangerous);
+    /** The route card's word for a risk ("low", "moderate", "high", "severe"); empty for None. */
+    static const TCHAR* RiskWord(ERouteRisk Risk);
     /** The encounter Route generates at Stage (0-based) under Ruleset and Revision: board, obstacles, spawns and enemies, with
      * the tutorial party standing on the party spawns. False for a recipe the stage or revision does not use, or an unsupported
      * ruleset or revision. A pure query: Route.EnemyCount is not read (generation and restore check it against the result). */

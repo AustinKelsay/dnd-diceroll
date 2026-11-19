@@ -4,6 +4,8 @@
 #include "Combat/ActionFacts.h"
 #include "Combat/CombatBattle.h"
 #include "Presentation/CombatHints.h"
+#include "Run/ProgressionQuery.h"
+#include "Presentation/TargetChipLayout.h"
 #include "GameFramework/HUD.h"
 #include "ExpeditionHUD.generated.h"
 
@@ -64,9 +66,15 @@ public:
     static constexpr float MinDockLabelScale = 0.62f;
     virtual void DrawHUD() override;
     bool ButtonAt(FVector2D ScreenPosition, FName& Id) const;
+    /** The last drawn rectangle of a button, in viewport pixels (a volume bar's, for a click's position along it). */
+    bool ButtonBox(FName Id, FBox2D& Box) const;
+    /** The Settings panel as last drawn (#246), in viewport pixels; empty when it is closed. */
+    FBox2D SettingsPanel() const { return SettingsRect; }
     /** Panels that should swallow clicks instead of passing them to the board. */
     bool CoversBoard(FVector2D ScreenPosition) const;
     TArray<FName> MenuButtons() const;
+    /** The offered diorama the last frame drew hovered under the pointer, with the Menu closed and no overlay (#248): the only one a press may arm. INDEX_NONE otherwise. */
+    int32 PreviewedDiorama() const { return PreviewedOffer; }
     /**
      * Targeting the last DrawHUD asked to place: one per target chip and per reach or blocked-sight
      * marker. Counted before screen projection, so a headless test without a viewport sees them.
@@ -93,6 +101,8 @@ public:
     int32 DockRebuilds() const { return DockRebuildCount; }
     /** The lines the build picker's details panel asked to draw for the shown build's abilities, from facts: name, then its cost and usage. */
     const TArray<FString>& BuildPickerLinesRequested() const { return PickerLines; }
+    /** The party builder's stat line for the selected hero ("HP 28 / AC 15 / reach 1"), as last drawn. */
+    const FString& BuildPickerStatsRequested() const { return PickerStats; }
     /** The hint callout the last DrawHUD asked to draw (#158), or null. Empty whenever an overlay, playback or enemy turn owns the screen. */
     const FHintRequest* HintRequested() const { return bHintRequested ? &HintDrawn : nullptr; }
     /** Test support: act as if the pointer were at this viewport position; a negative position returns to the physical pointer. */
@@ -117,12 +127,38 @@ public:
     void PreviewDetailLines(int32 Lines) { MinDetailLines = Lines; }
     /** Every full status panel the last draw showed, in viewport pixels (#171). */
     const TArray<FBox2D>& PartyDetailRects() const { return DetailRects; }
+    /** What the last draw showed of progression (#218), for tests: each reward card's title and lines, the Claim label, the reward title, the camp lines,
+     * and each party card's level marker and gain line. Cleared every frame. */
+    struct FProgressionDrawn
+    {
+        FString RewardTitle;
+        TArray<ERewardCard> Cards;
+        TArray<TArray<FString>> CardLines;
+        TArray<bool> CardAvailable;
+        FString Claim;
+        bool bClaimEnabled = false;
+        TArray<FString> CampLines;
+        TArray<FString> PartyMarkers;
+        TArray<FString> DetailLines;
+    };
+    const FProgressionDrawn& ProgressionDrawn() const { return Drawn; }
+    /** The title of the turn or result banner the last draw showed (#251), or empty. */
+    const FString& BannerDrawn() const { return BannerShown; }
+    /** The dimmed band behind the turn banner the last draw showed, in viewport pixels, or null (#252). It keeps clear of the party cards. */
+    const FBox2D* BannerRequested() const { return bBannerRequested ? &BannerBox : nullptr; }
 private:
+    FString BannerShown;
+    FBox2D BannerBox = FBox2D(ForceInit);
+    bool bBannerRequested = false;
     int32 DetailUnitId = INDEX_NONE;
     TArray<int32> DetailUnitIds;
     /** The party slot under the pointer this frame, or INDEX_NONE (set by DrawParty): on the route, reward and camp screens a hovered card's details replace the selected hero's (#200). */
     int32 HoveredParty = INDEX_NONE;
     TArray<FBox2D> DetailRects;
+    /** The progression facts this frame (#218); empty in combat. */
+    FProgressionFacts Progression;
+    FProgressionDrawn Drawn;
+    const FHeroProgressFacts* HeroProgress(int32 Id) const;
     FBox2D LegendBox = FBox2D(ForceInit);
     bool bLegendRequested = false;
     FBox2D DiceBox = FBox2D(ForceInit), DiceRow = FBox2D(ForceInit), DiceDrawn = FBox2D(ForceInit);
@@ -140,6 +176,7 @@ private:
     void DrawPathCost();
     TArray<FActionTagRequest> TagsRequested;
     TArray<FString> PickerLines;
+    FString PickerStats;
     /** One dock button as the facts describe it, kept until the combat state changes. */
     struct FDockEntry
     {
@@ -220,17 +257,53 @@ private:
     void DrawPartyDetail(const FCombatantState& Unit, float X, float Y);
     void DrawHint();
     void DrawActionBar();
+    void DrawSkipButton();
     void DrawForecast();
     void DrawDice();
     void DrawLog();
     void DrawBanner();
     void DrawTitle();
     void DrawRoutes();
+    /** The route fly-in (#249): its fade over the whole screen and, while the camera moves, the skip line. */
+    void DrawFlyIn();
+    /** The journey map's HUD (#248): the stage and goal chips, each raised diorama's plaque and click target, the compact banner and the route cards in the bottom band. */
+    void DrawJourneyMarks();
+    /** The journey's route-screen text and rectangles (#248), rebuilt only on a new presentation revision or design size. */
+    struct FJourneyHudCache
+    {
+        int32 Revision = -1;
+        double W = 0.0, H = 0.0;
+        TArray<FString> Chips;
+        TArray<FLinearColor> ChipColors;
+        TArray<ExpeditionLayout::Rect> ChipRects;
+        TArray<float> ChipWidths;
+        TArray<bool> HasBox;
+        TArray<ExpeditionLayout::Rect> Boxes;
+        TArray<FName> DioramaIds;
+        TArray<ExpeditionLayout::Rect> Plaques;
+        TArray<FString> PlaqueTitles, PlaqueDetails;
+        TArray<FLinearColor> Accents;
+        FString Banner;
+        TArray<FString> Tags;
+        TArray<float> TagWidths;
+        TArray<FName> RouteIds;
+        TArray<TArray<TPair<FString, bool>>> Lines;
+    };
+    FJourneyHudCache JourneyCache;
+    void RefreshJourneyCache();
+    /** The offered diorama drawn hovered under the pointer this frame (live: no Menu, no overlay), or INDEX_NONE. */
+    int32 PreviewedOffer = INDEX_NONE;
+    void DrawJourneyRoutes();
+    void DrawJourneyEnding();
+    /** A raised diorama takes a click only while no overlay or Menu owns the screen. */
+    bool AllowsRouteClick() const;
     void DrawReward();
     void DrawCamp();
     void DrawEnding();
     void DrawRecords();
     void DrawHelp();
+    void DrawSettings();
+    FBox2D SettingsRect = FBox2D(ForceInit);
     void DrawReturnConfirm();
     void DrawAbandonConfirm();
 };

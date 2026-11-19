@@ -249,6 +249,19 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action, int32 HonedBonu
     }
 }
 
+FString FCombatBattle::Describe(ECombatCommandType Action) const
+{
+    if (Action != ECombatCommandType::Rescue || !State.Encounter.bSturdyRescue) { return DescribeAction(Action); }
+    using namespace Revision11Rules;
+    const TCHAR* Share = RescueShare == 2 ? TEXT("half") : RescueShare == 3 ? TEXT("a third") : TEXT("a quarter");
+    return FString::Printf(TEXT("Downed ally, %d cell; restore %s of its max HP"), TouchRange, Share);
+}
+
+int32 FCombatBattle::RescueAmount(const FCombatantState& Target) const
+{
+    return State.Encounter.bSturdyRescue ? FMath::Max(1, Target.MaxHP / Revision11Rules::RescueShare) : 1;
+}
+
 bool FCombatBattle::IsInside(FIntPoint Cell) const
 {
     return Cell.X >= 0 && Cell.Y >= 0 && Cell.X < State.Encounter.Width && Cell.Y < State.Encounter.Height;
@@ -261,6 +274,17 @@ bool FCombatBattle::IsOpen(FIntPoint Cell, int32 MovingId) const
         {
             // Downed and dead bodies occupy their cells until the encounter transition.
             return Unit.Id != MovingId && Unit.Cell == Cell;
+        });
+}
+
+bool FCombatBattle::IsPassable(FIntPoint Cell, const FCombatantState& Mover) const
+{
+    if (!State.Encounter.bMoveThrough) { return IsOpen(Cell, Mover.Id); }
+    // SRD 5.2.1 (#240): allies, incapacitated (Downed) and dead creatures can be moved through; a conscious opponent blocks.
+    return IsInside(Cell) && !State.Encounter.BlockedCells.Contains(Cell) &&
+        !State.Encounter.Combatants.ContainsByPredicate([Cell, &Mover](const FCombatantState& Unit)
+        {
+            return Unit.Id != Mover.Id && Unit.Cell == Cell && Unit.Side != Mover.Side && Unit.Life == ECombatLife::Conscious;
         });
 }
 
@@ -278,7 +302,7 @@ TMap<FIntPoint, int32> FCombatBattle::Distances(int32 Id, TMap<FIntPoint, FIntPo
         for (FIntPoint Offset : Neighbors)
         {
             const FIntPoint Next = Cell + Offset;
-            if (IsOpen(Next, Id) && !Result.Contains(Next))
+            if (!Result.Contains(Next) && IsPassable(Next, *Unit))
             {
                 Result.Add(Next, Cost);
                 if (Parents) { Parents->Add(Next, Cell); }
@@ -295,7 +319,8 @@ TArray<FIntPoint> FCombatBattle::LegalMoves(int32 Id) const
     if (!bStarted || State.Phase != EBattlePhase::Fighting || ActiveId() != Id) { return Result; }
     for (const auto& Entry : Distances(Id))
     {
-        if (Entry.Value > 0 && Entry.Value <= State.MovementLeft) { Result.Add(Entry.Key); }
+        // Distances may cross occupied cells (move-through); a move never ends on one.
+        if (Entry.Value > 0 && Entry.Value <= State.MovementLeft && IsOpen(Entry.Key, Id)) { Result.Add(Entry.Key); }
     }
     return Result;
 }
@@ -431,7 +456,7 @@ TArray<FIntPoint> FCombatBattle::PathTo(int32 Id, FIntPoint Destination) const
     TMap<FIntPoint, FIntPoint> Parents;
     const TMap<FIntPoint, int32> Costs = Distances(Id, &Parents);
     const int32* Cost = Costs.Find(Destination);
-    if (!Cost || *Cost <= 0 || *Cost > State.MovementLeft) { return Path; }
+    if (!Cost || *Cost <= 0 || *Cost > State.MovementLeft || !IsOpen(Destination, Id)) { return Path; }
     for (FIntPoint Cell = Destination; Cell != Unit->Cell; Cell = Parents[Cell]) { Path.Insert(Cell, 0); }
     return Path;
 }
@@ -546,7 +571,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
     case ECombatCommandType::SecondWind: Effect(1, WindDie, FighterLevel + FBuildCatalog::HonedBonus(*Actor, Action)); break;
     case ECombatCommandType::CureWounds: Effect(CureDice, CureDie, HealingModifier + FBuildCatalog::HonedBonus(*Actor, Action)); break;
     case ECombatCommandType::Potion: Effect(PotionDice, PotionDie, PotionBonus); break;
-    case ECombatCommandType::Rescue: Forecast.MinAmount = Forecast.MaxAmount = 1; Forecast.Formula = TEXT("1"); break;
+    case ECombatCommandType::Rescue: Forecast.MinAmount = Forecast.MaxAmount = RescueAmount(*Target); Forecast.Formula = FString::FromInt(Forecast.MinAmount); break;
     default: Forecast.bValid = false; return Forecast;
     }
     Forecast.bHealing = Action != ECombatCommandType::Attack && Action != ECombatCommandType::PrecisionStrike && Action != ECombatCommandType::MagicMissile;
@@ -831,7 +856,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             if (Command.Type == ECombatCommandType::SecondWind) { --User->SecondWindUses; Result.EffectModifier = FighterLevel + FBuildCatalog::HonedBonus(*User, Command.Type); Amount = Roll(WindDie) + Result.EffectModifier; Ability = TEXT("Second Wind (bonus, 1 use)"); }
             else if (Command.Type == ECombatCommandType::CureWounds) { --User->SpellSlots; Result.EffectModifier = HealingModifier + FBuildCatalog::HonedBonus(*User, Command.Type); Amount = RollDice(CureDice, CureDie) + Result.EffectModifier; Ability = TEXT("Cure Wounds (1 slot)"); }
             else if (Command.Type == ECombatCommandType::Potion) { --User->Potions; Result.EffectModifier = PotionBonus; Amount = RollDice(PotionDice, PotionDie) + PotionBonus; Ability = TEXT("Potion (1 bottle)"); }
-            else { Result.EffectModifier = 1; }
+            else { Amount = RescueAmount(*Target); Result.EffectModifier = Amount; }
             DiceLog = nullptr;
             Result.Healing = FMath::Min(Amount, Target->MaxHP - Target->HP);
             Target->HP += Result.Healing;
@@ -1112,6 +1137,9 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
         const TMap<FIntPoint, int32> Costs = Distances(Id, &Parents);
         TOptional<FIntPoint> Best;
         int32 BestCost = MAX_int32;
+        // Revision 11 (#241): among the cheapest firing cells, the one with the weakest hero in its sights (lowest HP, then cell order).
+        int32 BestHP = MAX_int32;
+        const bool bQuarry = State.Encounter.bNearestTarget;
         // Search in fixed cell order for a reachable firing cell. TMap iteration never chooses AI ties.
         for (int32 Y = 0; Y < State.Encounter.Height; ++Y)
         {
@@ -1119,25 +1147,39 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
             {
                 const FIntPoint Cell(X, Y);
                 const int32* Cost = Costs.Find(Cell);
-                if (!Cost || *Cost >= BestCost) { continue; }
+                // A firing cell must be one the enemy can stop on (move-through may reach occupied cells).
+                if (!Cost || (bQuarry ? *Cost > BestCost : *Cost >= BestCost) || !IsOpen(Cell, Id)) { continue; }
                 for (const FCombatantState& Target : State.Encounter.Combatants)
                 {
-                    if (CanTargetFrom(*Enemy, Cell, Target))
-                    {
-                        Best = Cell; BestCost = *Cost; break;
-                    }
+                    if (!CanTargetFrom(*Enemy, Cell, Target)) { continue; }
+                    if (!bQuarry) { Best = Cell; BestCost = *Cost; break; }
+                    if (*Cost < BestCost || Target.HP < BestHP) { Best = Cell; BestCost = *Cost; BestHP = Target.HP; }
                 }
             }
         }
         if (Best.IsSet() && BestCost > 0)
         {
             FIntPoint Destination = Best.GetValue();
-            while (Costs[Destination] > State.MovementLeft) { Destination = Parents[Destination]; }
-            Results.Add(Submit({ECombatCommandType::Move, Id, Destination}));
+            // Back along the route to the farthest cell within movement that it can stop on; its own cell means no move this turn.
+            while (Costs[Destination] > State.MovementLeft || !IsOpen(Destination, Id)) { Destination = Parents[Destination]; }
+            if (Destination != Enemy->Cell) { Results.Add(Submit({ECombatCommandType::Move, Id, Destination})); }
         }
     }
     const TArray<int32> Targets = LegalTargets(Id);
-    if (!Targets.IsEmpty()) { Results.Add(Submit({ECombatCommandType::Attack, Id, {}, Targets[0]})); }
+    int32 Pick = Targets.IsEmpty() ? INDEX_NONE : Targets[0];
+    if (State.Encounter.bNearestTarget && Targets.Num() > 1)
+    {
+        // Revision 11 (#241): the nearest hero in reach, then the lowest HP, then roster order (LegalTargets lists the roster in order).
+        const FIntPoint From = Find(Id)->Cell;
+        auto Before = [this, From](int32 A, int32 B)
+        {
+            const FCombatantState* TA = Find(A); const FCombatantState* TB = Find(B);
+            const int32 DA = GridDistance(From, TA->Cell), DB = GridDistance(From, TB->Cell);
+            return DA != DB ? DA < DB : TA->HP < TB->HP;
+        };
+        for (const int32 Candidate : Targets) { if (Before(Candidate, Pick)) { Pick = Candidate; } }
+    }
+    if (Pick != INDEX_NONE) { Results.Add(Submit({ECombatCommandType::Attack, Id, {}, Pick})); }
     // An SRD opportunity attack can end the mover's turn early.
     if (State.Phase == EBattlePhase::Fighting && ActiveId() == Id) { Results.Add(Submit({ECombatCommandType::EndTurn, Id})); }
     return Results;

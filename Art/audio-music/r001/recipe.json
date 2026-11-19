@@ -1,0 +1,217 @@
+{
+ "about": "Editable source of the score (#245): the loops and stings, rendered by tools/audio_beds.py build (layer keys as in the ambience recipe). Loop points were chosen where the audio after the start and after the end match best (log-spectrum cosine similarity over the crossfade); CombatB is authored as a loop.",
+ "output": "music",
+ "sample_rate": 48000,
+ "channels": 2,
+ "true_peak_ceiling": -1.0,
+ "categories": {
+  "music": {
+   "lufs": -27.0,
+   "seam_level_db": null,
+   "about": "At or under every effect category of #242 (the quietest, step, is -27; impacts are -16) and 3 LU over the ambience (-30)."
+  },
+  "sting": {
+   "lufs": -23.0,
+   "about": "Over the loops, still under every fanfare and impact cue (-17, -16)."
+  }
+ },
+ "order": [
+  "Table",
+  "CombatA",
+  "CombatB",
+  "Finale",
+  "Victory",
+  "Defeat"
+ ],
+ "sources": {
+  "oga-lament": {
+   "folder": "oga-randommind-lament",
+   "title": "Fantasy: Lament for a Warrior's Soul",
+   "url": "https://opengameart.org/content/fantasy-lament-for-a-warriors-soul",
+   "author": "RandomMind",
+   "license": "CC0 1.0 Universal (OpenGameArt licence field, checked on the page); credit appreciated, not required",
+   "archive": "Lament_for_a_Warriors_Soul_REUPLOAD.mp3 (direct; the newer upload)",
+   "files": {
+    "Lament_for_a_Warriors_Soul_REUPLOAD.mp3": "a754242196b16c9fc21f9c2d108d7022b56867e5503fe1c99cf85cc752d4176e"
+   }
+  },
+  "oga-battle": {
+   "folder": "oga-randommind-battle",
+   "title": "Medieval: Battle",
+   "url": "https://opengameart.org/content/medieval-battle",
+   "author": "RandomMind",
+   "license": "CC0 1.0 Universal (OpenGameArt licence field, checked on the page); credit appreciated, not required",
+   "archive": "battle_1.wav (direct; the page's battle.wav)",
+   "files": {
+    "battle_1.wav": "fd92173a70ef2412db138cb43829d91ed631ea433725e659b09548d39d165169"
+   }
+  },
+  "oga-labyrinth": {
+   "folder": "oga-great-labyrinth",
+   "title": "Great Labyrinth (Orchestral dungeon music)",
+   "url": "https://opengameart.org/content/great-labyrinthorchestral-dungeon-music",
+   "author": "MintoDog",
+   "license": "CC0 1.0 Universal (OpenGameArt licence field, checked on the page)",
+   "archive": "great_labyrinth_bpm160.flac (direct)",
+   "files": {
+    "great_labyrinth_bpm160.flac": "b79b43da075ec0cb19a590f1b2f78dc8413e7281e60046feddfe1657d9a986e6"
+   }
+  },
+  "oga-legend": {
+   "folder": "oga-ancient-legend",
+   "title": "The Ancient Legend",
+   "url": "https://opengameart.org/content/the-ancient-legend",
+   "author": "vitalezzz",
+   "license": "CC0 1.0 Universal (OpenGameArt licence field, checked on the page)",
+   "archive": "the_ancient_legend_0.wav (direct; the page's the_ancient_legend.wav)",
+   "files": {
+    "the_ancient_legend_0.wav": "18cecfef9823755ef4a70a2eaf41f101a6a3d78405c48169a881a5ec0e54217f"
+   }
+  },
+  "oga-victory": {
+   "folder": "oga-randommind-victory",
+   "title": "Medieval: Victory Theme",
+   "url": "https://opengameart.org/content/medieval-victory-theme",
+   "author": "RandomMind",
+   "license": "CC0 1.0 Universal (OpenGameArt licence field, checked on the page); credit appreciated, not required",
+   "archive": "victory.wav (direct)",
+   "files": {
+    "victory.wav": "91f35879d31091cdeb38721fb4d985a0e7363c0caa97d738ec879bf96e8538f4"
+   }
+  },
+  "oga-defeat": {
+   "folder": "oga-randommind-defeat",
+   "title": "Medieval: Defeat Theme",
+   "url": "https://opengameart.org/content/medieval-defeat-theme",
+   "author": "RandomMind",
+   "license": "CC0 1.0 Universal (OpenGameArt licence field, checked on the page)",
+   "archive": "defeat.wav (direct)",
+   "files": {
+    "defeat.wav": "832a9062921000cde7044f18838d11682c578067db0c60a124d95473bb122fc8"
+   }
+  }
+ },
+ "pieces": {
+  "Table": {
+   "category": "music",
+   "loop": true,
+   "length": 105.56,
+   "crossfade": 3.0,
+   "volume": 1.0,
+   "about": "The war table and start screen: RandomMind's lament, 7.22 s to 112.78 s (the coda is left out), folded over a 3 s crossfade where the two passages match (spectral similarity 0.94).",
+   "layers": [
+    {
+     "source": "oga-lament",
+     "file": "Lament_for_a_Warriors_Soul_REUPLOAD.mp3",
+     "start": 7.22,
+     "dur": 108.56,
+     "at": 0.0,
+     "fade_in": 0.01,
+     "fade_out": 0.01
+    }
+   ]
+  },
+  "CombatA": {
+   "category": "music",
+   "loop": true,
+   "length": 59.42,
+   "crossfade": 2.0,
+   "volume": 1.0,
+   "about": "Odd fights: RandomMind's battle, 7.06 s to 66.48 s, folded over 2 s (spectral similarity 0.95).",
+   "layers": [
+    {
+     "source": "oga-battle",
+     "file": "battle_1.wav",
+     "start": 7.06,
+     "dur": 61.42,
+     "at": 0.0,
+     "fade_in": 0.01,
+     "fade_out": 0.01
+    }
+   ]
+  },
+  "CombatB": {
+   "category": "music",
+   "loop": true,
+   "length": 132.75,
+   "crossfade": 0.25,
+   "volume": 1.0,
+   "about": "Even fights: MintoDog's Great Labyrinth, authored as a loop (132.75 s, 354 beats at 160 bpm): the whole file, its start placed again at its end, folded over 0.25 s.",
+   "layers": [
+    {
+     "source": "oga-labyrinth",
+     "file": "great_labyrinth_bpm160.flac",
+     "start": 0.0,
+     "dur": 132.75,
+     "at": 0.0,
+     "fade_in": 0.005,
+     "fade_out": 0.005
+    },
+    {
+     "source": "oga-labyrinth",
+     "file": "great_labyrinth_bpm160.flac",
+     "start": 0.0,
+     "dur": 0.5,
+     "at": 132.75,
+     "fade_in": 0.005,
+     "fade_out": 0.005
+    }
+   ]
+  },
+  "Finale": {
+   "category": "music",
+   "loop": true,
+   "length": 98.26,
+   "crossfade": 3.0,
+   "volume": 1.0,
+   "about": "The Vault: vitalezzz's The Ancient Legend from its build-up, 33.65 s to 131.91 s, folded over 3 s (spectral similarity 0.86).",
+   "layers": [
+    {
+     "source": "oga-legend",
+     "file": "the_ancient_legend_0.wav",
+     "start": 33.65,
+     "dur": 101.26,
+     "at": 0.0,
+     "fade_in": 0.01,
+     "fade_out": 0.01
+    }
+   ]
+  },
+  "Victory": {
+   "category": "sting",
+   "loop": false,
+   "length": 6.9,
+   "volume": 1.0,
+   "about": "A won run: the opening phrase of RandomMind's victory theme to its first break at 6.3 s, then a short release.",
+   "layers": [
+    {
+     "source": "oga-victory",
+     "file": "victory.wav",
+     "start": 0.0,
+     "dur": 6.9,
+     "at": 0.0,
+     "fade_in": 0.005,
+     "fade_out": 0.6
+    }
+   ]
+  },
+  "Defeat": {
+   "category": "sting",
+   "loop": false,
+   "length": 9.0,
+   "volume": 1.0,
+   "about": "A lost run: the opening of RandomMind's defeat theme, released over its last 2.5 s.",
+   "layers": [
+    {
+     "source": "oga-defeat",
+     "file": "defeat.wav",
+     "start": 0.0,
+     "dur": 9.0,
+     "at": 0.0,
+     "fade_in": 0.005,
+     "fade_out": 2.5
+    }
+   ]
+  }
+ }
+}

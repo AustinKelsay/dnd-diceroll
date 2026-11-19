@@ -666,6 +666,8 @@ bool FRiggedFiguresTest::RunTest(const FString& Parameters)
         const FString Path = FPaths::Combine(Directory, FString::Printf(TEXT("play-%d"), static_cast<int32>(End)), TEXT("current.json"));
         AExpeditionBattleView* View = MakeView(World, Path, EView::Rigged);
         if (!TestNotNull(TEXT("Battle view"), View)) { continue; }
+        // The rigs that played the last action must converge at rest: with the journey off, a defeat keeps this board instead of rebuilding into the journey map (#248).
+        View->SetJourneyAllowed(false);
         View->NewRun();
         View->ChooseRoute(0);
         if (End == EEnd::Fast) { View->CycleSpeed(); }
@@ -721,6 +723,8 @@ bool FRiggedFiguresTest::RunTest(const FString& Parameters)
                 Restored.Battle = Resumed->Rules().Snapshot();
                 TestTrue(*(Label + TEXT(": the resumed snapshot equals the saved one")), ExpeditionTestSupport::SameRun(Original, Restored));
             }
+            // A resumed defeat opens on the journey map (#248); the figures are on the battle board behind it.
+            if (Resumed->ShowingJourney()) { Resumed->ToggleEndingJourney(); Resumed->Tick(0.016f); }
             int32 ExpectedRigs = 0;
             for (const FCombatantState& Unit : Resumed->Rules().Snapshot().Encounter.Combatants) { ExpectedRigs += ExpectsRig(Unit) ? 1 : 0; }
             const int32 Inspected = ExpectFiguresConverged(*this, *Resumed, Label + TEXT(" resumed"));
@@ -3309,6 +3313,8 @@ bool FFoeBatchFiguresTest::RunTest(const FString& Parameters)
         const FString Path = FPaths::Combine(Directory, FString::Printf(TEXT("play-%d"), static_cast<int32>(End)), TEXT("current.json"));
         AExpeditionBattleView* View = MakeView(nullptr, Path, EView::Rigged);
         if (!TestNotNull(*(Label + TEXT(": battle view")), View)) { continue; }
+        // The rigs that played the last action must converge at rest: with the journey off, a defeat keeps this board instead of rebuilding into the journey map (#248).
+        View->SetJourneyAllowed(false);
         View->NewRun();
         View->ChooseRoute(1);
         if (End == EEnd::Fast) { View->CycleSpeed(); }
@@ -3364,6 +3370,8 @@ bool FFoeBatchFiguresTest::RunTest(const FString& Parameters)
                 Restored.Battle = Resumed->Rules().Snapshot();
                 TestTrue(*(Label + TEXT(": the resumed snapshot equals the saved one")), ExpeditionTestSupport::SameRun(Original, Restored));
             }
+            // A resumed defeat opens on the journey map (#248); the figures are on the battle board behind it.
+            if (Resumed->ShowingJourney()) { Resumed->ToggleEndingJourney(); Resumed->Tick(0.016f); }
             const int32 Inspected = ExpectFiguresConverged(*this, *Resumed, Label + TEXT(" resumed"));
             TestEqual(*(Label + TEXT(": the resumed rig count matches the original view")), Inspected, OriginalRigs);
             if (bFoeFallen)

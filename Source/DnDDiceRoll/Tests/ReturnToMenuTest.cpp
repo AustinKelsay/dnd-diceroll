@@ -124,7 +124,7 @@ bool FReturnToMenuTest::RunTest(const FString& Parameters)
     if (!TestTrue(TEXT("The party wins the first encounter"), Game.WinBattle())) { return false; }
     Game.Settle();
     if (!TestEqual(TEXT("Victory reaches the reward"), View->Progress().Phase, EExpeditionPhase::Reward)) { return false; }
-    ReturnAndResume(Game, TEXT("Reward"), [&] { Game.Press(EKeys::BackSpace); }, [&] { Game.Press(EKeys::O); }, TEXT("Claim"));
+    ReturnAndResume(Game, TEXT("Reward"), [&] { Game.Press(EKeys::BackSpace); }, [&] { Game.Press(EKeys::O); }, TEXT("CardGear"));
 
     Game.Press(EKeys::One);
     Game.Press(EKeys::L);
@@ -424,7 +424,8 @@ bool FReturnToMenuBattleEndsTest::RunTest(const FString& Parameters)
         TestFalse(TEXT("The battle's end drops the return asked in combat"), Player->ReturnPending());
         TestFalse(TEXT("No question opens after the battle"), Player->ConfirmingReturn());
         TestTrue(TEXT("The run stays in play on the reward"), View->HasRun() && View->Progress().Phase == EExpeditionPhase::Reward && !Player->ShowingBuilder());
-        TestEqual(TEXT("The reward focuses its primary choice"), Player->MenuFocus(), FName(TEXT("Claim")));
+        // #218: the reward's primary choice is its first card, Gear (Enter on it claims).
+        TestEqual(TEXT("The reward focuses its primary choice"), Player->MenuFocus(), FName(TEXT("CardGear")));
         TestTrue(TEXT("The checkpoint bytes are unchanged"), Game.CheckpointBytes() == Bytes);
         return !HasAnyErrors();
     }

@@ -16,7 +16,8 @@
  * recipes, which show the Root of the World kit r002 once it is imported), board-vault and board-vault-pillars (the finale with the same two
  * recipes, which show the Vault kit r002 once it is imported; every finale fixture here is a catalog revision 8 run, which still draws those
  * recipes for fight 5, whereas a revision 9 run's finale is always the vault sanctum (#188)), the action dock's kit-barbarian-battle, kit-wizard-battle,
- * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, the hint fixtures end-turn-only-battle and downed-ally-battle, and the batch 2 cast
+ * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, the hint fixtures end-turn-only-battle and downed-ally-battle, move-through-battle (#240: a
+ * revision 11 battle with a body in front of the acting hero, so the targeting shot's path crosses it), and the batch 2 cast
  * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars, cast2-board-root-r002 and cast2-board-vault with a party of barbarian, monk, paladin and ranger, the same four with `cast3-` for a sorcerer, warlock, druid and wizard and with `cast4-` for a bard, artificer, fighter and wizard, and
  * board-vault-raiders, the dangerous Vault finale against rigged raiders, r9-pressure-guarded|dangerous, r9-finale-guarded|dangerous (the vault sanctum), r9-colonnade, r9-causeway and r9-cairn (revision 9 encounters with the skirmisher, brute and warden on each new layout, #188), and the batch 4 palette sweep pal-NN-vigil|root|vault (every catalog build on the three
  * cast boards, four distinct classes to a party; palette-parties.json lists them) with dup-four-fighters-*, dup-four-paladins-*, dup-four-rogues-*, dup-two-pairs-* (the duplicate-accent parties) and acc-<class>-root (four of one build of each class)),
@@ -466,6 +467,15 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
             Describe(TEXT("downed-ally-battle"), Downed, DefaultSeed, 0);
         }
     }
+    // Move-through (#240): a revision 11 battle with a dead enemy in front of the acting hero, so the targeting shot's path runs through a body.
+    {
+        FExpeditionRun Run; FIntPoint Body, Beyond;
+        if (TestTrue(TEXT("A move-through battle with a body in front of the acting hero"), ExpeditionTestSupport::BodyInFrontBattle(Run, Body, Beyond)))
+        {
+            Write(TEXT("move-through-battle"), Run);
+            Describe(TEXT("move-through-battle"), Run, Run.Progress().Seed, 1);
+        }
+    }
     // Blocked sight: a first turn where some attack or ability finds every target in range but behind an obstacle.
     {
         bool bFound = false;
@@ -667,6 +677,82 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
         bVictoryWritten = true;
     }
     TestTrue(TEXT("A seed reaches victory"), bVictoryWritten);
+    {
+        // Reward cards (#218): revision 10 runs of a Kit, a Kit + Slot (Life), a Rage and a Wind + Maneuver hero, captured by tools/capture/reward-poses.json.
+        // reward-choice-first: reward 1, nothing taken. -upgraded: reward 3 after hero 4 took Reserve and Honed. -gear-cap: reward 4 after three Gear to
+        // hero 4. -fallen: the first reward with a fallen hero. -camp: the camp after Reserve at reward 1 to hero 4. -route: the route after that camp.
+        TArray<FPartyBuildSelection> Cards;
+        const TCHAR* Builds[] = {TEXT("rogue.thief"), TEXT("cleric.life"), TEXT("barbarian.berserker"), TEXT("fighter.battle-master")};
+        const TCHAR* Names[] = {TEXT("Aria"), TEXT("Bram"), TEXT("Cass"), TEXT("Dain")};
+        for (int32 I = 0; I < 4; ++I) { FPartyBuildSelection Slot; Slot.Id = I + 1; Slot.Name = Names[I]; Slot.BuildId = Builds[I]; Cards.Add(Slot); }
+        auto Alive = [](const FExpeditionRun& R, int32 Id) { const FCombatantState* U = R.Battle().Find(Id); return U && U->Life == ECombatLife::Conscious; };
+        auto Fallen = [](const FExpeditionRun& R) { return R.Battle().Snapshot().Encounter.Combatants.ContainsByPredicate([](const FCombatantState& U) { return U.Side == ECombatSide::Party && U.Life == ECombatLife::Dead; }); };
+        bool bFirst = false, bUpgraded = false, bCap = false, bFallen = false, bCamp = false;
+        for (int32 Seed = 42; Seed < 342 && !(bFirst && bUpgraded && bCap && bFallen && bCamp); ++Seed)
+        {
+            for (const bool bGear : {false, true})
+            {
+                FExpeditionRun Run; FString E;
+                Run.NewRun(Seed, Cards, E, FString::Printf(TEXT("reward-choice-%d"), Seed));
+                for (int32 Guard = 0; Guard < 12; ++Guard)
+                {
+                    if (Run.Progress().Phase == EExpeditionPhase::Recovery)
+                    {
+                        const bool bWrite = !bGear && !bCamp && Run.Battle().Find(4)->bReserve;
+                        if (bWrite) { Write(TEXT("reward-choice-camp"), Run); }
+                        Run.Recover(true, E);
+                        if (bWrite) { Write(TEXT("reward-choice-route"), Run); bCamp = true; }
+                    }
+                    if (Run.Progress().Phase != EExpeditionPhase::Route || !Run.ChooseRoute(Run.Progress().Offers[0].Id, E) || !ExpeditionTestSupport::FinishCombat(Run) ||
+                        Run.Progress().Phase != EExpeditionPhase::Reward) { break; }
+                    const int32 Victory = Run.Progress().EncountersCompleted;
+                    if (!bFallen && Fallen(Run)) { Write(TEXT("reward-choice-fallen"), Run); bFallen = true; }
+                    if (!Alive(Run, 4)) { break; }
+                    if (bGear)
+                    {
+                        if (Victory == 4 && !bCap && Run.Battle().Find(4)->WeaponRank == 3) { Write(TEXT("reward-choice-gear-cap"), Run); bCap = true; }
+                        if (!Run.ClaimReward(4, ERewardCard::Gear, E)) { break; }
+                        continue;
+                    }
+                    if (Victory == 1 && !bFirst) { Write(TEXT("reward-choice-first"), Run); }
+                    if (Victory == 3 && !bUpgraded) { Write(TEXT("reward-choice-upgraded"), Run); bUpgraded = true; }
+                    if (!Run.ClaimReward(4, Victory == 1 ? ERewardCard::Reserve : Victory == 2 ? ERewardCard::Honed : ERewardCard::Gear, E)) { break; }
+                    if (Victory == 1) { bFirst = true; }
+                }
+            }
+        }
+        TestTrue(TEXT("The reward-choice fixtures were found"), bFirst && bUpgraded && bCap && bFallen && bCamp);
+    }
+    {
+        // The journey map (#248): journey-mid-route, a fork after two won fights (alternating roads: the forest, then the Vigil), and journey-defeat-mid, the same run
+        // lost on the third stage's dangerous road, so the map shows cleared, lost and unreached stages.
+        bool bMid = false, bLostMid = false;
+        for (int32 Seed = 42; Seed < 240 && !(bMid && bLostMid); ++Seed)
+        {
+            FExpeditionRun Run; FString E;
+            if (!Run.NewRun(Seed, E, FString::Printf(TEXT("capture-journey-%d"), Seed))) { continue; }
+            bool bOk = true;
+            for (int32 Guard = 0; Guard < 32 && bOk && !(Run.Progress().Phase == EExpeditionPhase::Route && Run.Progress().EncountersCompleted == 2); ++Guard)
+            {
+                switch (Run.Progress().Phase)
+                {
+                case EExpeditionPhase::Route: bOk = Run.ChooseRoute(Run.Progress().Offers[Run.Progress().EncountersCompleted % 2].Id, E); break;
+                case EExpeditionPhase::Combat: bOk = ExpeditionTestSupport::FinishCombat(Run) && Run.Progress().Phase == EExpeditionPhase::Reward; break;
+                case EExpeditionPhase::Reward: bOk = Run.ClaimReward(Survivor(Run), E); break;
+                case EExpeditionPhase::Recovery: bOk = Run.Recover(true, E); break;
+                default: bOk = false; break;
+                }
+            }
+            if (!bOk || Run.Progress().Phase != EExpeditionPhase::Route || Run.Progress().EncountersCompleted != 2) { continue; }
+            if (!bMid) { Write(TEXT("journey-mid-route"), Run); bMid = true; }
+            if (!bLostMid && Run.ChooseRoute(Run.Progress().Offers[1].Id, E))
+            {
+                ExpeditionTestSupport::FinishCombat(Run, false);
+                if (Run.Progress().Phase == EExpeditionPhase::Defeat) { Write(TEXT("journey-defeat-mid"), Run); bLostMid = true; }
+            }
+        }
+        TestTrue(TEXT("The journey fixtures were found"), bMid && bLostMid);
+    }
     FString Error;
     FExpeditionRun Lost;
     Lost.NewRun(3, Error, TEXT("capture-defeat"));

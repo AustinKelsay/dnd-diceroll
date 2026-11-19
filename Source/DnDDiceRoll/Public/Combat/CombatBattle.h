@@ -99,6 +99,18 @@ struct DNDDICEROLL_API FCombatEncounter
     UPROPERTY() bool bAmbush = false;
     /** Party Stealth totals used when bAmbush is set (SRD surprise). */
     UPROPERTY() TArray<int32> AmbushStealthTotals;
+    /** SRD 5.2.1 move-through (#240): a mover may pass through a cell held by an ally, a Downed creature or a body, never through a conscious
+     * opponent, and never ends a move on an occupied cell. Compact runs from catalog revision 11 (FExpeditionRun::MovesThroughUnits).
+     * Deliberately not a UPROPERTY, so the save schema is unchanged: the run derives it from its saved ruleset and revision on every
+     * layout it generates and on Restore. False keeps the older rule, under which every unit blocks its cell. */
+    bool bMoveThrough = false;
+    /** Catalog revision 11 balance (#241, docs/runs/journey-checkpoint/M2-balance-contract.md), Compact only and, like bMoveThrough, never saved:
+     * the run derives both from its ruleset and revision (FExpeditionRun::PlaysRevision11Balance). With bNearestTarget an enemy goes for the
+     * hero it can attack soonest and attacks the nearest one in reach, the lower HP and then roster order breaking ties, instead of the first
+     * legal target in roster order. With bSturdyRescue, Rescue restores a share of the Downed hero's max HP (Revision11Rules::RescueShare) instead
+     * of 1. False keeps the older rules. */
+    bool bNearestTarget = false;
+    bool bSturdyRescue = false;
 };
 
 /** Value-only reflected state: no actors, pointers, or implicit global randomness. */
@@ -228,8 +240,9 @@ struct DNDDICEROLL_API FActionReach
 
 /** Authoritative combat module. Start rejects invalid encounters atomically. All commands,
  * including enemy decisions, use the same validation. Queries consume no random numbers.
- * Grid: cardinal movement, occupied cells block travel, attacks use Manhattan range and
- * blocked-cell line of sight. Limits: 16x16 cells, 32 combatants, stats bounded at Start.
+ * Grid: cardinal movement; occupied cells block travel, or with FCombatEncounter::bMoveThrough only a conscious opponent's does; a move
+ * never ends on an occupied cell. Attacks use Manhattan range and blocked-cell line of sight. Limits: 16x16 cells, 32 combatants, stats
+ * bounded at Start.
  */
 class DNDDICEROLL_API FCombatBattle
 {
@@ -239,10 +252,11 @@ public:
     const FCombatSnapshot& Snapshot() const { return State; }
     const FCombatantState* Find(int32 Id) const;
     int32 ActiveId() const;
+    /** Every cell the active combatant can end a move on this turn: reachable within MovementLeft and unoccupied. */
     TArray<FIntPoint> LegalMoves(int32 Id) const;
     TArray<int32> LegalTargets(int32 Id, ECombatCommandType Action = ECombatCommandType::Attack) const;
     FActionReach ActionReach(int32 ActorId, ECombatCommandType Action) const;
-    /** Cells a legal move would enter, in order. Empty when the move is not legal. */
+    /** Cells a legal move would enter, in order: a shortest route, which with move-through may pass occupied cells. Empty when the move is not legal. */
     TArray<FIntPoint> PathTo(int32 Id, FIntPoint Destination) const;
     /** Hit chance and effect range for a legal target. Consumes no random numbers. */
     FActionForecast Forecast(int32 ActorId, ECombatCommandType Action, int32 TargetId) const;
@@ -254,6 +268,10 @@ public:
     /** Player-facing action facts share the tuning used by validation and resolution. HonedBonus is FBuildCatalog::HonedBonus of the
      * actor for this command (Second Wind's and Cure Wounds' healing, Magic Missile's damage, Precision Strike's bonus); 0 unhoned. */
     static FString DescribeAction(ECombatCommandType Action, int32 HonedBonus = 0);
+    /** DescribeAction under this battle's own rules: Rescue states its revision 11 amount (bSturdyRescue). */
+    FString Describe(ECombatCommandType Action) const;
+    /** The HP a Rescue restores to Target: 1, or with bSturdyRescue max HP / Revision11Rules::RescueShare (at least 1). */
+    int32 RescueAmount(const FCombatantState& Target) const;
     static FCombatEncounter TutorialEncounter();
 private:
     friend class FPartyContinuity;
@@ -279,7 +297,10 @@ private:
     FAttackSetup AttackSetup(const FCombatantState& Actor, ECombatCommandType Action, const FCombatantState& Target) const;
     static bool ValidateEncounter(const FCombatEncounter& Encounter, FString& Error);
     bool IsInside(FIntPoint Cell) const;
+    /** A move, push or shove may end on Cell: inside, not blocked terrain and held by no other unit. */
     bool IsOpen(FIntPoint Cell, int32 MovingId) const;
+    /** Mover may pass through Cell on the way: IsOpen, or with move-through a cell whose units are its allies, Downed or dead. */
+    bool IsPassable(FIntPoint Cell, const FCombatantState& Mover) const;
     TMap<FIntPoint, int32> Distances(int32 Id, TMap<FIntPoint, FIntPoint>* Parents = nullptr) const;
     bool HasLineOfSight(FIntPoint From, FIntPoint To) const;
     bool CanTargetFrom(const FCombatantState& Attacker, FIntPoint Origin, const FCombatantState& Target) const;

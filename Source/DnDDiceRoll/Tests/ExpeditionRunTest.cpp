@@ -283,6 +283,8 @@ bool FRunCommandAtomicityTest::RunTest(const FString& Parameters)
     {
         if (Unit.Side != ECombatSide::Party) { continue; }
         const auto& After = *Run.Battle().Find(Unit.Id);
+        // Camp is survivor-only: a hero lost in the fight (revision 11's seed-42 fight costs one, #241) keeps its state.
+        if (Unit.Life != ECombatLife::Conscious) { TestTrue(TEXT("The fallen are not recovered"), After.HP == Unit.HP && After.Life == Unit.Life && After.SpellSlots == Unit.SpellSlots); continue; }
         TestEqual(TEXT("Camp health exactly capped +10"), After.HP, FMath::Min(Unit.MaxHP, Unit.HP+10));
         TestEqual(TEXT("Camp never adds potions"), After.Potions, Unit.Potions);
         TestEqual(TEXT("Camp never adds gear"), After.WeaponRank, Unit.WeaponRank);
@@ -333,13 +335,10 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRunSurvivorTest, "Project.Expedition.Run.DeadR
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRunSurvivorTest::RunTest(const FString& Parameters)
 {
-    FExpeditionRun Run; FString Error; Run.NewRun(42, Error, TEXT("seeded-fixture")); Run.ChooseRoute(Run.Progress().Offers[0].Id,Error);
-    for(int32 Turn=0;Turn<120 && Run.Progress().Phase==EExpeditionPhase::Combat && Run.Battle().Find(1)->Life!=ECombatLife::Dead;++Turn)
-    {
-        const auto* Active=Run.Battle().Find(Run.Battle().ActiveId());
-        if(Active->Side==ECombatSide::Enemy){Run.PlayEnemyTurn();}
-        else{Run.Submit({ECombatCommandType::EndTurn,Active->Id});}
-    }
+    FExpeditionRun Run; FString Error;
+    const int32 Seed = ExpeditionTestSupport::FirstLossSeed();
+    if (!TestTrue(TEXT("A seed loses slot 1 and still wins fight 1"), Seed != INDEX_NONE)) { return false; }
+    ExpeditionTestSupport::PassUntilSlotOneDies(Run, Seed, TEXT("seeded-fixture"));
     if(!TestTrue(TEXT("Actual first death with surviving party"),Run.Battle().Find(1)->Life==ECombatLife::Dead && Run.Progress().Phase==EExpeditionPhase::Combat)){return false;}
     TestTrue(TEXT("Shrinking party can complete encounter"),FinishCombat(Run));
     if(!TestTrue(TEXT("Survivor victory"),Run.Progress().Phase==EExpeditionPhase::Reward)){return false;}
@@ -453,16 +452,16 @@ bool FCompactEnemyTuningTest::RunTest(const FString& Parameters)
         }
         TestEqual(TEXT("Still revision 7"), Old.Progress().CatalogRevision, 7);
     }
-    // New runs are revision 10 (#218); a revision outside 7..10 is refused by name and changes nothing.
+    // New runs are revision 11 (#240); a revision outside 7..11 is refused by name and changes nothing.
     FExpeditionRun Run; Run.NewRun(42, Error, TEXT("tuning-fixture"));
-    TestEqual(TEXT("New runs use revision 10"), Run.Progress().CatalogRevision, 10);
+    TestEqual(TEXT("New runs use revision 11"), Run.Progress().CatalogRevision, 11);
     const FExpeditionSnapshot Before = Run.Snapshot();
-    for (const int32 Revision : {6, 11})
+    for (const int32 Revision : {6, 12})
     {
         FExpeditionSnapshot Unknown = Run.Snapshot(); Unknown.Progress.CatalogRevision = Revision;
         TestFalse(FString::Printf(TEXT("Revision %d refused"), Revision), Run.Restore(Unknown, Error));
         TestTrue(TEXT("The refusal names the revision and the supported ones: ") + Error,
-            Error.Contains(FString::Printf(TEXT("revision %d;"), Revision)) && Error.Contains(TEXT("revisions 7 to 10")));
+            Error.Contains(FString::Printf(TEXT("revision %d;"), Revision)) && Error.Contains(TEXT("revisions 7 to 11")));
         TestTrue(TEXT("Refusal leaves the run unchanged"), SameRun(Before, Run.Snapshot()));
     }
     return !HasAnyErrors();

@@ -1,0 +1,246 @@
+{
+  "version": 1,
+  "settleFrames": 4,
+  "shots": [
+    {
+      "name": "setpiece-000",
+      "mode": "setpiece",
+      "time": 0.0
+    },
+    {
+      "name": "setpiece-001",
+      "mode": "setpiece",
+      "time": 0.1
+    },
+    {
+      "name": "setpiece-002",
+      "mode": "setpiece",
+      "time": 0.2
+    },
+    {
+      "name": "setpiece-003",
+      "mode": "setpiece",
+      "time": 0.3
+    },
+    {
+      "name": "setpiece-004",
+      "mode": "setpiece",
+      "time": 0.4
+    },
+    {
+      "name": "setpiece-005",
+      "mode": "setpiece",
+      "time": 0.5
+    },
+    {
+      "name": "setpiece-006",
+      "mode": "setpiece",
+      "time": 0.6
+    },
+    {
+      "name": "setpiece-007",
+      "mode": "setpiece",
+      "time": 0.7
+    },
+    {
+      "name": "setpiece-008",
+      "mode": "setpiece",
+      "time": 0.8
+    },
+    {
+      "name": "setpiece-009",
+      "mode": "setpiece",
+      "time": 0.9
+    },
+    {
+      "name": "setpiece-010",
+      "mode": "setpiece",
+      "time": 1.0
+    },
+    {
+      "name": "setpiece-011",
+      "mode": "setpiece",
+      "time": 1.1
+    },
+    {
+      "name": "setpiece-012",
+      "mode": "setpiece",
+      "time": 1.2
+    },
+    {
+      "name": "setpiece-013",
+      "mode": "setpiece",
+      "time": 1.3
+    },
+    {
+      "name": "setpiece-014",
+      "mode": "setpiece",
+      "time": 1.4
+    },
+    {
+      "name": "setpiece-015",
+      "mode": "setpiece",
+      "time": 1.5
+    },
+    {
+      "name": "setpiece-016",
+      "mode": "setpiece",
+      "time": 1.6
+    },
+    {
+      "name": "setpiece-017",
+      "mode": "setpiece",
+      "time": 1.7
+    },
+    {
+      "name": "setpiece-018",
+      "mode": "setpiece",
+      "time": 1.8
+    },
+    {
+      "name": "setpiece-019",
+      "mode": "setpiece",
+      "time": 1.9
+    },
+    {
+      "name": "setpiece-020",
+      "mode": "setpiece",
+      "time": 2.0
+    },
+    {
+      "name": "setpiece-021",
+      "mode": "setpiece",
+      "time": 2.1
+    },
+    {
+      "name": "setpiece-022",
+      "mode": "setpiece",
+      "time": 2.2
+    },
+    {
+      "name": "setpiece-023",
+      "mode": "setpiece",
+      "time": 2.3
+    },
+    {
+      "name": "setpiece-024",
+      "mode": "setpiece",
+      "time": 2.4
+    },
+    {
+      "name": "setpiece-025",
+      "mode": "setpiece",
+      "time": 2.5
+    },
+    {
+      "name": "setpiece-026",
+      "mode": "setpiece",
+      "time": 2.6
+    },
+    {
+      "name": "setpiece-027",
+      "mode": "setpiece",
+      "time": 2.7
+    },
+    {
+      "name": "setpiece-028",
+      "mode": "setpiece",
+      "time": 2.8
+    },
+    {
+      "name": "setpiece-029",
+      "mode": "setpiece",
+      "time": 2.9
+    },
+    {
+      "name": "setpiece-030",
+      "mode": "setpiece",
+      "time": 3.0
+    },
+    {
+      "name": "setpiece-031",
+      "mode": "setpiece",
+      "time": 3.1
+    },
+    {
+      "name": "setpiece-032",
+      "mode": "setpiece",
+      "time": 3.2
+    },
+    {
+      "name": "setpiece-033",
+      "mode": "setpiece",
+      "time": 3.3
+    },
+    {
+      "name": "setpiece-034",
+      "mode": "setpiece",
+      "time": 3.4
+    },
+    {
+      "name": "setpiece-035",
+      "mode": "setpiece",
+      "time": 3.5
+    },
+    {
+      "name": "setpiece-036",
+      "mode": "setpiece",
+      "time": 3.6
+    },
+    {
+      "name": "setpiece-037",
+      "mode": "setpiece",
+      "time": 3.7
+    },
+    {
+      "name": "setpiece-038",
+      "mode": "setpiece",
+      "time": 3.8
+    },
+    {
+      "name": "setpiece-039",
+      "mode": "setpiece",
+      "time": 3.9
+    },
+    {
+      "name": "setpiece-040",
+      "mode": "setpiece",
+      "time": 4.0
+    },
+    {
+      "name": "setpiece-041",
+      "mode": "setpiece",
+      "time": 4.1
+    },
+    {
+      "name": "setpiece-042",
+      "mode": "setpiece",
+      "time": 4.2
+    },
+    {
+      "name": "setpiece-043",
+      "mode": "setpiece",
+      "time": 4.3
+    },
+    {
+      "name": "setpiece-044",
+      "mode": "setpiece",
+      "time": 4.4
+    },
+    {
+      "name": "setpiece-045",
+      "mode": "setpiece",
+      "time": 4.5
+    },
+    {
+      "name": "setpiece-046",
+      "mode": "setpiece",
+      "time": 4.6
+    },
+    {
+      "name": "setpiece-settled",
+      "mode": "setpiece",
+      "time": 6
+    }
+  ]
+}

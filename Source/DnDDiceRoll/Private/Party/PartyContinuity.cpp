@@ -41,7 +41,7 @@ bool FPartyContinuity::Reward(FCombatBattle& Battle, int32 RecipientId, int32 Po
     return Reward(Battle, RecipientId, Potions, ERewardCard::Gear, Error);
 }
 
-bool FPartyContinuity::Reward(FCombatBattle& Battle, int32 RecipientId, int32 Potions, ERewardCard Card, FString& Error)
+bool FPartyContinuity::Reward(FCombatBattle& Battle, int32 RecipientId, int32 Potions, ERewardCard Card, FString& Error, bool bCardsRefill)
 {
     Error.Reset();
     const FCombatantState* Recipient = Battle.Find(RecipientId);
@@ -60,18 +60,30 @@ bool FPartyContinuity::Reward(FCombatBattle& Battle, int32 RecipientId, int32 Po
     case ERewardCard::Gear: Survivor->WeaponRank = FMath::Min(3, Survivor->WeaponRank + 1); break;
     case ERewardCard::Reserve:
     {
-        // +1 cap and +1 use on each pool: a hero at Kit 0/2 goes to 1/3. Never a refill.
+        // +1 cap and +1 use on each pool: a hero at Kit 0/2 goes to 1/3. Revision 11 (#241) refills each pool to its new cap instead: 0/2 to 3/3.
         const FResourceCaps Before = FBuildCatalog::Caps(*Survivor);
         Survivor->bReserve = true;
+        const FResourceCaps After = FBuildCatalog::Caps(*Survivor);
         const int32 Extra = UpgradeRules::ReserveUses;
-        if (Before.Kit > 0) { Survivor->KitUses += Extra; }
-        if (Before.Slot > 0) { Survivor->SpellSlots += Extra; }
-        if (Before.Wind > 0) { Survivor->SecondWindUses += Extra; }
-        if (Before.Maneuver > 0) { Survivor->ManeuverUses += Extra; }
-        if (Before.Rage > 0) { Survivor->RageUses += Extra; }
+        auto Grant = [bCardsRefill, Extra](int32& Held, int32 Cap) { Held = bCardsRefill ? Cap : Held + Extra; };
+        if (Before.Kit > 0) { Grant(Survivor->KitUses, After.Kit); }
+        if (Before.Slot > 0) { Grant(Survivor->SpellSlots, After.Slot); }
+        if (Before.Wind > 0) { Grant(Survivor->SecondWindUses, After.Wind); }
+        if (Before.Maneuver > 0) { Grant(Survivor->ManeuverUses, After.Maneuver); }
+        if (Before.Rage > 0) { Grant(Survivor->RageUses, After.Rage); }
         break;
     }
-    case ERewardCard::Honed: Survivor->bHoned = true; break;
+    case ERewardCard::Honed:
+    {
+        Survivor->bHoned = true;
+        if (bCardsRefill)
+        {
+            // Revision 11 (#241): Honed also refills each special pool to the hero's own caps.
+            const FResourceCaps Cap = FBuildCatalog::Caps(*Survivor);
+            Survivor->KitUses = Cap.Kit; Survivor->SpellSlots = Cap.Slot; Survivor->SecondWindUses = Cap.Wind; Survivor->ManeuverUses = Cap.Maneuver; Survivor->RageUses = Cap.Rage;
+        }
+        break;
+    }
     }
     Survivor->Potions = FMath::Min(9, Survivor->Potions + Potions);
     return true;
