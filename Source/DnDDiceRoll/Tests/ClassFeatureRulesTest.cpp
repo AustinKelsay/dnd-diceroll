@@ -49,4 +49,44 @@ bool FClassFeatureCatalogTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("Summary names Second Wind"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Fighter, 1).Contains(TEXT("Second Wind")));
 	return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FClassFeatureRows521Test, "Project.Expedition.Rules.ClassFeatureRows521",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FClassFeatureRows521Test::RunTest(const FString& Parameters)
+{
+    // #177 review finding 4: action costs and unlock levels from the SRD 5.2.1 class and subclass sections.
+    using R = EAdventurerRole;
+    auto Find = [](const TArray<FClassFeature>& Rows, const TCHAR* Prefix) -> const FClassFeature*
+    { return Rows.FindByPredicate([Prefix](const FClassFeature& F) { return FString(F.Name).StartsWith(Prefix); }); };
+    const TArray<FClassFeature> Paladin1 = FClassFeatureRules::FeaturesThrough(R::Paladin, 1);
+    const FClassFeature* Lay = Find(Paladin1, TEXT("Lay on Hands"));
+    TestTrue(TEXT("Paladin 1: Lay on Hands is a Bonus Action"), Lay && Lay->Cost == EActionCost::BonusAction);
+    const TArray<FClassFeature> Druid2 = FClassFeatureRules::FeaturesThrough(R::Druid, 2);
+    const FClassFeature* Wild = Find(Druid2, TEXT("Wild Shape"));
+    TestTrue(TEXT("Druid 2: Wild Shape is a Bonus Action"), Wild && Wild->Cost == EActionCost::BonusAction);
+    TestTrue(TEXT("Druid 2 lists no Natural Recovery"), Find(Druid2, TEXT("Land: Natural Recovery")) == nullptr);
+    const TArray<FClassFeature> Druid5 = FClassFeatureRules::FeaturesThrough(R::Druid, 5);
+    TestTrue(TEXT("Druid 5 lists no Natural Recovery"), Find(Druid5, TEXT("Land: Natural Recovery")) == nullptr);
+    const TArray<FClassFeature> Druid6 = FClassFeatureRules::DataFeaturesThrough(R::Druid, 6);
+    const FClassFeature* Recovery = Find(Druid6, TEXT("Land: Natural Recovery"));
+    TestTrue(TEXT("Natural Recovery is a Circle of the Land level 6 feature"), Recovery && Recovery->Level == 6);
+    const TArray<FClassFeature> Sorcerer1 = FClassFeatureRules::FeaturesThrough(R::Sorcerer, 1);
+    const TArray<FClassFeature> Sorcerer2 = FClassFeatureRules::FeaturesThrough(R::Sorcerer, 2);
+    TestTrue(TEXT("Sorcerer 1 has no Metamagic"), Find(Sorcerer1, TEXT("Metamagic")) == nullptr);
+    const FClassFeature* Metamagic = Find(Sorcerer2, TEXT("Metamagic"));
+    TestTrue(TEXT("Sorcerer 2 has Metamagic"), Metamagic && Metamagic->Level == 2);
+    const TArray<FClassFeature> Cleric2 = FClassFeatureRules::FeaturesThrough(R::Cleric, 2);
+    const TArray<FClassFeature> Cleric3 = FClassFeatureRules::FeaturesThrough(R::Cleric, 3);
+    TestTrue(TEXT("Cleric 2 has no Disciple of Life before the subclass"), Find(Cleric2, TEXT("Life: Disciple of Life")) == nullptr);
+    const FClassFeature* Disciple = Find(Cleric3, TEXT("Life: Disciple of Life"));
+    TestTrue(TEXT("Disciple of Life arrives with the Life Domain at Cleric 3"), Disciple && Disciple->Level == 3);
+    const TArray<FClassFeature> Wizard2 = FClassFeatureRules::FeaturesThrough(R::Wizard, 2);
+    const TArray<FClassFeature> Wizard5 = FClassFeatureRules::FeaturesThrough(R::Wizard, 5);
+    TestTrue(TEXT("Wizard 2 lists no Sculpt Spells"), Find(Wizard2, TEXT("Evocation: Sculpt Spells")) == nullptr);
+    TestTrue(TEXT("Wizard 5 lists no Sculpt Spells"), Find(Wizard5, TEXT("Evocation: Sculpt Spells")) == nullptr);
+    const TArray<FClassFeature> Wizard6 = FClassFeatureRules::DataFeaturesThrough(R::Wizard, 6);
+    const FClassFeature* Sculpt = Find(Wizard6, TEXT("Evocation: Sculpt Spells"));
+    TestTrue(TEXT("Sculpt Spells is an Evoker level 6 feature"), Sculpt && Sculpt->Level == 6);
+    return !HasAnyErrors();
+}
 #endif
